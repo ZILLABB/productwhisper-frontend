@@ -1,5 +1,5 @@
 import React from 'react';
-import { IconType } from 'react-icons';
+import type { IconType } from 'react-icons';
 
 export type BadgeVariant = 'primary' | 'secondary' | 'success' | 'warning' | 'danger' | 'info' | 'neutral';
 export type BadgeSize = 'sm' | 'md' | 'lg';

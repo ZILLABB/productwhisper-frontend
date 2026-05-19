@@ -1,5 +1,5 @@
 import { apiService } from './api';
-import { Notification } from '../types/notification';
+import type { Notification } from '../types/notification';
 
 class NotificationService {
   /**

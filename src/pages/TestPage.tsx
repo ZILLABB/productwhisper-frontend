@@ -1,7 +1,8 @@
 import React, { useState } from 'react';
 import { apiService } from '../services/api';
 import { useErrorHandler } from '../utils/errorHandling';
-import { Button, Card, Badge, LoadingSpinner, useToast } from '../components/common';
+import { Card, LoadingSpinner, useToast } from '../components/common';
+import Button from '../common/components/Button';
 import { ContentContainer, FlexLayout } from '../components/layout';
 
 const TestPage: React.FC = () => {

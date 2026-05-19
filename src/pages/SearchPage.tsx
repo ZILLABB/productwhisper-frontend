@@ -1,7 +1,6 @@
 import React, { useState, useEffect, useMemo } from "react";
 import { Input } from "../components/ui/input";
 import Button from "../common/components/Button";
-import { Card, CardContent } from "../components/ui/card";
 import { Badge } from "../components/ui/badge";
 import { Slider } from "../components/ui/slider";
 import {
@@ -34,12 +33,8 @@ import {
   Star,
   X,
   Filter,
-  SlidersHorizontal,
   Grid,
   List,
-  ChevronDown,
-  ShoppingCart,
-  Heart,
   TrendingUp,
   History,
   Loader2,

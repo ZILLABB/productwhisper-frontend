@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { useSearchParams, useNavigate } from 'react-router-dom';
+import { useSearchParams } from 'react-router-dom';
 import { motion } from 'framer-motion';
 import { FiBarChart2, FiCheck, FiX, FiAlertCircle, FiPlus, FiSearch } from 'react-icons/fi';
 import LoadingSpinner from '../components/common/LoadingSpinner';
@@ -28,7 +28,6 @@ interface Product {
 
 const ComparisonPage: React.FC = () => {
   const [searchParams, setSearchParams] = useSearchParams();
-  const navigate = useNavigate();
   const { showToast } = useToast();
 
   const [products, setProducts] = useState<Product[]>([]);
@@ -189,7 +188,7 @@ const ComparisonPage: React.FC = () => {
       setSearchResults(response.products || []);
     } catch (error) {
       console.error('Error searching products:', error);
-      showToast('error', 'Failed to search products');
+      showToast({ type: 'error', title: 'Error', message: 'Failed to search products' });
 
       // Fallback mock search results for development
       setSearchResults([
@@ -230,12 +229,12 @@ const ComparisonPage: React.FC = () => {
   // Add product to comparison
   const addProduct = (product: Product) => {
     if (products.length >= 4) {
-      showToast('warning', 'You can compare up to 4 products at a time');
+      showToast({ type: 'warning', title: 'Limit', message: 'You can compare up to 4 products at a time' });
       return;
     }
 
     if (products.some(p => p.id === product.id)) {
-      showToast('info', 'This product is already in your comparison');
+      showToast({ type: 'info', title: 'Info', message: 'This product is already in your comparison' });
       return;
     }
 
@@ -260,7 +259,7 @@ const ComparisonPage: React.FC = () => {
 
     if (newIds.length < 2) {
       // If less than 2 products remain, show a message
-      showToast('info', 'At least two products are required for comparison');
+      showToast({ type: 'info', title: 'Info', message: 'At least two products are required for comparison' });
       return;
     }
 
@@ -468,7 +467,7 @@ const ComparisonPage: React.FC = () => {
             <div className="bg-gray-50 p-6 font-medium text-gray-700 border-b border-gray-100">
               <h3 className="text-lg font-display font-semibold">Product Details</h3>
             </div>
-            {products.map((product, index) => (
+            {products.map((product) => (
               <div key={product.id} className="p-6 border-l border-b border-gray-100 relative">
                 {/* Product Image */}
                 <div className="w-full h-48 bg-gray-100 rounded-lg mb-4 overflow-hidden">

@@ -5,7 +5,7 @@
  * to be used as fallbacks when API calls fail or during development.
  */
 
-import { Product, TrendData, SearchResult } from '../types/api';
+import type { Product, SearchResult } from '../types/api';
 
 /**
  * Generate a mock product with the given ID
@@ -225,7 +225,7 @@ export const getMockTrendData = (productId: number, period: string): any => {
     for (let i = days; i >= 0; i--) {
       const date = new Date(today);
       date.setDate(date.getDate() - i);
-      const aspectData = {};
+      const aspectData: Record<string, { count: number; sentiment: number }> = {};
 
       aspects.forEach(aspect => {
         aspectData[aspect] = {

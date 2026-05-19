@@ -1,22 +1,18 @@
 import { AxiosError } from 'axios';
 
-/**
- * Error codes for API errors
- */
-export enum ApiErrorCode {
-  NETWORK_ERROR = 'network_error',
-  TIMEOUT = 'timeout',
-  SERVER_ERROR = 'server_error',
-  UNAUTHORIZED = 'unauthorized',
-  FORBIDDEN = 'forbidden',
-  NOT_FOUND = 'not_found',
-  VALIDATION_ERROR = 'validation_error',
-  UNKNOWN = 'unknown_error',
-}
+export const ApiErrorCode = {
+  NETWORK_ERROR: 'network_error',
+  TIMEOUT: 'timeout',
+  SERVER_ERROR: 'server_error',
+  UNAUTHORIZED: 'unauthorized',
+  FORBIDDEN: 'forbidden',
+  NOT_FOUND: 'not_found',
+  VALIDATION_ERROR: 'validation_error',
+  UNKNOWN: 'unknown_error',
+} as const;
 
-/**
- * Custom API error class
- */
+export type ApiErrorCode = (typeof ApiErrorCode)[keyof typeof ApiErrorCode];
+
 export class ApiError extends Error {
   public readonly code: ApiErrorCode;
   public readonly status: number | null;
@@ -37,15 +33,10 @@ export class ApiError extends Error {
     this.data = data;
     this.originalError = originalError;
 
-    // Ensure instanceof works correctly
     Object.setPrototypeOf(this, ApiError.prototype);
   }
 
-  /**
-   * Create an ApiError from an AxiosError
-   */
   static fromAxiosError(error: AxiosError): ApiError {
-    // Network errors
     if (error.code === 'ECONNABORTED') {
       return new ApiError(
         'Request timed out. Please try again.',
@@ -68,9 +59,8 @@ export class ApiError extends Error {
 
     const { status, data } = error.response;
     const errorData = typeof data === 'object' ? data : null;
-    const errorMessage = errorData?.message || error.message || 'An error occurred';
+    const errorMessage = (errorData as any)?.message || error.message || 'An error occurred';
 
-    // Map HTTP status codes to error codes
     let code: ApiErrorCode;
     switch (status) {
       case 401:
@@ -98,9 +88,6 @@ export class ApiError extends Error {
     return new ApiError(errorMessage, code, status, errorData, error);
   }
 
-  /**
-   * Get a user-friendly error message
-   */
   getUserMessage(): string {
     switch (this.code) {
       case ApiErrorCode.NETWORK_ERROR:
@@ -114,7 +101,7 @@ export class ApiError extends Error {
       case ApiErrorCode.NOT_FOUND:
         return 'The requested resource was not found.';
       case ApiErrorCode.VALIDATION_ERROR:
-        return this.data?.errors 
+        return this.data?.errors
           ? `Please correct the following errors: ${Object.values(this.data.errors).join(', ')}`
           : 'The submitted data is invalid. Please check your inputs and try again.';
       case ApiErrorCode.SERVER_ERROR:

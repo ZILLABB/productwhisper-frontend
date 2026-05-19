@@ -1,29 +1,8 @@
-import React, { createContext, useContext, useState, ReactNode } from 'react';
+import React, { createContext, useContext, useState } from 'react';
+import type { ReactNode } from 'react';
 import { apiService } from '../services/api';
+import type { Product } from '../types/api';
 
-// Product type
-interface Product {
-  id: number;
-  name: string;
-  description: string | null;
-  category: string | null;
-  image_url: string | null;
-  brand: string | null;
-  price: number | null;
-  average_rating: number | null;
-  scores: {
-    overall: number;
-    reddit: number;
-    amazon: number;
-    youtube: number;
-    confidence: number;
-    sample_size: number;
-  };
-  sources: string[];
-  tags: string[];
-}
-
-// Search filters type
 interface SearchFilters {
   minScore?: number;
   sources?: string[];
@@ -36,7 +15,6 @@ interface SearchFilters {
   priceMax?: number;
 }
 
-// Recent search type
 interface RecentSearch {
   id: number;
   query: string;
@@ -44,7 +22,6 @@ interface RecentSearch {
   results_count: number;
 }
 
-// Search context type
 interface SearchContextType {
   searchResults: Product[];
   recentSearches: RecentSearch[];
@@ -65,21 +42,17 @@ interface SearchContextType {
   isFavorite: (productId: number) => boolean;
 }
 
-// Create context
 const SearchContext = createContext<SearchContextType | undefined>(undefined);
 
-// Search provider props
 interface SearchProviderProps {
   children: ReactNode;
 }
 
-// Default filters
 const defaultFilters: SearchFilters = {
   minScore: 0,
   sortBy: 'score',
 };
 
-// Search provider component
 export const SearchProvider: React.FC<SearchProviderProps> = ({ children }) => {
   const [searchResults, setSearchResults] = useState<Product[]>([]);
   const [recentSearches, setRecentSearches] = useState<RecentSearch[]>([]);
@@ -90,19 +63,15 @@ export const SearchProvider: React.FC<SearchProviderProps> = ({ children }) => {
   const [searchQuery, setSearchQuery] = useState<string>('');
   const [filters, setFilters] = useState<SearchFilters>(defaultFilters);
 
-  // Search function
   const search = async (query: string, newFilters?: SearchFilters) => {
     setLoading(true);
     setError(null);
     setSearchQuery(query);
 
-    const searchFilters = newFilters || filters;
-
     try {
-      const data = await apiService.searchProducts(query, searchFilters);
-      setSearchResults(data.results);
+      const data = await apiService.searchProducts(query);
+      setSearchResults(data.products);
 
-      // Update filters if new ones were provided
       if (newFilters) {
         setFilters(newFilters);
       }
@@ -114,48 +83,45 @@ export const SearchProvider: React.FC<SearchProviderProps> = ({ children }) => {
     }
   };
 
-  // Update filters
   const updateFilters = (newFilters: SearchFilters) => {
     const updatedFilters = { ...filters, ...newFilters };
     setFilters(updatedFilters);
 
-    // If there's an active search query, re-run the search
     if (searchQuery) {
       search(searchQuery, updatedFilters);
     }
   };
 
-  // Clear filters
   const clearFilters = () => {
     setFilters(defaultFilters);
-
-    // If there's an active search query, re-run the search
     if (searchQuery) {
       search(searchQuery, defaultFilters);
     }
   };
 
-  // Load recent searches
   const loadRecentSearches = async () => {
     try {
       const data = await apiService.getRecentSearches();
-      setRecentSearches(data);
+      setRecentSearches(data.map((q: string, i: number) => ({
+        id: i,
+        query: q,
+        created_at: new Date().toISOString(),
+        results_count: 0
+      })));
     } catch (err) {
       console.error('Failed to load recent searches:', err);
     }
   };
 
-  // Load popular searches
   const loadPopularSearches = async () => {
     try {
       const data = await apiService.getPopularSearches();
-      setPopularSearches(data);
+      setPopularSearches(data.map((q: string) => ({ query: q, count: 0 })));
     } catch (err) {
       console.error('Failed to load popular searches:', err);
     }
   };
 
-  // Load favorites
   const loadFavorites = async () => {
     try {
       const data = await apiService.getFavorites();
@@ -165,7 +131,6 @@ export const SearchProvider: React.FC<SearchProviderProps> = ({ children }) => {
     }
   };
 
-  // Add favorite
   const addFavorite = async (productId: number) => {
     try {
       await apiService.addFavorite(productId);
@@ -175,7 +140,6 @@ export const SearchProvider: React.FC<SearchProviderProps> = ({ children }) => {
     }
   };
 
-  // Remove favorite
   const removeFavorite = async (productId: number) => {
     try {
       await apiService.removeFavorite(productId);
@@ -185,12 +149,10 @@ export const SearchProvider: React.FC<SearchProviderProps> = ({ children }) => {
     }
   };
 
-  // Check if product is in favorites
   const isFavorite = (productId: number): boolean => {
-    return favorites.some(fav => fav.product_id === productId);
+    return favorites.some((fav: any) => fav.product_id === productId || fav.id === productId);
   };
 
-  // Context value
   const value = {
     searchResults,
     recentSearches,
@@ -214,13 +176,10 @@ export const SearchProvider: React.FC<SearchProviderProps> = ({ children }) => {
   return <SearchContext.Provider value={value}>{children}</SearchContext.Provider>;
 };
 
-// Custom hook to use search context
 export const useSearch = (): SearchContextType => {
   const context = useContext(SearchContext);
-
   if (context === undefined) {
     throw new Error('useSearch must be used within a SearchProvider');
   }
-
   return context;
 };

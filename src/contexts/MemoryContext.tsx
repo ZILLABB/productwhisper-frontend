@@ -1,6 +1,7 @@
-import React, { createContext, useContext, useState, useEffect, ReactNode } from 'react';
-import { Memory } from '../components/common/MemoryBank';
-import { initialMemories, initializeMemories } from '../utils/initialMemories';
+import React, { createContext, useContext, useState, useEffect } from 'react';
+import type { ReactNode } from 'react';
+import type { Memory } from '../components/common/MemoryBank';
+import { initializeMemories } from '../utils/initialMemories';
 
 interface MemoryContextType {
   memories: Memory[];

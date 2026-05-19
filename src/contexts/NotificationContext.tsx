@@ -2,8 +2,7 @@ import React, { createContext, useContext, useEffect, useState } from 'react';
 import { useSocket, SocketEvent } from './SocketContext';
 import { useAuth } from './AuthContext';
 import { notificationService } from '../services/notificationService';
-import { toast } from '../components/common/Toast';
-import { Notification, NotificationType, NotificationPriority } from '../types/notification';
+import type { Notification } from '../types/notification';
 
 interface NotificationContextType {
   notifications: Notification[];
@@ -28,6 +27,7 @@ const NotificationContext = createContext<NotificationContextType>({
 });
 
 export const useNotifications = () => useContext(NotificationContext);
+export const useNotification = useNotifications;
 
 export const NotificationProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
   const [notifications, setNotifications] = useState<Notification[]>([]);
@@ -37,7 +37,6 @@ export const NotificationProvider: React.FC<{ children: React.ReactNode }> = ({ 
   const { socket, isConnected } = useSocket();
   const { isAuthenticated } = useAuth();
 
-  // Fetch notifications when authenticated
   useEffect(() => {
     if (isAuthenticated) {
       fetchNotifications();
@@ -48,21 +47,11 @@ export const NotificationProvider: React.FC<{ children: React.ReactNode }> = ({ 
     }
   }, [isAuthenticated]);
 
-  // Listen for real-time notifications
   useEffect(() => {
     if (socket && isConnected && isAuthenticated) {
       socket.on(SocketEvent.USER_NOTIFICATION, (notification: Notification) => {
-        // Add new notification to state
-        setNotifications(prev => [notification, ...prev]);
-        setUnreadCount(prev => prev + 1);
-
-        // Show toast notification
-        toast({
-          title: notification.title,
-          message: notification.message,
-          type: getToastTypeFromPriority(notification.priority),
-          duration: 5000,
-        });
+        setNotifications((prev: Notification[]) => [notification, ...prev]);
+        setUnreadCount((prev: number) => prev + 1);
       });
 
       return () => {
@@ -71,7 +60,6 @@ export const NotificationProvider: React.FC<{ children: React.ReactNode }> = ({ 
     }
   }, [socket, isConnected, isAuthenticated]);
 
-  // Fetch notifications from API
   const fetchNotifications = async () => {
     if (!isAuthenticated) return;
 
@@ -89,7 +77,6 @@ export const NotificationProvider: React.FC<{ children: React.ReactNode }> = ({ 
     }
   };
 
-  // Fetch unread count from API
   const fetchUnreadCount = async () => {
     if (!isAuthenticated) return;
 
@@ -101,43 +88,33 @@ export const NotificationProvider: React.FC<{ children: React.ReactNode }> = ({ 
     }
   };
 
-  // Mark notification as read
   const markAsRead = async (notificationId: number) => {
     if (!isAuthenticated) return;
 
     try {
       await notificationService.markAsRead(notificationId);
-
-      // Update local state
-      setNotifications(prev =>
-        prev.map(notification =>
+      setNotifications((prev: Notification[]) =>
+        prev.map((notification: Notification) =>
           notification.id === notificationId
             ? { ...notification, read: true }
             : notification
         )
       );
-
-      // Update unread count
-      setUnreadCount(prev => Math.max(0, prev - 1));
+      setUnreadCount((prev: number) => Math.max(0, prev - 1));
     } catch (err) {
       console.error('Error marking notification as read:', err);
       throw err;
     }
   };
 
-  // Mark all notifications as read
   const markAllAsRead = async () => {
     if (!isAuthenticated) return;
 
     try {
       await notificationService.markAllAsRead();
-
-      // Update local state
-      setNotifications(prev =>
-        prev.map(notification => ({ ...notification, read: true }))
+      setNotifications((prev: Notification[]) =>
+        prev.map((notification: Notification) => ({ ...notification, read: true }))
       );
-
-      // Reset unread count
       setUnreadCount(0);
     } catch (err) {
       console.error('Error marking all notifications as read:', err);
@@ -145,37 +122,19 @@ export const NotificationProvider: React.FC<{ children: React.ReactNode }> = ({ 
     }
   };
 
-  // Delete notification
   const deleteNotification = async (notificationId: number) => {
     if (!isAuthenticated) return;
 
     try {
       await notificationService.deleteNotification(notificationId);
-
-      // Update local state
-      const deletedNotification = notifications.find(n => n.id === notificationId);
-      setNotifications(prev => prev.filter(n => n.id !== notificationId));
-
-      // Update unread count if needed
+      const deletedNotification = notifications.find((n: Notification) => n.id === notificationId);
+      setNotifications((prev: Notification[]) => prev.filter((n: Notification) => n.id !== notificationId));
       if (deletedNotification && !deletedNotification.read) {
-        setUnreadCount(prev => Math.max(0, prev - 1));
+        setUnreadCount((prev: number) => Math.max(0, prev - 1));
       }
     } catch (err) {
       console.error('Error deleting notification:', err);
       throw err;
-    }
-  };
-
-  // Helper function to map notification priority to toast type
-  const getToastTypeFromPriority = (priority: NotificationPriority) => {
-    switch (priority) {
-      case NotificationPriority.HIGH:
-        return 'error';
-      case NotificationPriority.MEDIUM:
-        return 'warning';
-      case NotificationPriority.LOW:
-      default:
-        return 'info';
     }
   };
 
