@@ -1,21 +1,22 @@
-// Notification types
-export enum NotificationType {
-  PRODUCT_MENTION = 'product_mention',
-  PRODUCT_TRENDING = 'product_trending',
-  PRODUCT_PRICE_DROP = 'product_price_drop',
-  PRODUCT_REVIEW = 'product_review',
-  FAVORITE_UPDATE = 'favorite_update',
-  SYSTEM = 'system'
-}
+export const NotificationType = {
+  PRODUCT_MENTION: 'product_mention',
+  PRODUCT_TRENDING: 'product_trending',
+  PRODUCT_PRICE_DROP: 'product_price_drop',
+  PRODUCT_REVIEW: 'product_review',
+  FAVORITE_UPDATE: 'favorite_update',
+  SYSTEM: 'system'
+} as const;
 
-// Notification priority
-export enum NotificationPriority {
-  LOW = 'low',
-  MEDIUM = 'medium',
-  HIGH = 'high'
-}
+export type NotificationType = (typeof NotificationType)[keyof typeof NotificationType];
 
-// Notification interface
+export const NotificationPriority = {
+  LOW: 'low',
+  MEDIUM: 'medium',
+  HIGH: 'high'
+} as const;
+
+export type NotificationPriority = (typeof NotificationPriority)[keyof typeof NotificationPriority];
+
 export interface Notification {
   id: number;
   user_id: number;

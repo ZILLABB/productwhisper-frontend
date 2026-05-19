@@ -1,4 +1,4 @@
-import React, { ButtonHTMLAttributes } from 'react';
+import React, { type ButtonHTMLAttributes } from 'react';
 import { Link } from 'react-router-dom';
 import { motion } from 'framer-motion';
 
@@ -125,7 +125,7 @@ const Button: React.FC<ButtonProps> = ({
       disabled={isLoading || props.disabled}
       whileHover={{ scale: 1.02 }}
       whileTap={{ scale: 0.98 }}
-      {...props}
+      {...(props as any)}
     >
       <ButtonContent />
     </MotionButton>

@@ -29,7 +29,7 @@ const LoginPage: React.FC = () => {
     
     try {
       setIsLoading(true);
-      await login(email, password, rememberMe);
+      await login(email, password);
       navigate(from, { replace: true });
     } catch (err: any) {
       setError(err.message || 'Failed to log in. Please check your credentials and try again.');

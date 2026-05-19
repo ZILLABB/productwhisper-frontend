@@ -2,10 +2,10 @@ import React, { useState, useRef } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { motion, useInView } from 'framer-motion';
 import { apiService } from '../services/api';
-import LoadingSpinner from '../components/common/LoadingSpinner';
 import useApi from '../hooks/useApi';
 import ApiErrorFallback from '../components/common/ApiErrorFallback';
 import AnimatedCircles from '../components/ui/AnimatedCircles';
+import { Skeleton } from '../components/ui/skeleton';
 import {
   Search as MagnifyingGlassIcon,
   BarChart as ChartBarIcon,
@@ -285,8 +285,21 @@ const HomePage: React.FC = () => {
           </motion.div>
 
           {loading ? (
-            <div className="flex justify-center py-12">
-              <LoadingSpinner size="large" text="Loading trending products..." />
+            <div className="grid grid-cols-1 gap-8 sm:grid-cols-2 lg:grid-cols-3">
+              {Array.from({ length: 6 }).map((_, i) => (
+                <div key={i} className="bg-white rounded-premium shadow-premium p-6">
+                  <div className="flex justify-between items-start mb-3">
+                    <Skeleton className="h-6 w-40" />
+                    <Skeleton className="h-6 w-16 rounded-full" />
+                  </div>
+                  <Skeleton className="h-4 w-full mb-2" />
+                  <Skeleton className="h-4 w-3/4 mb-6" />
+                  <div className="flex justify-between items-center pt-4 border-t border-gray-100">
+                    <Skeleton className="h-4 w-20" />
+                    <Skeleton className="h-4 w-24" />
+                  </div>
+                </div>
+              ))}
             </div>
           ) : error ? (
             <div className="max-w-lg mx-auto py-8">

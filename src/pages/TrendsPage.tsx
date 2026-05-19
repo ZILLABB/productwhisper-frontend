@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { useParams, useSearchParams, Link } from 'react-router-dom';
 import { motion } from 'framer-motion';
-import { FiTrendingUp, FiTrendingDown, FiAlertCircle, FiFilter, FiCalendar, FiSearch } from 'react-icons/fi';
+import { FiTrendingUp, FiTrendingDown, FiAlertCircle, FiFilter, FiCalendar, FiSearch, FiBarChart2 } from 'react-icons/fi';
 import LoadingSpinner from '../components/common/LoadingSpinner';
 import { apiService } from '../services/api';
 import { useToast } from '../components/common/Toast';
@@ -99,7 +99,7 @@ const TrendsPage: React.FC = () => {
       } catch (err) {
         setError('Failed to load trend data');
         console.error('Error fetching trend data:', err);
-        showToast('error', 'Failed to load trend data');
+        showToast({ type: 'error', title: 'Error', message: 'Failed to load trend data' });
       } finally {
         setLoading(false);
       }

@@ -1,4 +1,4 @@
-import React, { useState, useMemo } from 'react';
+import React, { useMemo } from 'react';
 import { useParams, Link } from 'react-router-dom';
 import { motion } from 'framer-motion';
 import {
@@ -12,15 +12,17 @@ import {
   FiTrendingUp,
   FiMessageCircle,
   FiList,
-  FiThumbsUp
 } from 'react-icons/fi';
-import LoadingSpinner from '../components/common/LoadingSpinner';
 import { apiService } from '../services/api';
 import useApi from '../hooks/useApi';
 import ApiErrorFallback from '../components/common/ApiErrorFallback';
 import LazyImage from '../components/common/LazyImage';
 import SentimentChart from '../components/product/SentimentChart';
 import ReviewCard from '../components/product/ReviewCard';
+import { Tabs, TabsList, TabsTrigger, TabsContent } from '../components/ui/tabs';
+import { Progress } from '../components/ui/progress';
+import { Skeleton } from '../components/ui/skeleton';
+import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '../components/ui/tooltip';
 
 // Import types from API
 import type { Product } from '../types/api';
@@ -32,7 +34,6 @@ interface ProductData extends Product {
 
 const ProductPage: React.FC = () => {
   const { id } = useParams<{ id: string }>();
-  const [activeTab, setActiveTab] = useState('overview');
 
   // Use the useApi hook to fetch product data with caching
   const { data: product, loading, error, refetch } = useApi<ProductData>(
@@ -55,8 +56,23 @@ const ProductPage: React.FC = () => {
 
   if (loading) {
     return (
-      <div className="flex justify-center items-center min-h-[60vh]">
-        <LoadingSpinner size="large" text="Loading product details..." />
+      <div className="container mx-auto px-4 py-12">
+        <div className="bg-white rounded-lg shadow-md overflow-hidden">
+          <div className="bg-gray-50 p-6 border-b border-gray-200">
+            <Skeleton className="h-8 w-64 mb-2" />
+            <Skeleton className="h-5 w-48" />
+          </div>
+          <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 p-6">
+            <div className="lg:col-span-5">
+              <Skeleton className="aspect-square rounded-xl" />
+              <Skeleton className="h-40 rounded-xl mt-8" />
+            </div>
+            <div className="lg:col-span-7 space-y-4">
+              <Skeleton className="h-12 rounded-xl" />
+              <Skeleton className="h-64 rounded-xl" />
+            </div>
+          </div>
+        </div>
       </div>
     );
   }
@@ -129,24 +145,36 @@ const ProductPage: React.FC = () => {
                       </span>
                     )}
                   </div>
+                  <TooltipProvider>
                   <div className="flex space-x-2">
-                    <motion.button
-                      className="p-2.5 rounded-full bg-gray-100 hover:bg-gray-200 text-gray-600 transition-colors"
-                      whileHover={{ scale: 1.1 }}
-                      whileTap={{ scale: 0.9 }}
-                      aria-label="Add to favorites"
-                    >
-                      <FiHeart size={18} />
-                    </motion.button>
-                    <motion.button
-                      className="p-2.5 rounded-full bg-gray-100 hover:bg-gray-200 text-gray-600 transition-colors"
-                      whileHover={{ scale: 1.1 }}
-                      whileTap={{ scale: 0.9 }}
-                      aria-label="Share product"
-                    >
-                      <FiShare2 size={18} />
-                    </motion.button>
+                    <Tooltip>
+                      <TooltipTrigger asChild>
+                        <motion.button
+                          className="p-2.5 rounded-full bg-gray-100 hover:bg-gray-200 text-gray-600 transition-colors"
+                          whileHover={{ scale: 1.1 }}
+                          whileTap={{ scale: 0.9 }}
+                          aria-label="Add to favorites"
+                        >
+                          <FiHeart size={18} />
+                        </motion.button>
+                      </TooltipTrigger>
+                      <TooltipContent>Add to favorites</TooltipContent>
+                    </Tooltip>
+                    <Tooltip>
+                      <TooltipTrigger asChild>
+                        <motion.button
+                          className="p-2.5 rounded-full bg-gray-100 hover:bg-gray-200 text-gray-600 transition-colors"
+                          whileHover={{ scale: 1.1 }}
+                          whileTap={{ scale: 0.9 }}
+                          aria-label="Share product"
+                        >
+                          <FiShare2 size={18} />
+                        </motion.button>
+                      </TooltipTrigger>
+                      <TooltipContent>Share product</TooltipContent>
+                    </Tooltip>
                   </div>
+                </TooltipProvider>
                 </div>
 
                 <div className="space-y-4">
@@ -202,34 +230,23 @@ const ProductPage: React.FC = () => {
 
           {/* Product Details */}
           <div className="lg:col-span-7">
-            {/* Tabs */}
-            <div className="bg-white rounded-xl shadow-sm border border-gray-100 mb-6 overflow-hidden">
-              <nav className="flex border-b border-gray-100">
-                {[
-                  { id: 'overview', label: 'Overview', icon: FiInfo },
-                  { id: 'sentiment', label: 'Sentiment Analysis', icon: FiBarChart2 },
-                  { id: 'specifications', label: 'Specifications', icon: FiList },
-                  { id: 'reviews', label: 'Reviews', icon: FiMessageCircle }
-                ].map((tab) => (
-                  <button
-                    key={tab.id}
-                    onClick={() => setActiveTab(tab.id)}
-                    className={`py-4 px-4 font-medium text-sm flex items-center flex-1 justify-center transition-colors ${
-                      activeTab === tab.id
-                        ? 'bg-primary/5 text-primary border-b-2 border-primary'
-                        : 'text-gray-600 hover:text-gray-900 hover:bg-gray-50'
-                    }`}
-                  >
-                    <tab.icon className="mr-2" size={16} />
-                    {tab.label}
-                  </button>
-                ))}
-              </nav>
-            </div>
+            <Tabs defaultValue="overview" className="w-full">
+              <TabsList className="w-full grid grid-cols-4 mb-6">
+                <TabsTrigger value="overview" className="flex items-center gap-2">
+                  <FiInfo size={16} /> Overview
+                </TabsTrigger>
+                <TabsTrigger value="sentiment" className="flex items-center gap-2">
+                  <FiBarChart2 size={16} /> Sentiment
+                </TabsTrigger>
+                <TabsTrigger value="specifications" className="flex items-center gap-2">
+                  <FiList size={16} /> Specs
+                </TabsTrigger>
+                <TabsTrigger value="reviews" className="flex items-center gap-2">
+                  <FiMessageCircle size={16} /> Reviews
+                </TabsTrigger>
+              </TabsList>
 
-            {/* Tab Content */}
-            <div className="tab-content">
-              {activeTab === 'overview' && (
+              <TabsContent value="overview">
                 <motion.div
                   initial={{ opacity: 0 }}
                   animate={{ opacity: 1 }}
@@ -257,15 +274,10 @@ const ProductPage: React.FC = () => {
                             <div className="bg-white p-1 rounded-full text-green-500 mr-3 mt-0.5 shadow-sm">
                               <FiCheck size={14} />
                             </div>
-                            <div>
+                            <div className="flex-1">
                               <span className="font-medium text-gray-900">{attr.name}</span>
-                              <div className="flex items-center mt-1">
-                                <div className="w-24 bg-gray-200 rounded-full h-1.5 mr-2">
-                                  <div
-                                    className="bg-green-500 h-1.5 rounded-full"
-                                    style={{ width: `${attr.score * 100}%` }}
-                                  ></div>
-                                </div>
+                              <div className="flex items-center mt-1 gap-2">
+                                <Progress value={attr.score * 100} className="w-24 h-1.5 [&>div]:bg-green-500" />
                                 <span className="text-xs text-gray-500">{attr.mentions} mentions</span>
                               </div>
                             </div>
@@ -285,15 +297,10 @@ const ProductPage: React.FC = () => {
                             <div className="bg-white p-1 rounded-full text-red-500 mr-3 mt-0.5 shadow-sm">
                               <FiX size={14} />
                             </div>
-                            <div>
+                            <div className="flex-1">
                               <span className="font-medium text-gray-900">{attr.name}</span>
-                              <div className="flex items-center mt-1">
-                                <div className="w-24 bg-gray-200 rounded-full h-1.5 mr-2">
-                                  <div
-                                    className="bg-red-500 h-1.5 rounded-full"
-                                    style={{ width: `${(1 - attr.score) * 100}%` }}
-                                  ></div>
-                                </div>
+                              <div className="flex items-center mt-1 gap-2">
+                                <Progress value={(1 - attr.score) * 100} className="w-24 h-1.5 [&>div]:bg-red-500" />
                                 <span className="text-xs text-gray-500">{attr.mentions} mentions</span>
                               </div>
                             </div>
@@ -303,9 +310,9 @@ const ProductPage: React.FC = () => {
                     </div>
                   </div>
                 </motion.div>
-              )}
+              </TabsContent>
 
-              {activeTab === 'sentiment' && (
+              <TabsContent value="sentiment">
                 <motion.div
                   initial={{ opacity: 0 }}
                   animate={{ opacity: 1 }}
@@ -357,23 +364,18 @@ const ProductPage: React.FC = () => {
 
                       <div className="space-y-4">
                         {[
-                          { label: 'Very Positive', percentage: 65, color: 'bg-green-500' },
-                          { label: 'Positive', percentage: 20, color: 'bg-green-300' },
-                          { label: 'Neutral', percentage: 8, color: 'bg-gray-300' },
-                          { label: 'Negative', percentage: 5, color: 'bg-red-300' },
-                          { label: 'Very Negative', percentage: 2, color: 'bg-red-500' }
+                          { label: 'Very Positive', percentage: 65, colorClass: '[&>div]:bg-green-500' },
+                          { label: 'Positive', percentage: 20, colorClass: '[&>div]:bg-green-300' },
+                          { label: 'Neutral', percentage: 8, colorClass: '[&>div]:bg-gray-400' },
+                          { label: 'Negative', percentage: 5, colorClass: '[&>div]:bg-red-300' },
+                          { label: 'Very Negative', percentage: 2, colorClass: '[&>div]:bg-red-500' }
                         ].map((item, index) => (
                           <div key={index}>
                             <div className="flex justify-between text-sm mb-1">
                               <span className="text-gray-700">{item.label}</span>
                               <span className="font-medium text-gray-900">{item.percentage}%</span>
                             </div>
-                            <div className="w-full bg-gray-100 rounded-full h-2.5">
-                              <div
-                                className={`h-2.5 rounded-full ${item.color}`}
-                                style={{ width: `${item.percentage}%` }}
-                              ></div>
-                            </div>
+                            <Progress value={item.percentage} className={`h-2.5 ${item.colorClass}`} />
                           </div>
                         ))}
                       </div>
@@ -395,9 +397,9 @@ const ProductPage: React.FC = () => {
                     </div>
                   </div>
                 </motion.div>
-              )}
+              </TabsContent>
 
-              {activeTab === 'specifications' && (
+              <TabsContent value="specifications">
                 <motion.div
                   initial={{ opacity: 0 }}
                   animate={{ opacity: 1 }}
@@ -438,9 +440,9 @@ const ProductPage: React.FC = () => {
                     <p>Specifications are provided by the manufacturer and may vary by region or model variant.</p>
                   </div>
                 </motion.div>
-              )}
+              </TabsContent>
 
-              {activeTab === 'reviews' && (
+              <TabsContent value="reviews">
                 <motion.div
                   initial={{ opacity: 0 }}
                   animate={{ opacity: 1 }}
@@ -504,8 +506,8 @@ const ProductPage: React.FC = () => {
                     </button>
                   </div>
                 </motion.div>
-              )}
-            </div>
+              </TabsContent>
+            </Tabs>
           </div>
         </div>
 

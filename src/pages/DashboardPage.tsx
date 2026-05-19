@@ -23,8 +23,8 @@ interface ChartData {
 
 const DashboardPage: React.FC = () => {
   const [stats, setStats] = useState<DashboardStats | null>(null);
-  const [userChartData, setUserChartData] = useState<ChartData | null>(null);
-  const [sentimentChartData, setSentimentChartData] = useState<ChartData | null>(null);
+  const [_userChartData, setUserChartData] = useState<ChartData | null>(null);
+  const [_sentimentChartData, setSentimentChartData] = useState<ChartData | null>(null);
   const [loading, setLoading] = useState(true);
   const [timeRange, setTimeRange] = useState('30d'); // 7d, 30d, 90d, 1y
   

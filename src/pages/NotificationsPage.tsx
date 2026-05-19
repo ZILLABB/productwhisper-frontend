@@ -1,34 +1,33 @@
 import React, { useState } from 'react';
 import { motion } from 'framer-motion';
-import { FiBell, FiTrash2, FiCheck, FiFilter, FiAlertCircle } from 'react-icons/fi';
-import { useNotification } from '../contexts/NotificationContext';
+import { FiBell, FiTrash2, FiCheck, FiAlertCircle } from 'react-icons/fi';
+import { useNotifications } from '../contexts/NotificationContext';
 import LoadingSpinner from '../components/common/LoadingSpinner';
+import type { Notification } from '../types/notification';
 
 const NotificationsPage: React.FC = () => {
-  const { 
-    notifications, 
-    unreadCount, 
-    markAsRead, 
-    markAllAsRead, 
-    removeNotification, 
-    clearAllNotifications 
-  } = useNotification();
-  
+  const {
+    notifications,
+    unreadCount,
+    markAsRead,
+    markAllAsRead,
+    deleteNotification
+  } = useNotifications();
+
   const [filter, setFilter] = useState<'all' | 'unread' | 'read'>('all');
   const [loading, setLoading] = useState(false);
-  
-  // Filter notifications based on selected filter
-  const filteredNotifications = notifications.filter(notification => {
+
+  const filteredNotifications = notifications.filter((notification: Notification) => {
     if (filter === 'unread') return !notification.read;
     if (filter === 'read') return notification.read;
     return true;
   });
-  
-  // Format date to relative time
-  const formatRelativeTime = (date: Date) => {
+
+  const formatRelativeTime = (dateStr: string) => {
+    const date = new Date(dateStr);
     const now = new Date();
     const diffInSeconds = Math.floor((now.getTime() - date.getTime()) / 1000);
-    
+
     if (diffInSeconds < 60) {
       return 'just now';
     } else if (diffInSeconds < 3600) {
@@ -44,31 +43,16 @@ const NotificationsPage: React.FC = () => {
       return date.toLocaleDateString();
     }
   };
-  
-  // Handle mark all as read with loading state
+
   const handleMarkAllAsRead = async () => {
     setLoading(true);
     try {
-      // Simulate API call
-      await new Promise(resolve => setTimeout(resolve, 500));
-      markAllAsRead();
+      await markAllAsRead();
     } finally {
       setLoading(false);
     }
   };
-  
-  // Handle clear all notifications with loading state
-  const handleClearAll = async () => {
-    setLoading(true);
-    try {
-      // Simulate API call
-      await new Promise(resolve => setTimeout(resolve, 500));
-      clearAllNotifications();
-    } finally {
-      setLoading(false);
-    }
-  };
-  
+
   return (
     <div className="container mx-auto px-4 py-12 animate-fade-in">
       <motion.div
@@ -78,22 +62,22 @@ const NotificationsPage: React.FC = () => {
       >
         <div className="flex flex-col md:flex-row md:items-center md:justify-between mb-8">
           <div className="flex items-center">
-            <FiBell className="text-primary-600 text-2xl mr-3" />
+            <FiBell className="text-primary text-2xl mr-3" />
             <h1 className="text-3xl font-bold">Notifications</h1>
             {unreadCount > 0 && (
-              <span className="ml-3 bg-primary-100 text-primary-800 text-sm font-medium px-2.5 py-0.5 rounded-full">
+              <span className="ml-3 bg-blue-100 text-blue-800 text-sm font-medium px-2.5 py-0.5 rounded-full">
                 {unreadCount} unread
               </span>
             )}
           </div>
-          
+
           <div className="mt-4 md:mt-0 flex flex-wrap gap-2">
             <div className="flex rounded-md shadow-sm">
               <button
                 onClick={() => setFilter('all')}
                 className={`px-4 py-2 text-sm font-medium rounded-l-md ${
                   filter === 'all'
-                    ? 'bg-primary-600 text-white'
+                    ? 'bg-primary text-white'
                     : 'bg-white text-gray-700 hover:bg-gray-50'
                 }`}
               >
@@ -103,7 +87,7 @@ const NotificationsPage: React.FC = () => {
                 onClick={() => setFilter('unread')}
                 className={`px-4 py-2 text-sm font-medium ${
                   filter === 'unread'
-                    ? 'bg-primary-600 text-white'
+                    ? 'bg-primary text-white'
                     : 'bg-white text-gray-700 hover:bg-gray-50'
                 }`}
               >
@@ -113,38 +97,27 @@ const NotificationsPage: React.FC = () => {
                 onClick={() => setFilter('read')}
                 className={`px-4 py-2 text-sm font-medium rounded-r-md ${
                   filter === 'read'
-                    ? 'bg-primary-600 text-white'
+                    ? 'bg-primary text-white'
                     : 'bg-white text-gray-700 hover:bg-gray-50'
                 }`}
               >
                 Read
               </button>
             </div>
-            
+
             {unreadCount > 0 && (
               <button
                 onClick={handleMarkAllAsRead}
                 disabled={loading}
-                className="inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-md shadow-sm text-white bg-primary-600 hover:bg-primary-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-primary-500"
+                className="inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-md shadow-sm text-white bg-primary hover:bg-primary-dark focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-primary"
               >
                 <FiCheck className="mr-2" />
                 Mark all as read
               </button>
             )}
-            
-            {notifications.length > 0 && (
-              <button
-                onClick={handleClearAll}
-                disabled={loading}
-                className="inline-flex items-center px-4 py-2 border border-gray-300 text-sm font-medium rounded-md shadow-sm text-gray-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-primary-500"
-              >
-                <FiTrash2 className="mr-2" />
-                Clear all
-              </button>
-            )}
           </div>
         </div>
-        
+
         {loading ? (
           <div className="flex justify-center py-12">
             <LoadingSpinner size="large" text="Processing..." />
@@ -166,7 +139,7 @@ const NotificationsPage: React.FC = () => {
         ) : (
           <div className="bg-white rounded-lg shadow-md overflow-hidden">
             <ul className="divide-y divide-gray-200">
-              {filteredNotifications.map((notification) => (
+              {filteredNotifications.map((notification: Notification) => (
                 <motion.li
                   key={notification.id}
                   className={`relative ${notification.read ? 'bg-white' : 'bg-blue-50'}`}
@@ -178,18 +151,8 @@ const NotificationsPage: React.FC = () => {
                   <div className="px-4 py-4 sm:px-6">
                     <div className="flex items-center justify-between">
                       <div className="flex items-center">
-                        <div className={`flex-shrink-0 h-10 w-10 rounded-full flex items-center justify-center ${
-                          notification.type === 'success' ? 'bg-green-100' :
-                          notification.type === 'warning' ? 'bg-yellow-100' :
-                          notification.type === 'error' ? 'bg-red-100' :
-                          'bg-blue-100'
-                        }`}>
-                          <FiAlertCircle className={`h-5 w-5 ${
-                            notification.type === 'success' ? 'text-green-600' :
-                            notification.type === 'warning' ? 'text-yellow-600' :
-                            notification.type === 'error' ? 'text-red-600' :
-                            'text-blue-600'
-                          }`} />
+                        <div className="flex-shrink-0 h-10 w-10 rounded-full flex items-center justify-center bg-blue-100">
+                          <FiAlertCircle className="h-5 w-5 text-blue-600" />
                         </div>
                         <div className="ml-4 flex-1">
                           <div className="text-sm font-medium text-gray-900">{notification.title}</div>
@@ -198,7 +161,7 @@ const NotificationsPage: React.FC = () => {
                       </div>
                       <div className="flex items-center">
                         <span className="text-xs text-gray-500">
-                          {formatRelativeTime(notification.createdAt)}
+                          {formatRelativeTime(notification.created_at)}
                         </span>
                         <div className="ml-4 flex-shrink-0 flex">
                           {!notification.read && (
@@ -211,7 +174,7 @@ const NotificationsPage: React.FC = () => {
                             </button>
                           )}
                           <button
-                            onClick={() => removeNotification(notification.id)}
+                            onClick={() => deleteNotification(notification.id)}
                             className="bg-gray-100 text-gray-600 hover:bg-gray-200 p-1 rounded-full"
                             title="Delete notification"
                           >

@@ -1,13 +1,11 @@
-import axios from 'axios';
-import type { AxiosInstance, AxiosRequestConfig, AxiosResponse, AxiosError } from 'axios';
+import axios, { AxiosError } from 'axios';
+import type { AxiosInstance, AxiosRequestConfig, AxiosResponse } from 'axios';
 import { ApiError } from './apiError';
 import type {
   Product,
   SearchFilters,
   SearchResult,
-  TrendData,
   User,
-  AuthTokens,
   Notification
 } from '../types/api';
 import { getMockProduct, getMockSearchResults, getMockTrendingProducts, getMockTrendData } from '../utils/mockData';
@@ -61,7 +59,7 @@ class ApiService {
         if (
           error.response?.status === 401 &&
           originalRequest &&
-          !originalRequest._retry &&
+          !(originalRequest as any)._retry &&
           !originalRequest.url?.includes('auth/refresh')
         ) {
           if (this.refreshing) {
@@ -78,7 +76,7 @@ class ApiService {
             }
           }
 
-          originalRequest._retry = true;
+          (originalRequest as any)._retry = true;
           this.refreshing = true;
 
           // Try to refresh the token
@@ -470,15 +468,32 @@ class ApiService {
     );
   }
 
-  /**
-   * Generic GET method
-   */
   async get(url: string, config?: AxiosRequestConfig): Promise<any> {
     try {
       const response = await this.api.get(url, config);
-      return response;
+      return response.data;
     } catch (error) {
       console.error(`Error in GET request to ${url}:`, error);
+      throw error;
+    }
+  }
+
+  async put(url: string, data?: any, config?: AxiosRequestConfig): Promise<any> {
+    try {
+      const response = await this.api.put(url, data, config);
+      return response.data;
+    } catch (error) {
+      console.error(`Error in PUT request to ${url}:`, error);
+      throw error;
+    }
+  }
+
+  async delete(url: string, config?: AxiosRequestConfig): Promise<any> {
+    try {
+      const response = await this.api.delete(url, config);
+      return response.data;
+    } catch (error) {
+      console.error(`Error in DELETE request to ${url}:`, error);
       throw error;
     }
   }

@@ -1,9 +1,11 @@
 import React, { useState } from 'react';
 import { motion } from 'framer-motion';
-import { FiUser, FiMail, FiLock, FiSave, FiAlertCircle, FiCheckCircle } from 'react-icons/fi';
+import { FiUser, FiMail, FiLock, FiSave } from 'react-icons/fi';
+import { AlertCircle, CheckCircle } from 'lucide-react';
 import { useAuth } from '../contexts/AuthContext';
-import LoadingSpinner from '../components/common/LoadingSpinner';
-import { ContentContainer, GridLayout, FlexLayout, SplitLayout } from '../components/layout';
+import { Avatar, AvatarFallback, AvatarImage } from '../components/ui/avatar';
+import { Alert, AlertDescription } from '../components/ui/alert';
+import { Skeleton } from '../components/ui/skeleton';
 
 const ProfilePage: React.FC = () => {
   const { user, updateProfile, updatePassword, loading } = useAuth();
@@ -149,8 +151,24 @@ const ProfilePage: React.FC = () => {
 
   if (loading) {
     return (
-      <div className="flex justify-center items-center min-h-[60vh]">
-        <LoadingSpinner size="large" text="Loading profile..." />
+      <div className="container mx-auto px-4 py-12">
+        <Skeleton className="h-9 w-48 mb-8" />
+        <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
+          <div className="lg:col-span-2 space-y-6">
+            <Skeleton className="h-[400px] rounded-lg" />
+            <Skeleton className="h-[300px] rounded-lg" />
+          </div>
+          <div className="lg:col-span-1">
+            <div className="bg-white rounded-lg shadow-md p-6 flex flex-col items-center">
+              <Skeleton className="h-24 w-24 rounded-full mb-4" />
+              <Skeleton className="h-6 w-32 mb-2" />
+              <Skeleton className="h-4 w-48 mb-4" />
+              <Skeleton className="h-px w-full mb-4" />
+              <Skeleton className="h-4 w-full mb-2" />
+              <Skeleton className="h-4 w-full" />
+            </div>
+          </div>
+        </div>
       </div>
     );
   }
@@ -171,24 +189,20 @@ const ProfilePage: React.FC = () => {
               <h2 className="text-xl font-semibold mb-6">Profile Information</h2>
 
               {profileSuccess && (
-                <motion.div
-                  className="bg-green-50 border border-green-200 text-green-700 px-4 py-3 rounded-lg mb-6 flex items-center"
-                  initial={{ opacity: 0, y: -10 }}
-                  animate={{ opacity: 1, y: 0 }}
-                >
-                  <FiCheckCircle className="mr-2" />
-                  <span>{profileSuccess}</span>
+                <motion.div initial={{ opacity: 0, y: -10 }} animate={{ opacity: 1, y: 0 }} className="mb-6">
+                  <Alert variant="success">
+                    <CheckCircle className="h-4 w-4" />
+                    <AlertDescription>{profileSuccess}</AlertDescription>
+                  </Alert>
                 </motion.div>
               )}
 
               {profileError && (
-                <motion.div
-                  className="bg-red-50 border border-red-200 text-red-700 px-4 py-3 rounded-lg mb-6 flex items-center"
-                  initial={{ opacity: 0, y: -10 }}
-                  animate={{ opacity: 1, y: 0 }}
-                >
-                  <FiAlertCircle className="mr-2" />
-                  <span>{profileError}</span>
+                <motion.div initial={{ opacity: 0, y: -10 }} animate={{ opacity: 1, y: 0 }} className="mb-6">
+                  <Alert variant="destructive">
+                    <AlertCircle className="h-4 w-4" />
+                    <AlertDescription>{profileError}</AlertDescription>
+                  </Alert>
                 </motion.div>
               )}
 
@@ -286,24 +300,20 @@ const ProfilePage: React.FC = () => {
               <h2 className="text-xl font-semibold mb-6">Change Password</h2>
 
               {passwordSuccess && (
-                <motion.div
-                  className="bg-green-50 border border-green-200 text-green-700 px-4 py-3 rounded-lg mb-6 flex items-center"
-                  initial={{ opacity: 0, y: -10 }}
-                  animate={{ opacity: 1, y: 0 }}
-                >
-                  <FiCheckCircle className="mr-2" />
-                  <span>{passwordSuccess}</span>
+                <motion.div initial={{ opacity: 0, y: -10 }} animate={{ opacity: 1, y: 0 }} className="mb-6">
+                  <Alert variant="success">
+                    <CheckCircle className="h-4 w-4" />
+                    <AlertDescription>{passwordSuccess}</AlertDescription>
+                  </Alert>
                 </motion.div>
               )}
 
               {passwordError && (
-                <motion.div
-                  className="bg-red-50 border border-red-200 text-red-700 px-4 py-3 rounded-lg mb-6 flex items-center"
-                  initial={{ opacity: 0, y: -10 }}
-                  animate={{ opacity: 1, y: 0 }}
-                >
-                  <FiAlertCircle className="mr-2" />
-                  <span>{passwordError}</span>
+                <motion.div initial={{ opacity: 0, y: -10 }} animate={{ opacity: 1, y: 0 }} className="mb-6">
+                  <Alert variant="destructive">
+                    <AlertCircle className="h-4 w-4" />
+                    <AlertDescription>{passwordError}</AlertDescription>
+                  </Alert>
                 </motion.div>
               )}
 
@@ -408,9 +418,12 @@ const ProfilePage: React.FC = () => {
           <div className="lg:col-span-1">
             <div className="bg-white rounded-lg shadow-md p-6 sticky top-6">
               <div className="flex flex-col items-center">
-                <div className="w-24 h-24 bg-primary-100 rounded-full flex items-center justify-center mb-4">
-                  <FiUser className="text-primary-600 text-4xl" />
-                </div>
+                <Avatar className="h-24 w-24 mb-4">
+                  <AvatarImage src={user?.avatar} alt={user?.name || 'User'} />
+                  <AvatarFallback className="text-2xl bg-primary-100 text-primary-600">
+                    {user?.name?.split(' ').map(n => n[0]).join('').toUpperCase() || 'U'}
+                  </AvatarFallback>
+                </Avatar>
                 <h3 className="text-xl font-semibold">{user?.name || 'User'}</h3>
                 <p className="text-gray-600 mb-4">{user?.email || 'user@example.com'}</p>
 
