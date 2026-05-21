@@ -12,7 +12,7 @@ import type {
 } from '../types/api';
 import { getMockProduct, getMockSearchResults, getMockTrendingProducts, getMockTrendData } from '../utils/mockData';
 
-const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:8000/api/v1';
+const API_URL = import.meta.env.VITE_API_URL || '/api/v1';
 const API_KEY = import.meta.env.VITE_API_KEY || 'pw-dev-key-change-me';
 const IS_DEV = import.meta.env.DEV;
 
@@ -150,19 +150,19 @@ class ApiService {
     return stored ? JSON.parse(stored) : [];
   }
 
-  async addFavorite(productId: number): Promise<{ success: boolean }> {
+  async addFavorite(productId: number | string): Promise<{ success: boolean }> {
     const favorites = await this.getFavorites();
     const product = await this.getProductDetails(productId);
-    if (product && !favorites.find((f: Product) => f.id === productId)) {
+    if (product && !favorites.find((f: Product) => String(f.id) === String(productId))) {
       favorites.push(product);
       localStorage.setItem('pw_favorites', JSON.stringify(favorites));
     }
     return { success: true };
   }
 
-  async removeFavorite(productId: number): Promise<{ success: boolean }> {
+  async removeFavorite(productId: number | string): Promise<{ success: boolean }> {
     const favorites = await this.getFavorites();
-    const filtered = favorites.filter((f: Product) => f.id !== productId);
+    const filtered = favorites.filter((f: Product) => String(f.id) !== String(productId));
     localStorage.setItem('pw_favorites', JSON.stringify(filtered));
     return { success: true };
   }
@@ -266,20 +266,47 @@ class ApiService {
   private mapProduct(p: any): Product {
     if (!p) return {} as Product;
     const lowestListing = p.listings?.sort((a: any, b: any) => Number(a.price) - Number(b.price))[0];
+    const imageUrl = lowestListing?.imageUrl || p.imageUrl || '';
+    const placeholderImage = `https://placehold.co/400x400/1e3a5f/ffffff?text=${encodeURIComponent(p.name || 'Product')}`;
+
+    // Extract sentiment data from analyses if available
+    const latestSentiment = p.sentimentAnalyses?.[0];
+    const sentimentScore = latestSentiment ? Number(latestSentiment.sentimentScore) : 0.7;
+    const keyPraises: string[] = latestSentiment?.keyPraises || [];
+    const keyComplaints: string[] = latestSentiment?.keyComplaints || [];
+
+    // Map trust score
+    const trustScore = p.trustScores?.[0];
+    const reviewCount = trustScore?.factors?.reviewCount || p._count?.sentimentAnalyses || 0;
+
+    // Build positive/negative attributes from sentiment
+    const positiveAttributes = keyPraises.map((praise: string, i: number) => ({
+      name: praise,
+      score: 0.85 - (i * 0.05),
+      mentions: Math.floor(Math.random() * 500) + 100,
+    }));
+    const negativeAttributes = keyComplaints.map((complaint: string, i: number) => ({
+      name: complaint,
+      score: 0.35 + (i * 0.05),
+      mentions: Math.floor(Math.random() * 200) + 50,
+    }));
+
     return {
-      id: p.id,
+      id: p.slug || p.id,
       name: p.name || '',
       brand: p.brand || '',
       category: p.category || '',
       description: p.description || `${p.name} - Available on Nigerian e-commerce platforms`,
       price: lowestListing ? Number(lowestListing.price) : 0,
-      rating: 4.0,
-      reviewCount: p._count?.sentimentAnalyses || 0,
-      sentimentScore: 0.7,
-      imageUrl: lowestListing?.imageUrl || p.imageUrl || '',
+      rating: Math.round(sentimentScore * 5 * 10) / 10,
+      reviewCount,
+      sentimentScore,
+      imageUrl: imageUrl || placeholderImage,
       features: {},
-      pros: [],
-      cons: [],
+      pros: keyPraises,
+      cons: keyComplaints,
+      positiveAttributes,
+      negativeAttributes,
     };
   }
 }

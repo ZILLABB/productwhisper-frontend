@@ -121,13 +121,13 @@ const Footer = () => {
               <div className="w-full sm:w-1/3 px-4 mb-8">
                 <h3 className="text-base font-display font-semibold mb-4 text-white">Contact Us</h3>
                 <div className="space-y-2 mb-4">
-                  <a href="mailto:info@productwhisper.com" className="text-white/70 hover:text-secondary transition-colors flex items-center text-sm">
+                  <a href="mailto:info@productwhisper.ng" className="text-white/70 hover:text-secondary transition-colors flex items-center text-sm">
                     <FiMail className="text-secondary mr-2" size={14} />
-                    info@productwhisper.com
+                    info@productwhisper.ng
                   </a>
-                  <a href="tel:+11234567890" className="text-white/70 hover:text-secondary transition-colors flex items-center text-sm">
+                  <a href="tel:+2348012345678" className="text-white/70 hover:text-secondary transition-colors flex items-center text-sm">
                     <FiPhone className="text-secondary mr-2" size={14} />
-                    (123) 456-7890
+                    +234 801 234 5678
                   </a>
                 </div>
 

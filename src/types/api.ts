@@ -2,7 +2,7 @@
  * Product interface
  */
 export interface Product {
-  id: number;
+  id: number | string;
   name: string;
   brand: string;
   category: string;
@@ -50,7 +50,7 @@ export interface ProductSpecification {
  * Product review interface
  */
 export interface ProductReview {
-  id: number;
+  id: number | string;
   user: string;
   date: string;
   rating: number;
@@ -64,7 +64,7 @@ export interface ProductReview {
  * Related product interface
  */
 export interface RelatedProduct {
-  id: number;
+  id: number | string;
   name: string;
   imageUrl: string;
   price: number;

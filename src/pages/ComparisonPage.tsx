@@ -1,13 +1,15 @@
 import React, { useState, useEffect } from 'react';
 import { useSearchParams, useNavigate } from 'react-router-dom';
 import { motion } from 'framer-motion';
-import { FiBarChart2, FiCheck, FiX, FiAlertCircle, FiPlus, FiSearch } from 'react-icons/fi';
+import { FiBarChart2, FiCheck, FiX, FiPlus, FiSearch } from 'react-icons/fi';
+import { GitCompareArrows, Search } from 'lucide-react';
 import LoadingSpinner from '../components/common/LoadingSpinner';
+import EmptyState from '../components/common/EmptyState';
 import { apiService } from '../services/api';
 import { useToast } from '../components/common/Toast';
 
 interface Product {
-  id: number;
+  id: number | string;
   name: string;
   brand: string;
   category: string;
@@ -57,7 +59,7 @@ const ComparisonPage: React.FC = () => {
         try {
           // Use the API service to fetch product details
           const productPromises = productIds.map(id =>
-            apiService.getProductDetails(parseInt(id))
+            apiService.getProductDetails(id)
           );
 
           const productsData = await Promise.all(productPromises);
@@ -185,8 +187,9 @@ const ComparisonPage: React.FC = () => {
     setIsSearching(true);
 
     try {
-      const response = await apiService.searchProducts(searchQuery);
-      setSearchResults(response.products || []);
+      const response: any = await apiService.searchProducts(searchQuery);
+      const results = response?.data?.products || response?.products || [];
+      setSearchResults(results);
     } catch (error) {
       console.error('Error searching products:', error);
       showToast('error', 'Failed to search products');
@@ -253,10 +256,9 @@ const ComparisonPage: React.FC = () => {
   };
 
   // Remove product from comparison
-  const removeProduct = (productId: number) => {
-    // Get current product IDs and remove the specified one
+  const removeProduct = (productId: number | string) => {
     const currentIds = searchParams.get('ids')?.split(',').filter(id => id) || [];
-    const newIds = currentIds.filter(id => parseInt(id) !== productId);
+    const newIds = currentIds.filter(id => id !== String(productId));
 
     if (newIds.length < 2) {
       // If less than 2 products remain, show a message
@@ -278,12 +280,109 @@ const ComparisonPage: React.FC = () => {
 
   if (error || products.length < 2) {
     return (
-      <div className="container mx-auto px-4 py-12">
-        <div className="bg-red-50 border border-red-200 text-red-700 px-4 py-3 rounded-lg">
-          <p className="flex items-center">
-            <FiAlertCircle className="mr-2" />
-            {error || "Please select at least two products to compare"}
-          </p>
+      <div className="min-h-screen bg-gradient-to-b from-gray-50 to-white">
+        <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
+          {/* Hero header */}
+          <div className="relative mb-10 bg-gradient-primary rounded-2xl overflow-hidden shadow-lg">
+            <div className="absolute inset-0 opacity-10">
+              <div className="absolute top-10 left-10 w-64 h-64 rounded-full bg-secondary/30 blur-3xl"></div>
+              <div className="absolute bottom-10 right-10 w-80 h-80 rounded-full bg-accent/20 blur-3xl"></div>
+            </div>
+            <div className="relative z-10 px-6 py-10 sm:px-12 sm:py-14 text-white text-center">
+              <h1 className="text-3xl md:text-4xl font-display font-bold text-white mb-2">Product Comparison</h1>
+              <p className="text-white/80 text-lg">Compare features, sentiment, and value across products</p>
+            </div>
+          </div>
+
+          {/* Product Picker */}
+          <div className="bg-white rounded-xl shadow-md border border-gray-100 p-6 mb-8">
+            <h2 className="text-lg font-display font-semibold text-gray-900 mb-4">Pick Products to Compare</h2>
+
+            {/* Current selections */}
+            {products.length > 0 && (
+              <div className="flex flex-wrap gap-2 mb-4">
+                {products.map((p) => (
+                  <span key={p.id} className="flex items-center bg-primary/10 text-primary rounded-full pl-3 pr-1 py-1 text-sm font-medium">
+                    {p.name}
+                    <button
+                      onClick={() => removeProduct(p.id)}
+                      className="ml-1 w-5 h-5 rounded-full bg-primary/20 flex items-center justify-center hover:bg-primary/30 transition-colors"
+                    >
+                      <FiX size={12} />
+                    </button>
+                  </span>
+                ))}
+                <span className="text-sm text-gray-500 self-center">
+                  {products.length < 2 ? `Add ${2 - products.length} more` : ''}
+                </span>
+              </div>
+            )}
+
+            <form onSubmit={handleSearch}>
+              <div className="relative">
+                <FiSearch className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400" />
+                <input
+                  type="text"
+                  placeholder="Search for a product to add..."
+                  value={searchQuery}
+                  onChange={(e) => setSearchQuery(e.target.value)}
+                  className="w-full pl-10 pr-24 py-3 rounded-lg border border-gray-200 focus:outline-none focus:ring-2 focus:ring-primary/30 focus:border-primary/30"
+                />
+                <button
+                  type="submit"
+                  className="absolute right-2 top-1/2 transform -translate-y-1/2 px-4 py-1.5 bg-primary text-white rounded-md hover:bg-primary-dark transition-colors text-sm"
+                >
+                  Search
+                </button>
+              </div>
+            </form>
+
+            {/* Inline search results */}
+            {isSearching && (
+              <div className="flex justify-center py-6">
+                <LoadingSpinner size="small" />
+              </div>
+            )}
+
+            {searchResults.length > 0 && (
+              <ul className="mt-4 divide-y divide-gray-100 max-h-80 overflow-y-auto">
+                {searchResults.map((result) => {
+                  const alreadyAdded = products.some((p) => String(p.id) === String(result.id));
+                  return (
+                    <li key={result.id} className="flex items-center justify-between px-4 py-3 hover:bg-gray-50 rounded-lg transition-colors">
+                      <div>
+                        <p className="font-medium text-gray-900">{result.name}</p>
+                        <p className="text-sm text-gray-500">{result.brand} · ₦{result.price.toLocaleString()}</p>
+                      </div>
+                      <button
+                        onClick={() => addProduct(result)}
+                        disabled={alreadyAdded}
+                        className={`px-4 py-1.5 rounded-lg text-sm font-medium transition-colors ${
+                          alreadyAdded
+                            ? 'bg-gray-100 text-gray-400 cursor-not-allowed'
+                            : 'bg-primary text-white hover:bg-primary-dark'
+                        }`}
+                      >
+                        {alreadyAdded ? 'Added' : 'Add'}
+                      </button>
+                    </li>
+                  );
+                })}
+              </ul>
+            )}
+          </div>
+
+          {/* Empty State */}
+          {searchResults.length === 0 && !isSearching && (
+            <EmptyState
+              icon={GitCompareArrows}
+              title="Compare Products Side by Side"
+              description="Search and pick at least two products above to compare their features, sentiment scores, pros, cons, and get a recommendation."
+              actions={[
+                { label: 'Browse Products', to: '/search', variant: 'primary', icon: Search },
+              ]}
+            />
+          )}
         </div>
       </div>
     );
@@ -483,7 +582,7 @@ const ComparisonPage: React.FC = () => {
                 <p className="text-gray-600 text-sm mb-3">{product.brand} • {product.category}</p>
 
                 <div className="flex items-center justify-between mb-3">
-                  <span className="font-bold text-xl text-primary">${product.price.toFixed(2)}</span>
+                  <span className="font-bold text-xl text-primary">₦{product.price.toLocaleString()}</span>
                   <div className={`px-2.5 py-1 rounded-full text-sm font-medium ${
                     product.sentimentScore > 0.7 ? 'bg-green-100 text-green-700' :
                     product.sentimentScore > 0.4 ? 'bg-yellow-100 text-yellow-700' :

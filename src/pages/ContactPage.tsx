@@ -99,10 +99,10 @@ const ContactPage: React.FC = () => {
             <h3 className="text-xl font-display font-semibold mb-3 text-gray-900">Email Us</h3>
             <p className="text-gray-600 mb-6">Our friendly team is here to help with any questions.</p>
             <a
-              href="mailto:hello@productwhisper.com"
+              href="mailto:hello@productwhisper.ng"
               className="text-primary font-medium hover:text-primary-dark transition-colors inline-flex items-center"
             >
-              hello@productwhisper.com
+              hello@productwhisper.ng
             </a>
           </motion.div>
 
@@ -115,12 +115,12 @@ const ContactPage: React.FC = () => {
               <FiPhone size={28} />
             </div>
             <h3 className="text-xl font-display font-semibold mb-3 text-gray-900">Call Us</h3>
-            <p className="text-gray-600 mb-6">Mon-Fri from 8am to 5pm PST. We'd love to hear from you.</p>
+            <p className="text-gray-600 mb-6">Mon-Fri from 9am to 5pm WAT. We'd love to hear from you.</p>
             <a
-              href="tel:+1234567890"
+              href="tel:+2348012345678"
               className="text-secondary font-medium hover:text-secondary-dark transition-colors inline-flex items-center"
             >
-              +1 (234) 567-890
+              +234 801 234 5678
             </a>
           </motion.div>
 
@@ -133,10 +133,10 @@ const ContactPage: React.FC = () => {
               <FiMapPin size={28} />
             </div>
             <h3 className="text-xl font-display font-semibold mb-3 text-gray-900">Visit Us</h3>
-            <p className="text-gray-600 mb-6">Come say hello at our headquarters in Tech City.</p>
+            <p className="text-gray-600 mb-6">Come say hello at our office in Lagos.</p>
             <p className="text-accent font-medium">
-              123 Innovation Way<br />
-              Tech City, CA 94043
+              12 Admiralty Way<br />
+              Lekki Phase 1, Lagos
             </p>
           </motion.div>
         </div>
@@ -192,7 +192,7 @@ const ContactPage: React.FC = () => {
                       value={formData.name}
                       onChange={handleChange}
                       className="w-full px-4 py-3 rounded-lg border border-gray-200 focus:outline-none focus:ring-2 focus:ring-primary/30 focus:border-primary/30 transition-colors"
-                      placeholder="John Doe"
+                      placeholder="Chinedu Okafor"
                       required
                     />
                   </div>
@@ -208,7 +208,7 @@ const ContactPage: React.FC = () => {
                       value={formData.email}
                       onChange={handleChange}
                       className="w-full px-4 py-3 rounded-lg border border-gray-200 focus:outline-none focus:ring-2 focus:ring-primary/30 focus:border-primary/30 transition-colors"
-                      placeholder="john@example.com"
+                      placeholder="chinedu@example.com"
                       required
                     />
                   </div>
@@ -318,7 +318,7 @@ const ContactPage: React.FC = () => {
               <div className="space-y-3">
                 <div className="flex justify-between items-center">
                   <span className="text-gray-700">Monday - Friday</span>
-                  <span className="font-medium text-gray-900">8:00 AM - 5:00 PM</span>
+                  <span className="font-medium text-gray-900">9:00 AM - 5:00 PM</span>
                 </div>
                 <div className="flex justify-between items-center">
                   <span className="text-gray-700">Saturday</span>
@@ -331,7 +331,7 @@ const ContactPage: React.FC = () => {
 
                 <div className="pt-4 mt-4 border-t border-gray-200">
                   <p className="text-gray-600 text-sm">
-                    All times are in Pacific Standard Time (PST).
+                    All times are in West Africa Time (WAT/GMT+1).
                     Our support team typically responds within 24 hours.
                   </p>
                 </div>

@@ -36,7 +36,7 @@ const ProductPage: React.FC = () => {
 
   // Use the useApi hook to fetch product data with caching
   const { data: product, loading, error, refetch } = useApi<ProductData>(
-    () => apiService.getProductDetails(parseInt(id || '1')),
+    () => apiService.getProductDetails(id || '1'),
     {
       cacheKey: `product-${id}`,
       dependencies: [id],
@@ -120,12 +120,12 @@ const ProductPage: React.FC = () => {
                 <div className="flex items-center justify-between mb-4">
                   <div>
                     {product.originalPrice && (
-                      <span className="text-gray-500 line-through text-sm mr-2">${product.originalPrice.toFixed(2)}</span>
+                      <span className="text-gray-500 line-through text-sm mr-2">₦{product.originalPrice.toLocaleString()}</span>
                     )}
-                    <span className="text-2xl font-bold text-gray-900">${product.price.toFixed(2)}</span>
+                    <span className="text-2xl font-bold text-gray-900">₦{product.price.toLocaleString()}</span>
                     {product.originalPrice && (
                       <span className="ml-2 bg-green-100 text-green-700 text-xs px-2 py-0.5 rounded-full">
-                        Save ${(product.originalPrice - product.price).toFixed(2)}
+                        Save ₦{(product.originalPrice - product.price).toLocaleString()}
                       </span>
                     )}
                   </div>
@@ -161,7 +161,7 @@ const ProductPage: React.FC = () => {
 
                   <div className="flex items-center justify-center text-sm text-gray-500">
                     <FiInfo size={14} className="mr-1.5" />
-                    <span>Free shipping on orders over $50</span>
+                    <span>Free shipping on orders over ₦50,000</span>
                   </div>
                 </div>
               </div>
@@ -535,7 +535,7 @@ const ProductPage: React.FC = () => {
                   <div className="p-4">
                     <h3 className="font-medium text-gray-900 mb-1">{relatedProduct.name}</h3>
                     <div className="flex items-center justify-between">
-                      <span className="font-bold text-primary">${relatedProduct.price.toFixed(2)}</span>
+                      <span className="font-bold text-primary">₦{relatedProduct.price.toLocaleString()}</span>
                       <Link
                         to={`/product/${relatedProduct.id}`}
                         className="text-sm text-primary font-medium hover:underline"

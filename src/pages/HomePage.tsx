@@ -18,7 +18,7 @@ import {
 import { Button } from '../common/components';
 
 interface TrendingProduct {
-  id: number;
+  id: number | string;
   name: string;
   description: string;
   brand: string;
@@ -31,26 +31,22 @@ const HomePage: React.FC = () => {
   const [searchQuery, setSearchQuery] = useState('');
   const navigate = useNavigate();
 
-  // References for scroll animations
   const heroRef = useRef<HTMLDivElement>(null);
   const featuresRef = useRef<HTMLDivElement>(null);
   const trendingRef = useRef<HTMLDivElement>(null);
 
-  // Check if sections are in view
   const heroInView = useInView(heroRef, { once: false, amount: 0.3 });
   const featuresInView = useInView(featuresRef, { once: false, amount: 0.3 });
   const trendingInView = useInView(trendingRef, { once: false, amount: 0.3 });
 
-  // Use the useApi hook to fetch trending products with caching
   const { data, loading, error, refetch } = useApi(
     () => apiService.getTrendingProducts(6),
     {
       cacheKey: 'trending-products',
-      cacheDuration: 5 * 60 * 1000, // 5 minutes
+      cacheDuration: 5 * 60 * 1000,
     }
   );
 
-  // Map the Product[] to TrendingProduct[] format
   const trendingProducts: TrendingProduct[] = data ? data.map(product => ({
     id: product.id,
     name: product.name,
@@ -61,7 +57,6 @@ const HomePage: React.FC = () => {
     mention_count: product.reviewCount || 0
   })) : [];
 
-  // Handle search form submission
   const handleSearch = (e: React.FormEvent) => {
     e.preventDefault();
     if (searchQuery.trim()) {
@@ -71,7 +66,6 @@ const HomePage: React.FC = () => {
 
   return (
     <div>
-      {/* Hero section */}
       <motion.div
         ref={heroRef}
         initial={{ opacity: 0 }}
@@ -134,7 +128,6 @@ const HomePage: React.FC = () => {
         </div>
       </motion.div>
 
-      {/* Features section */}
       <motion.div
         ref={featuresRef}
         initial={{ opacity: 0 }}
@@ -161,105 +154,40 @@ const HomePage: React.FC = () => {
 
           <div className="mt-16">
             <div className="grid grid-cols-1 gap-8 md:grid-cols-3">
-              <motion.div
-                className="relative p-6 bg-white rounded-premium shadow-premium hover:shadow-premium-hover transition-shadow duration-300"
-                initial={{ y: 50, opacity: 0 }}
-                animate={featuresInView ? { y: 0, opacity: 1 } : { y: 50, opacity: 0 }}
-                transition={{ duration: 0.6, delay: 0.1 }}
-                whileHover={{ y: -5 }}
-              >
-                <div className="flex items-center justify-center h-16 w-16 rounded-full bg-blue-100 text-blue-600 mb-6">
-                  <MagnifyingGlassIcon className="h-8 w-8" aria-hidden="true" />
+              {[
+                { icon: MagnifyingGlassIcon, title: 'Sentiment Analysis', color: 'blue', desc: 'Our advanced AI analyzes thousands of reviews and comments to determine how people really feel about products, identifying both positive and negative aspects.' },
+                { icon: ChartBarIcon, title: 'Trend Analysis', color: 'indigo', desc: 'Track how sentiment changes over time and spot emerging issues or improvements. Stay ahead of the curve with our real-time trend monitoring.' },
+                { icon: ArrowsRightLeftIcon, title: 'Product Comparison', color: 'purple', desc: 'Compare products side-by-side based on real user sentiment and specific features. Make informed decisions with our comprehensive comparison tools.' },
+              ].map((feature, index) => (
+                <div key={index} className="relative p-6 bg-white rounded-premium shadow-premium hover:shadow-premium-hover transition-shadow duration-300">
+                  <div className={`flex items-center justify-center h-16 w-16 rounded-full bg-${feature.color}-100 text-${feature.color}-600 mb-6`}>
+                    <feature.icon className="h-8 w-8" aria-hidden="true" />
+                  </div>
+                  <h3 className="text-xl font-bold text-gray-900 font-display mb-3">{feature.title}</h3>
+                  <p className="text-base text-gray-600 leading-relaxed">{feature.desc}</p>
                 </div>
-                <h3 className="text-xl font-bold text-gray-900 font-display mb-3">Sentiment Analysis</h3>
-                <p className="text-base text-gray-600 leading-relaxed">
-                  Our advanced AI analyzes thousands of reviews and comments to determine how people really feel about products, identifying both positive and negative aspects.
-                </p>
-              </motion.div>
-
-              <motion.div
-                className="relative p-6 bg-white rounded-premium shadow-premium hover:shadow-premium-hover transition-shadow duration-300"
-                initial={{ y: 50, opacity: 0 }}
-                animate={featuresInView ? { y: 0, opacity: 1 } : { y: 50, opacity: 0 }}
-                transition={{ duration: 0.6, delay: 0.2 }}
-                whileHover={{ y: -5 }}
-              >
-                <div className="flex items-center justify-center h-16 w-16 rounded-full bg-indigo-100 text-indigo-600 mb-6">
-                  <ChartBarIcon className="h-8 w-8" aria-hidden="true" />
-                </div>
-                <h3 className="text-xl font-bold text-gray-900 font-display mb-3">Trend Analysis</h3>
-                <p className="text-base text-gray-600 leading-relaxed">
-                  Track how sentiment changes over time and spot emerging issues or improvements. Stay ahead of the curve with our real-time trend monitoring.
-                </p>
-              </motion.div>
-
-              <motion.div
-                className="relative p-6 bg-white rounded-premium shadow-premium hover:shadow-premium-hover transition-shadow duration-300"
-                initial={{ y: 50, opacity: 0 }}
-                animate={featuresInView ? { y: 0, opacity: 1 } : { y: 50, opacity: 0 }}
-                transition={{ duration: 0.6, delay: 0.3 }}
-                whileHover={{ y: -5 }}
-              >
-                <div className="flex items-center justify-center h-16 w-16 rounded-full bg-purple-100 text-purple-600 mb-6">
-                  <ArrowsRightLeftIcon className="h-8 w-8" aria-hidden="true" />
-                </div>
-                <h3 className="text-xl font-bold text-gray-900 font-display mb-3">Product Comparison</h3>
-                <p className="text-base text-gray-600 leading-relaxed">
-                  Compare products side-by-side based on real user sentiment and specific features. Make informed decisions with our comprehensive comparison tools.
-                </p>
-              </motion.div>
+              ))}
             </div>
 
-            <motion.div
-              className="mt-16 grid grid-cols-1 gap-8 md:grid-cols-3"
-              initial={{ opacity: 0 }}
-              animate={featuresInView ? { opacity: 1 } : { opacity: 0 }}
-              transition={{ duration: 0.8, delay: 0.4 }}
-            >
-              <motion.div
-                className="relative p-6 bg-white rounded-premium shadow-premium hover:shadow-premium-hover transition-shadow duration-300"
-                whileHover={{ y: -5 }}
-              >
-                <div className="flex items-center justify-center h-16 w-16 rounded-full bg-green-100 text-green-600 mb-6">
-                  <LightBulbIcon className="h-8 w-8" aria-hidden="true" />
+            <div className="mt-16 grid grid-cols-1 gap-8 md:grid-cols-3">
+              {[
+                { icon: LightBulbIcon, title: 'Smart Recommendations', color: 'green', desc: 'Get personalized product recommendations based on your preferences and the collective wisdom of thousands of real users.' },
+                { icon: ChatBubbleLeftRightIcon, title: 'Review Summarization', color: 'yellow', desc: 'Save time with our AI-powered review summarization that distills thousands of reviews into key insights and takeaways.' },
+                { icon: ShieldCheckIcon, title: 'Fake Review Detection', color: 'red', desc: 'Our advanced algorithms identify and filter out fake or biased reviews, ensuring you get authentic insights from real users.' },
+              ].map((feature, index) => (
+                <div key={index} className="relative p-6 bg-white rounded-premium shadow-premium hover:shadow-premium-hover transition-shadow duration-300">
+                  <div className={`flex items-center justify-center h-16 w-16 rounded-full bg-${feature.color}-100 text-${feature.color}-600 mb-6`}>
+                    <feature.icon className="h-8 w-8" aria-hidden="true" />
+                  </div>
+                  <h3 className="text-xl font-bold text-gray-900 font-display mb-3">{feature.title}</h3>
+                  <p className="text-base text-gray-600 leading-relaxed">{feature.desc}</p>
                 </div>
-                <h3 className="text-xl font-bold text-gray-900 font-display mb-3">Smart Recommendations</h3>
-                <p className="text-base text-gray-600 leading-relaxed">
-                  Get personalized product recommendations based on your preferences and the collective wisdom of thousands of real users.
-                </p>
-              </motion.div>
-
-              <motion.div
-                className="relative p-6 bg-white rounded-premium shadow-premium hover:shadow-premium-hover transition-shadow duration-300"
-                whileHover={{ y: -5 }}
-              >
-                <div className="flex items-center justify-center h-16 w-16 rounded-full bg-yellow-100 text-yellow-600 mb-6">
-                  <ChatBubbleLeftRightIcon className="h-8 w-8" aria-hidden="true" />
-                </div>
-                <h3 className="text-xl font-bold text-gray-900 font-display mb-3">Review Summarization</h3>
-                <p className="text-base text-gray-600 leading-relaxed">
-                  Save time with our AI-powered review summarization that distills thousands of reviews into key insights and takeaways.
-                </p>
-              </motion.div>
-
-              <motion.div
-                className="relative p-6 bg-white rounded-premium shadow-premium hover:shadow-premium-hover transition-shadow duration-300"
-                whileHover={{ y: -5 }}
-              >
-                <div className="flex items-center justify-center h-16 w-16 rounded-full bg-red-100 text-red-600 mb-6">
-                  <ShieldCheckIcon className="h-8 w-8" aria-hidden="true" />
-                </div>
-                <h3 className="text-xl font-bold text-gray-900 font-display mb-3">Fake Review Detection</h3>
-                <p className="text-base text-gray-600 leading-relaxed">
-                  Our advanced algorithms identify and filter out fake or biased reviews, ensuring you get authentic insights from real users.
-                </p>
-              </motion.div>
-            </motion.div>
+              ))}
+            </div>
           </div>
         </div>
       </motion.div>
 
-      {/* Trending products section */}
       <motion.div
         ref={trendingRef}
         initial={{ opacity: 0 }}
@@ -269,12 +197,7 @@ const HomePage: React.FC = () => {
       >
         <AnimatedCircles variant="primary" count={10} className="opacity-60" />
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 relative z-10">
-          <motion.div
-            className="lg:text-center mb-12"
-            initial={{ y: 30, opacity: 0 }}
-            animate={trendingInView ? { y: 0, opacity: 1 } : { y: 30, opacity: 0 }}
-            transition={{ duration: 0.6 }}
-          >
+          <div className="lg:text-center mb-12">
             <h2 className="text-base text-blue-600 font-semibold tracking-wide uppercase font-sans">Trending Now</h2>
             <p className="mt-2 text-4xl font-bold tracking-tight text-gray-900 font-display">
               Popular Products People Are Talking About
@@ -282,7 +205,7 @@ const HomePage: React.FC = () => {
             <p className="mt-6 max-w-2xl text-xl text-gray-600 lg:mx-auto font-sans leading-relaxed">
               Discover what's trending based on real user sentiment and mentions across the web.
             </p>
-          </motion.div>
+          </div>
 
           {loading ? (
             <div className="flex justify-center py-12">
@@ -297,60 +220,43 @@ const HomePage: React.FC = () => {
               />
             </div>
           ) : (
-            <motion.div
-              className="grid grid-cols-1 gap-8 sm:grid-cols-2 lg:grid-cols-3"
-              initial={{ y: 50, opacity: 0 }}
-              animate={trendingInView ? { y: 0, opacity: 1 } : { y: 50, opacity: 0 }}
-              transition={{ duration: 0.6, staggerChildren: 0.1 }}
-            >
+            <div className="grid grid-cols-1 gap-8 sm:grid-cols-2 lg:grid-cols-3">
               {trendingProducts.length > 0 ? (
-                trendingProducts.map((product, index) => (
-                  <motion.div
+                trendingProducts.map((product) => (
+                  <Link
                     key={product.id}
-                    initial={{ y: 50, opacity: 0 }}
-                    animate={trendingInView ? { y: 0, opacity: 1 } : { y: 50, opacity: 0 }}
-                    transition={{ duration: 0.5, delay: index * 0.1 }}
-                    whileHover={{ y: -5 }}
+                    to={`/product/${product.id}`}
+                    className="group block h-full bg-white rounded-premium shadow-premium overflow-hidden hover:shadow-premium-hover transition-all duration-300 hover:-translate-y-1"
                   >
-                    <Link
-                      to={`/product/${product.id}`}
-                      className="group block h-full bg-white rounded-premium shadow-premium overflow-hidden hover:shadow-premium-hover transition-all duration-300"
-                    >
-                      <div className="p-6">
-                        <div className="flex justify-between items-start">
-                          <h3 className="text-xl font-bold text-gray-900 group-hover:text-blue-600 transition-colors font-display">
-                            {product.name}
-                          </h3>
-                          <div className="flex items-center space-x-1 bg-blue-100 text-blue-800 px-3 py-1 rounded-full">
-                            <StarIcon className="h-4 w-4" />
-                            <span className="text-sm font-semibold">{(product.score * 5).toFixed(1)}</span>
-                          </div>
-                        </div>
-                        <p className="mt-3 text-base text-gray-600 line-clamp-2 font-sans leading-relaxed">
-                          {product.description}
-                        </p>
-                        <div className="mt-6 flex justify-between items-center pt-4 border-t border-gray-100">
-                          <span className="text-sm font-semibold text-gray-700">{product.brand}</span>
-                          <span className="text-sm font-medium text-blue-600">{product.mention_count.toLocaleString()} mentions</span>
+                    <div className="p-6">
+                      <div className="flex justify-between items-start">
+                        <h3 className="text-xl font-bold text-gray-900 group-hover:text-blue-600 transition-colors font-display">
+                          {product.name}
+                        </h3>
+                        <div className="flex items-center space-x-1 bg-blue-100 text-blue-800 px-3 py-1 rounded-full">
+                          <StarIcon className="h-4 w-4" />
+                          <span className="text-sm font-semibold">{(product.score * 5).toFixed(1)}</span>
                         </div>
                       </div>
-                    </Link>
-                  </motion.div>
+                      <p className="mt-3 text-base text-gray-600 line-clamp-2 font-sans leading-relaxed">
+                        {product.description}
+                      </p>
+                      <div className="mt-6 flex justify-between items-center pt-4 border-t border-gray-100">
+                        <span className="text-sm font-semibold text-gray-700">{product.brand}</span>
+                        <span className="text-sm font-medium text-blue-600">{product.mention_count.toLocaleString()} mentions</span>
+                      </div>
+                    </div>
+                  </Link>
                 ))
               ) : (
                 <div className="col-span-full text-center py-8 text-gray-500">
                   No trending products found at this time.
                 </div>
               )}
-            </motion.div>
+            </div>
           )}
 
-          <motion.div
-            className="mt-12 text-center"
-            initial={{ opacity: 0 }}
-            animate={trendingInView ? { opacity: 1 } : { opacity: 0 }}
-            transition={{ duration: 0.6, delay: 0.5 }}
-          >
+          <div className="mt-12 text-center">
             <Button
               to="/search"
               size="lg"
@@ -359,41 +265,20 @@ const HomePage: React.FC = () => {
             >
               Explore More Products
             </Button>
-          </motion.div>
+          </div>
         </div>
       </motion.div>
 
-      {/* Call to Action Section */}
-      <motion.div
-        initial={{ opacity: 0 }}
-        animate={{ opacity: 1 }}
-        transition={{ duration: 0.8, delay: 0.2 }}
-        className="bg-gradient-secondary py-16 mt-12 rounded-premium mx-4 sm:mx-8 lg:mx-12 relative overflow-hidden"
-      >
+      <div className="bg-gradient-secondary py-16 mt-12 rounded-premium mx-4 sm:mx-8 lg:mx-12 relative overflow-hidden">
         <AnimatedCircles variant="secondary" count={25} className="opacity-80" />
         <div className="max-w-5xl mx-auto px-4 sm:px-6 lg:px-8 text-center relative z-10">
-          <motion.h2
-            className="text-3xl sm:text-4xl font-bold text-white font-display mb-6"
-            initial={{ y: 20, opacity: 0 }}
-            animate={{ y: 0, opacity: 1 }}
-            transition={{ duration: 0.6, delay: 0.3 }}
-          >
+          <h2 className="text-3xl sm:text-4xl font-bold text-white font-display mb-6">
             Ready to Make Smarter Purchasing Decisions?
-          </motion.h2>
-          <motion.p
-            className="text-xl text-white/90 font-light max-w-3xl mx-auto mb-10 leading-relaxed"
-            initial={{ y: 20, opacity: 0 }}
-            animate={{ y: 0, opacity: 1 }}
-            transition={{ duration: 0.6, delay: 0.4 }}
-          >
+          </h2>
+          <p className="text-xl text-white/90 font-light max-w-3xl mx-auto mb-10 leading-relaxed">
             Join thousands of smart shoppers who use ProductWhisper to cut through marketing hype and discover products that truly meet their needs.
-          </motion.p>
-          <motion.div
-            className="flex flex-col sm:flex-row gap-4 justify-center"
-            initial={{ y: 20, opacity: 0 }}
-            animate={{ y: 0, opacity: 1 }}
-            transition={{ duration: 0.6, delay: 0.5 }}
-          >
+          </p>
+          <div className="flex flex-col sm:flex-row gap-4 justify-center">
             <Button
               to="/search"
               size="lg"
@@ -409,9 +294,9 @@ const HomePage: React.FC = () => {
             >
               Learn More
             </Button>
-          </motion.div>
+          </div>
         </div>
-      </motion.div>
+      </div>
     </div>
   );
 };

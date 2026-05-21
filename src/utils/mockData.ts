@@ -5,7 +5,7 @@
  * to be used as fallbacks when API calls fail or during development.
  */
 
-import { Product, TrendData, SearchResult } from '../types/api';
+import type { Product, TrendData, SearchResult } from '../types/api';
 
 /**
  * Generate a mock product with the given ID

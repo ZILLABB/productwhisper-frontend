@@ -1,5 +1,4 @@
 import React, { useState, useEffect } from 'react';
-import { motion, AnimatePresence } from 'framer-motion';
 import { FiBookOpen, FiX, FiPlus, FiEdit2, FiTrash2, FiSave, FiCheck } from 'react-icons/fi';
 
 // Define CSS classes for consistent styling
@@ -29,11 +28,14 @@ interface MemoryBankProps {
   categories?: string[];
 }
 
+const DEFAULT_MEMORIES: Memory[] = [];
+const DEFAULT_CATEGORIES = ['Product', 'Feature', 'Design', 'Backend', 'Frontend', 'Other'];
+
 const MemoryBank: React.FC<MemoryBankProps> = ({
-  initialMemories = [],
+  initialMemories = DEFAULT_MEMORIES,
   onSave,
   onLoad,
-  categories = ['Product', 'Feature', 'Design', 'Backend', 'Frontend', 'Other']
+  categories = DEFAULT_CATEGORIES
 }) => {
   const [isOpen, setIsOpen] = useState(false);
   const [memories, setMemories] = useState<Memory[]>(initialMemories);
@@ -44,7 +46,6 @@ const MemoryBank: React.FC<MemoryBankProps> = ({
   const [editCategory, setEditCategory] = useState('');
   const [filter, setFilter] = useState<string | null>(null);
 
-  // Load memories from localStorage on component mount
   useEffect(() => {
     const loadMemories = () => {
       if (onLoad) {
@@ -55,7 +56,6 @@ const MemoryBank: React.FC<MemoryBankProps> = ({
       if (storedMemories) {
         try {
           const parsed = JSON.parse(storedMemories);
-          // Convert string dates back to Date objects
           const memories = parsed.map((memory: any) => ({
             ...memory,
             createdAt: new Date(memory.createdAt),
@@ -70,7 +70,7 @@ const MemoryBank: React.FC<MemoryBankProps> = ({
     };
 
     setMemories(loadMemories());
-  }, [initialMemories, onLoad]);
+  }, []);
 
   // Save memories to localStorage when they change
   useEffect(() => {
@@ -138,12 +138,10 @@ const MemoryBank: React.FC<MemoryBankProps> = ({
       </button>
 
       {/* Memory Bank Panel */}
-      <AnimatePresence>
         {isOpen && (
-          <motion.div
+          <div
             initial={{ opacity: 0, x: 300 }}
             animate={{ opacity: 1, x: 0 }}
-            exit={{ opacity: 0, x: 300 }}
             transition={{ type: 'spring', damping: 25 }}
             className="fixed top-0 right-0 h-full w-full sm:w-96 bg-white shadow-xl z-50 flex flex-col"
           >
@@ -312,9 +310,8 @@ const MemoryBank: React.FC<MemoryBankProps> = ({
                 </button>
               </div>
             </div>
-          </motion.div>
+          </div>
         )}
-      </AnimatePresence>
     </>
   );
 };

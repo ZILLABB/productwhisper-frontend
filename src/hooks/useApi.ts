@@ -1,8 +1,7 @@
 import { useState, useEffect, useCallback, useRef } from 'react';
 
-// Cache for storing API responses
 const apiCache = new Map<string, { data: any; timestamp: number }>();
-const CACHE_DURATION = 5 * 60 * 1000; // 5 minutes in milliseconds
+const CACHE_DURATION = 5 * 60 * 1000;
 
 interface UseApiOptions<T> {
   initialData?: T;
@@ -14,12 +13,6 @@ interface UseApiOptions<T> {
   skipInitialCall?: boolean;
 }
 
-/**
- * Custom hook for making API calls with error handling and caching
- * @param apiCall - The API function to call
- * @param options - Configuration options
- * @returns Object containing data, loading state, error, and refetch function
- */
 function useApi<T>(
   apiCall: (...args: any[]) => Promise<T>,
   options: UseApiOptions<T> = {}
@@ -28,8 +21,6 @@ function useApi<T>(
     initialData,
     cacheKey,
     cacheDuration = CACHE_DURATION,
-    onSuccess,
-    onError,
     dependencies = [],
     skipInitialCall = false
   } = options;
@@ -38,71 +29,70 @@ function useApi<T>(
   const [loading, setLoading] = useState(!skipInitialCall);
   const [error, setError] = useState<Error | null>(null);
   const isMounted = useRef(true);
+  const apiCallRef = useRef(apiCall);
+  const onSuccessRef = useRef(options.onSuccess);
+  const onErrorRef = useRef(options.onError);
 
-  // Function to fetch data
+  apiCallRef.current = apiCall;
+  onSuccessRef.current = options.onSuccess;
+  onErrorRef.current = options.onError;
+
   const fetchData = useCallback(
     async (...args: any[]) => {
       setLoading(true);
       setError(null);
 
       try {
-        // Check cache first if cacheKey is provided
         if (cacheKey) {
           const cachedData = apiCache.get(cacheKey);
           const now = Date.now();
-          
+
           if (cachedData && now - cachedData.timestamp < cacheDuration) {
             setData(cachedData.data);
             setLoading(false);
-            if (onSuccess) onSuccess(cachedData.data);
+            onSuccessRef.current?.(cachedData.data);
             return cachedData.data;
           }
         }
 
-        // Make the API call
-        const result = await apiCall(...args);
-        
-        // Only update state if component is still mounted
+        const result = await apiCallRef.current(...args);
+
         if (isMounted.current) {
           setData(result);
           setLoading(false);
-          
-          // Cache the result if cacheKey is provided
+
           if (cacheKey) {
             apiCache.set(cacheKey, { data: result, timestamp: Date.now() });
           }
-          
-          if (onSuccess) onSuccess(result);
+
+          onSuccessRef.current?.(result);
         }
-        
+
         return result;
       } catch (err) {
-        // Only update state if component is still mounted
         if (isMounted.current) {
           const error = err instanceof Error ? err : new Error(String(err));
           setError(error);
           setLoading(false);
-          if (onError) onError(error);
+          onErrorRef.current?.(error);
         }
         throw err;
       }
     },
-    [apiCall, cacheKey, cacheDuration, onSuccess, onError]
+    [cacheKey, cacheDuration]
   );
 
-  // Initial API call
   useEffect(() => {
+    isMounted.current = true;
     if (!skipInitialCall) {
       fetchData();
     }
-    
-    // Cleanup function to prevent state updates after unmount
+
     return () => {
       isMounted.current = false;
     };
   }, [fetchData, skipInitialCall, ...dependencies]);
 
-  // Function to clear cache for a specific key or all cache
   const clearCache = useCallback((key?: string) => {
     if (key) {
       apiCache.delete(key);

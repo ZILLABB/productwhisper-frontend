@@ -3,10 +3,10 @@ import { Link } from 'react-router-dom';
 import { motion } from 'framer-motion';
 import { Star, ShoppingCart, Heart, BarChart2 } from 'lucide-react';
 import { Badge } from '../ui/badge';
-import { Button } from '../../common/components/Button';
+import Button from '../../common/components/Button';
 
 interface ProductCardProps {
-  id: number;
+  id: number | string;
   name: string;
   brand: string;
   category: string;
@@ -46,6 +46,9 @@ const ProductCard: React.FC<ProductCardProps> = ({
 }) => {
   // Format price with currency
   const formatPrice = (value: number) => {
+    if (value >= 1000) {
+      return '₦' + new Intl.NumberFormat('en-NG').format(value);
+    }
     return new Intl.NumberFormat('en-US', {
       style: 'currency',
       currency: 'USD',

@@ -1,6 +1,5 @@
 import { useState, useEffect } from 'react';
 import { Link, useLocation } from 'react-router-dom';
-import { AnimatePresence, motion } from 'framer-motion';
 import {
   FiMenu,
   FiX,
@@ -118,33 +117,30 @@ const Header = () => {
                 <FiChevronDown className={`ml-2 transition-transform duration-200 ${isDropdownOpen ? 'rotate-180' : ''}`} />
               </button>
 
-              <AnimatePresence>
-                {isDropdownOpen && (
-                  <motion.div
-                    initial={{ opacity: 0, y: -10 }}
-                    animate={{ opacity: 1, y: 0 }}
-                    exit={{ opacity: 0, y: -10 }}
-                    transition={{ duration: 0.2 }}
-                    className="absolute right-0 mt-2 w-48 rounded-md shadow-lg bg-white ring-1 ring-black ring-opacity-5 z-50"
-                  >
-                    <div className="py-1">
-                      {secondaryNavItems.map((item) => (
-                        <Link
-                          key={item.name}
-                          to={item.path}
-                          className={`block px-4 py-2 text-sm ${
-                            isActive(item.path)
-                              ? 'bg-primary/10 text-primary'
-                              : 'text-gray-700 hover:bg-gray-100 hover:text-primary'
-                          }`}
-                        >
-                          {item.name}
-                        </Link>
-                      ))}
-                    </div>
-                  </motion.div>
-                )}
-              </AnimatePresence>
+              {isDropdownOpen && (
+                <div
+                  initial={{ opacity: 0, y: -10 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  transition={{ duration: 0.2 }}
+                  className="absolute right-0 mt-2 w-48 rounded-md shadow-lg bg-white ring-1 ring-black ring-opacity-5 z-50"
+                >
+                  <div className="py-1">
+                    {secondaryNavItems.map((item) => (
+                      <Link
+                        key={item.name}
+                        to={item.path}
+                        className={`block px-4 py-2 text-sm ${
+                          isActive(item.path)
+                            ? 'bg-primary/10 text-primary'
+                            : 'text-gray-700 hover:bg-gray-100 hover:text-primary'
+                        }`}
+                      >
+                        {item.name}
+                      </Link>
+                    ))}
+                  </div>
+                </div>
+              )}
             </div>
 
             {/* Notification and user buttons */}
@@ -184,13 +180,8 @@ const Header = () => {
         </div>
 
         {/* Mobile Navigation */}
-        <AnimatePresence>
           {isMenuOpen && (
-            <motion.div
-              initial={{ opacity: 0, height: 0 }}
-              animate={{ opacity: 1, height: 'auto' }}
-              exit={{ opacity: 0, height: 0 }}
-              transition={{ duration: 0.3 }}
+            <div
               className="lg:hidden mt-4 pt-4 border-t border-gray-200 overflow-hidden"
             >
               <div className="grid grid-cols-2 gap-2 mb-6">
@@ -226,9 +217,8 @@ const Header = () => {
               </div>
 
               {/* Mobile auth buttons removed */}
-            </motion.div>
+            </div>
           )}
-        </AnimatePresence>
       </div>
     </header>
   );
