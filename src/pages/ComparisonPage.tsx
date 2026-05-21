@@ -18,6 +18,7 @@ interface Product {
   rating: number;
   reviewCount: number;
   sentimentScore: number;
+  imageUrl?: string;
   features: {
     [key: string]: {
       value: string;
@@ -237,7 +238,7 @@ const ComparisonPage: React.FC = () => {
       return;
     }
 
-    if (products.some(p => p.id === product.id)) {
+    if (products.some(p => String(p.id) === String(product.id))) {
       showToast('info', 'This product is already in your comparison');
       return;
     }
@@ -246,13 +247,20 @@ const ComparisonPage: React.FC = () => {
     const currentIds = searchParams.get('ids')?.split(',').filter(id => id) || [];
     const newIds = [...currentIds, product.id.toString()];
 
+    // Also add the product to local state immediately for responsive UI
+    setProducts(prev => [...prev, product]);
+
     // Update URL with new product IDs
     setSearchParams({ ids: newIds.join(',') });
 
-    // Clear search
-    setSearchQuery('');
-    setSearchResults([]);
-    setShowSearch(false);
+    // Only close search when we have enough products for comparison
+    if (newIds.length >= 2) {
+      setSearchQuery('');
+      setSearchResults([]);
+      setShowSearch(false);
+    } else {
+      showToast('info', `Added! Pick ${2 - newIds.length} more product(s) to compare.`);
+    }
   };
 
   // Remove product from comparison
@@ -570,11 +578,14 @@ const ComparisonPage: React.FC = () => {
             {products.map((product, index) => (
               <div key={product.id} className="p-6 border-l border-b border-gray-100 relative">
                 {/* Product Image */}
-                <div className="w-full h-48 bg-gray-100 rounded-lg mb-4 overflow-hidden">
+                <div className="w-full h-48 bg-gray-50 rounded-lg mb-4 overflow-hidden flex items-center justify-center">
                   <img
-                    src={`https://source.unsplash.com/random/300x300/?${product.category.toLowerCase()}`}
+                    src={(product as any).imageUrl || `https://placehold.co/300x300/1e3a5f/ffffff?text=${encodeURIComponent(product.name.substring(0, 20))}`}
                     alt={product.name}
-                    className="w-full h-full object-cover"
+                    className="h-full w-full object-contain p-2"
+                    onError={(e) => {
+                      (e.target as HTMLImageElement).src = `https://placehold.co/300x300/1e3a5f/ffffff?text=${encodeURIComponent(product.name.substring(0, 20))}`;
+                    }}
                   />
                 </div>
 
@@ -738,9 +749,10 @@ const ComparisonPage: React.FC = () => {
             <div className="grid grid-cols-1 md:grid-cols-[repeat(auto-fill,minmax(220px,1fr))] gap-4">
               {products.map((product) => {
                 // Calculate a recommendation score based on sentiment, rating, and price
-                const recommendationScore = (product.sentimentScore * 0.5) + ((product.rating / 5) * 0.3) + (1 - (product.price / 500) * 0.2);
+                const maxPrice = Math.max(...products.map(p => p.price), 1);
+                const recommendationScore = Math.min(1, Math.max(0, (product.sentimentScore * 0.5) + ((product.rating / 5) * 0.3) + ((1 - product.price / maxPrice) * 0.2)));
                 const isRecommended = recommendationScore === Math.max(...products.map(p =>
-                  (p.sentimentScore * 0.5) + ((p.rating / 5) * 0.3) + (1 - (p.price / 500) * 0.2)
+                  Math.min(1, Math.max(0, (p.sentimentScore * 0.5) + ((p.rating / 5) * 0.3) + ((1 - p.price / maxPrice) * 0.2)))
                 ));
 
                 return (
