@@ -83,7 +83,11 @@ const ProductCard: React.FC<ProductCardProps> = ({
             <img
               src={image}
               alt={name}
-              className="h-56 w-full object-cover"
+              className="h-56 w-full object-contain bg-gray-50 p-2"
+              onError={(e) => {
+                const img = e.target as HTMLImageElement;
+                img.src = `https://placehold.co/400x400/1e3a5f/ffffff?text=${encodeURIComponent(name.substring(0, 20))}`;
+              }}
             />
           </Link>
           

@@ -25,6 +25,8 @@ interface TrendingProduct {
   category: string;
   score: number;
   mention_count: number;
+  imageUrl?: string;
+  price?: number;
 }
 
 const HomePage: React.FC = () => {
@@ -53,8 +55,10 @@ const HomePage: React.FC = () => {
     description: product.description || '',
     brand: product.brand || '',
     category: product.category || '',
-    score: product.sentimentScore || 0,
-    mention_count: product.reviewCount || 0
+    score: Math.max(0, product.sentimentScore || 0),
+    mention_count: product.reviewCount || 0,
+    imageUrl: product.imageUrl,
+    price: product.price,
   })) : [];
 
   const handleSearch = (e: React.FormEvent) => {
@@ -228,22 +232,39 @@ const HomePage: React.FC = () => {
                     to={`/product/${product.id}`}
                     className="group block h-full bg-white rounded-premium shadow-premium overflow-hidden hover:shadow-premium-hover transition-all duration-300 hover:-translate-y-1"
                   >
+                    {product.imageUrl && (
+                      <div className="h-48 bg-gray-50 flex items-center justify-center overflow-hidden">
+                        <img
+                          src={product.imageUrl}
+                          alt={product.name}
+                          className="h-full w-full object-contain p-4 group-hover:scale-105 transition-transform duration-300"
+                          onError={(e) => { (e.target as HTMLImageElement).style.display = 'none'; }}
+                        />
+                      </div>
+                    )}
                     <div className="p-6">
                       <div className="flex justify-between items-start">
-                        <h3 className="text-xl font-bold text-gray-900 group-hover:text-blue-600 transition-colors font-display">
+                        <h3 className="text-lg font-bold text-gray-900 group-hover:text-blue-600 transition-colors font-display line-clamp-2 flex-1 mr-2">
                           {product.name}
                         </h3>
-                        <div className="flex items-center space-x-1 bg-blue-100 text-blue-800 px-3 py-1 rounded-full">
+                        <div className="flex items-center space-x-1 bg-blue-100 text-blue-800 px-3 py-1 rounded-full shrink-0">
                           <StarIcon className="h-4 w-4" />
                           <span className="text-sm font-semibold">{(product.score * 5).toFixed(1)}</span>
                         </div>
                       </div>
-                      <p className="mt-3 text-base text-gray-600 line-clamp-2 font-sans leading-relaxed">
+                      {product.price && product.price > 0 && (
+                        <p className="mt-2 text-xl font-bold text-gray-900">
+                          ₦{product.price.toLocaleString()}
+                        </p>
+                      )}
+                      <p className="mt-2 text-sm text-gray-600 line-clamp-2 font-sans leading-relaxed">
                         {product.description}
                       </p>
-                      <div className="mt-6 flex justify-between items-center pt-4 border-t border-gray-100">
-                        <span className="text-sm font-semibold text-gray-700">{product.brand}</span>
-                        <span className="text-sm font-medium text-blue-600">{product.mention_count.toLocaleString()} mentions</span>
+                      <div className="mt-4 flex justify-between items-center pt-3 border-t border-gray-100">
+                        <span className="text-sm font-semibold text-gray-700">{product.brand || product.category}</span>
+                        {product.mention_count > 0 && (
+                          <span className="text-sm font-medium text-blue-600">{product.mention_count.toLocaleString()} reviews</span>
+                        )}
                       </div>
                     </div>
                   </Link>
