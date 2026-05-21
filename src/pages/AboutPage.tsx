@@ -45,10 +45,10 @@ const AboutPage: React.FC = () => {
         {/* Stats Section */}
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-16 -mt-24">
           {[
-            { icon: FiUsers, value: "50K+", label: "Active Users", color: "primary" },
-            { icon: FiBarChart2, value: "1M+", label: "Reviews Analyzed", color: "secondary" },
-            { icon: FiAward, value: "95%", label: "Accuracy Rate", color: "accent" },
-            { icon: FiTrendingUp, value: "3K+", label: "Products Tracked", color: "primary" }
+            { icon: FiUsers, value: "3", label: "Platforms Tracked", color: "primary" },
+            { icon: FiBarChart2, value: "100+", label: "Nigerian Pidgin Terms", color: "secondary" },
+            { icon: FiAward, value: "5", label: "Trust Score Factors", color: "accent" },
+            { icon: FiTrendingUp, value: "Real-time", label: "Price Monitoring", color: "primary" }
           ].map((stat, index) => (
             <motion.div
               key={index}
@@ -87,23 +87,23 @@ const AboutPage: React.FC = () => {
 
             <div className="space-y-4 relative z-10">
               <p className="text-gray-700">
-                At ProductWhisper, our mission is to help consumers make informed purchasing decisions by providing
-                unbiased, data-driven insights into products across various categories. We believe in the power of
-                authentic user experiences and leverage advanced sentiment analysis to cut through marketing hype.
+                ProductWhisper helps Nigerian consumers make smarter purchasing decisions by aggregating and analyzing
+                product data across Jumia, Konga, and Jiji. Our AI-powered sentiment engine understands Nigerian
+                Pidgin and local buying patterns to give you the real story behind any product.
               </p>
               <p className="text-gray-700">
-                We're committed to transparency, accuracy, and continuously improving our platform to better serve
-                our community of discerning shoppers.
+                We monitor prices, detect scam listings, analyze vendor reliability, and surface authentic user
+                sentiment so you can shop with confidence across Nigerian e-commerce platforms.
               </p>
 
               <div className="pt-4 mt-4 border-t border-gray-100">
                 <h3 className="font-medium text-gray-900 mb-3">Our Core Values</h3>
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                   {[
-                    "Data-Driven Insights",
-                    "User Privacy",
-                    "Continuous Innovation",
-                    "Transparency"
+                    "Nigerian Market Focus",
+                    "Scam Detection",
+                    "Price Transparency",
+                    "Vendor Trust Scoring"
                   ].map((value, i) => (
                     <div key={i} className="flex items-center">
                       <div className="w-2 h-2 bg-primary rounded-full mr-2"></div>
@@ -133,15 +133,15 @@ const AboutPage: React.FC = () => {
 
             <div className="space-y-4 relative z-10">
               <p className="text-gray-700">
-                ProductWhisper was founded in 2023 by a team of technology enthusiasts and consumer advocates who
-                were frustrated with the lack of reliable product information online. We noticed that traditional
-                review platforms were often filled with fake reviews, biased opinions, or simply lacked the depth
-                needed to make confident purchasing decisions.
+                ProductWhisper was born from the frustration of shopping online in Nigeria. Between inflated prices,
+                fake reviews, unreliable vendors, and the challenge of comparing products across multiple platforms,
+                Nigerian consumers deserve better tools to make informed decisions.
               </p>
               <p className="text-gray-700">
-                We set out to build a platform that uses advanced natural language processing and machine learning
-                to analyze thousands of authentic user reviews and comments from across the web. Our technology
-                identifies patterns, sentiment, and specific product attributes that matter most to consumers.
+                We built a platform that scrapes real-time product data from Jumia, Konga, and Jiji, analyzes reviews
+                using AI that understands Nigerian Pidgin and local expressions, tracks price history, and computes
+                trust scores for both products and vendors. Our goal is to be the go-to product intelligence tool
+                for Nigerian e-commerce.
               </p>
 
               <div className="pt-4 mt-4 border-t border-gray-100">
@@ -185,13 +185,13 @@ const AboutPage: React.FC = () => {
                   </div>
 
                   <p className="text-gray-700 mb-6">
-                    At the heart of ProductWhisper is our proprietary sentiment analysis engine that processes millions of reviews to extract meaningful insights.
+                    ProductWhisper combines real-time web scraping, Nigerian Pidgin-aware sentiment analysis, and multi-factor trust scoring to give you the full picture on any product.
                   </p>
 
                   <div className="p-4 bg-primary/5 rounded-lg border border-primary/10">
                     <h3 className="font-medium text-primary mb-2">Why It Matters</h3>
                     <p className="text-gray-600 text-sm">
-                      Our technology provides a comprehensive, nuanced understanding of products that goes far beyond simple star ratings, helping consumers make truly informed decisions.
+                      Unlike simple review aggregators, we understand Nigerian buying culture — from detecting "419" scam signals to recognizing when someone says "e dey kampe" means a product is great.
                     </p>
                   </div>
                 </div>
@@ -201,29 +201,29 @@ const AboutPage: React.FC = () => {
                 <div className="space-y-6">
                   {[
                     {
-                      title: "Data Collection",
-                      description: "We collect and analyze thousands of authentic user reviews from across the internet",
-                      details: "Our crawlers scan hundreds of e-commerce sites, forums, and social media platforms to gather diverse opinions."
+                      title: "Live Scraping",
+                      description: "Real-time product data from Jumia, Konga, and Jiji using JSON-LD structured data",
+                      details: "Our scrapers extract prices, reviews, vendor info, and product details directly from Nigerian e-commerce platforms."
                     },
                     {
-                      title: "Feature Extraction",
-                      description: "Our natural language processing algorithms identify key product attributes and features",
-                      details: "We use advanced NLP techniques to identify what aspects of products matter most to consumers."
+                      title: "Nigerian Pidgin NLP",
+                      description: "Sentiment engine with 100+ Nigerian Pidgin and local expression terms",
+                      details: "We understand 'wahala', 'na die', 'chop my money', 'dey kampe' and other expressions used in Nigerian product reviews."
                     },
                     {
-                      title: "Sentiment Analysis",
-                      description: "We measure sentiment around each attribute to understand what users truly love or dislike",
-                      details: "Our sentiment engine can detect subtle nuances in language, including sarcasm and context-dependent opinions."
+                      title: "Scam Detection",
+                      description: "Identifies fake listings, counterfeit products, and 419 signals in reviews",
+                      details: "Our engine detects keywords like 'fake', 'counterfeit', '419', and 'scam' to flag potentially fraudulent products."
                     },
                     {
-                      title: "Entity Recognition",
-                      description: "Our entity recognition system distinguishes between different product models and versions",
-                      details: "We can accurately differentiate between similar products and track sentiment for specific model variations."
+                      title: "Trust Scoring",
+                      description: "5-factor algorithm: listing consistency, price reasonableness, vendor reliability, sentiment, and data completeness",
+                      details: "Every product and vendor gets a trust score based on multiple weighted factors to help you gauge reliability."
                     },
                     {
-                      title: "Trend Tracking",
-                      description: "We track sentiment trends over time to identify quality changes or emerging issues",
-                      details: "Our temporal analysis can detect when product quality changes after firmware updates or new releases."
+                      title: "Price Tracking",
+                      description: "Monitor price changes across all platforms with historical snapshots",
+                      details: "We record daily price snapshots so you can see price trends, detect inflated pricing, and find the best time to buy."
                     }
                   ].map((step, index) => (
                     <motion.div
@@ -268,50 +268,50 @@ const AboutPage: React.FC = () => {
               >
                 <FiUsers size={28} />
               </motion.div>
-              <h2 className="text-3xl font-bold text-gray-900 font-display mb-4">Meet Our Team</h2>
+              <h2 className="text-3xl font-bold text-gray-900 font-display mb-4">Built for Nigeria</h2>
               <p className="text-gray-700 max-w-2xl mx-auto">
-                ProductWhisper is built by a diverse team of technologists, data scientists, product experts, and
-                consumer advocates who are passionate about helping people make better purchasing decisions.
+                ProductWhisper is an open-source project built to solve real problems Nigerian consumers face
+                when shopping online. We're passionate about transparency and empowering buyers with data.
               </p>
             </div>
 
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
               {[
                 {
-                  name: "Alex Johnson",
-                  role: "Founder & CEO",
-                  bio: "Former product lead at Amazon with a passion for consumer advocacy.",
-                  image: "https://randomuser.me/api/portraits/men/32.jpg"
+                  name: "Jumia Integration",
+                  role: "Live Scraping",
+                  bio: "Real-time product data, prices, reviews, and vendor information from Nigeria's largest marketplace.",
+                  image: "https://placehold.co/200x200/1e3a5f/ffffff?text=Jumia"
                 },
                 {
-                  name: "Samantha Chen",
-                  role: "Chief Data Scientist",
-                  bio: "PhD in Machine Learning with expertise in natural language processing.",
-                  image: "https://randomuser.me/api/portraits/women/44.jpg"
+                  name: "Konga Integration",
+                  role: "Coming Soon",
+                  bio: "Price comparison and product tracking across Konga's catalog for the best deals.",
+                  image: "https://placehold.co/200x200/1e3a5f/ffffff?text=Konga"
                 },
                 {
-                  name: "Marcus Williams",
-                  role: "Head of Product",
-                  bio: "Consumer tech expert with 10+ years experience in product management.",
-                  image: "https://randomuser.me/api/portraits/men/68.jpg"
+                  name: "Jiji Integration",
+                  role: "Coming Soon",
+                  bio: "Marketplace listings and vendor trust scoring for secondhand and new products.",
+                  image: "https://placehold.co/200x200/1e3a5f/ffffff?text=Jiji"
                 },
                 {
-                  name: "Priya Patel",
-                  role: "Lead Engineer",
-                  bio: "Full-stack developer specializing in scalable data processing systems.",
-                  image: "https://randomuser.me/api/portraits/women/65.jpg"
+                  name: "Nairaland Insights",
+                  role: "Community Sentiment",
+                  bio: "Discussion analysis from Nigeria's largest forum to capture authentic consumer opinions.",
+                  image: "https://placehold.co/200x200/1e3a5f/ffffff?text=Nairaland"
                 },
                 {
-                  name: "David Kim",
-                  role: "UX Director",
-                  bio: "Award-winning designer focused on creating intuitive user experiences.",
-                  image: "https://randomuser.me/api/portraits/men/75.jpg"
+                  name: "Nigerian Pidgin AI",
+                  role: "Sentiment Engine",
+                  bio: "Custom-built NLP engine with 100+ Nigerian Pidgin terms for accurate local sentiment analysis.",
+                  image: "https://placehold.co/200x200/1e3a5f/ffffff?text=NLP"
                 },
                 {
-                  name: "Olivia Rodriguez",
-                  role: "Content Director",
-                  bio: "Former tech journalist with a keen eye for product trends and insights.",
-                  image: "https://randomuser.me/api/portraits/women/90.jpg"
+                  name: "Trust Algorithm",
+                  role: "5-Factor Scoring",
+                  bio: "Multi-factor trust scoring considering listing consistency, price, vendor reliability, and more.",
+                  image: "https://placehold.co/200x200/1e3a5f/ffffff?text=Trust"
                 }
               ].map((member, index) => (
                 <motion.div
