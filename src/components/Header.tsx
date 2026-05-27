@@ -6,6 +6,7 @@ import {
   FiSearch,
   FiBarChart2,
   FiRefreshCw,
+  FiDollarSign,
   FiChevronDown,
   FiBell,
   FiSettings
@@ -46,6 +47,7 @@ const Header = () => {
     { name: 'Home', path: '/', icon: null },
     { name: 'Search', path: '/search', icon: <FiSearch className="mr-2" /> },
     { name: 'Trends', path: '/trends', icon: <FiBarChart2 className="mr-2" /> },
+    { name: 'Prices', path: '/prices', icon: <FiDollarSign className="mr-2" /> },
     { name: 'Compare', path: '/compare', icon: <FiRefreshCw className="mr-2" /> },
   ];
 

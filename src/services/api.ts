@@ -237,6 +237,18 @@ class ApiService {
     return [];
   }
 
+  /**
+   * Live cross-platform search — hits Jumia, Konga, Jiji in real time.
+   * Returns products grouped by platform with price comparison.
+   */
+  async liveSearch(query: string, maxResults: number = 10): Promise<any> {
+    const response = await this.api.get('/products/live-search', {
+      params: { q: query, maxResults },
+      timeout: 60000, // scrapers can be slow
+    });
+    return response.data;
+  }
+
   async getPriceComparison(productId: string): Promise<any> {
     return this.handleRequest(
       () => this.api.get(`/prices/compare/${productId}`),

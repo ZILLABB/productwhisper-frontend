@@ -22,6 +22,7 @@ const ContactPage = lazy(() => import('./pages/ContactPage'));
 const ProductPage = lazy(() => import('./pages/ProductPage'));
 const PrivacyPage = lazy(() => import('./pages/PrivacyPage'));
 const TermsPage = lazy(() => import('./pages/TermsPage'));
+const PriceComparePage = lazy(() => import('./pages/PriceComparePage'));
 // Commented out pages that are not currently needed
 // const ProfilePage = lazy(() => import('./pages/ProfilePage'));
 // const NotificationsPage = lazy(() => import('./pages/NotificationsPage'));
@@ -62,6 +63,7 @@ function App() {
             <Route path="trends" element={withErrorBoundaryAndSuspense(TrendsPage)} />
             <Route path="trends/:productId" element={withErrorBoundaryAndSuspense(TrendsPage)} />
             <Route path="compare" element={withErrorBoundaryAndSuspense(ComparisonPage)} />
+            <Route path="prices" element={withErrorBoundaryAndSuspense(PriceComparePage)} />
             <Route path="about" element={withErrorBoundaryAndSuspense(AboutPage)} />
             <Route path="contact" element={withErrorBoundaryAndSuspense(ContactPage)} />
             <Route path="product/:id" element={withErrorBoundaryAndSuspense(ProductPage)} />
