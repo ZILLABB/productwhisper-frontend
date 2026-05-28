@@ -297,6 +297,20 @@ class ApiService {
       mentions: Math.floor(Math.random() * 200) + 50,
     }));
 
+    // Map real listings from DB (with actual e-commerce URLs)
+    const listings = (p.listings || []).map((l: any) => ({
+      platform: l.platform,
+      title: l.title,
+      price: Number(l.price),
+      currency: l.currency || 'NGN',
+      condition: l.condition || 'UNKNOWN',
+      url: l.url,
+      imageUrl: l.imageUrl,
+      vendorName: l.vendor?.name,
+      vendorRating: l.vendor?.rating ? Number(l.vendor.rating) : undefined,
+      vendorIsVerified: l.vendor?.isVerified,
+    }));
+
     return {
       id: p.slug || p.id,
       name: p.name || '',
@@ -313,6 +327,7 @@ class ApiService {
       cons: keyComplaints,
       positiveAttributes,
       negativeAttributes,
+      listings,
     };
   }
 }

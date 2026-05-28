@@ -1,6 +1,19 @@
 /**
  * Product interface
  */
+export interface ProductListing {
+  platform: string;
+  title: string;
+  price: number;
+  currency: string;
+  condition: string;
+  url: string;
+  imageUrl?: string;
+  vendorName?: string;
+  vendorRating?: number;
+  vendorIsVerified?: boolean;
+}
+
 export interface Product {
   id: number | string;
   name: string;
@@ -27,6 +40,7 @@ export interface Product {
   specifications?: ProductSpecification[];
   reviews?: ProductReview[];
   relatedProducts?: RelatedProduct[];
+  listings?: ProductListing[];
 }
 
 /**

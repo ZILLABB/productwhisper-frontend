@@ -189,36 +189,87 @@ const ProductPage: React.FC = () => {
 
                 <div className="space-y-3">
                   {/* Main price display */}
-                  <div className="flex items-center justify-between pb-3 border-b border-gray-100">
-                    <div>
-                      <span className="text-2xl font-bold text-gray-900">{fmtNGN(product.price)}</span>
-                      {product.originalPrice && product.originalPrice > product.price && (
-                        <>
-                          <span className="text-gray-400 line-through text-sm ml-2">{fmtNGN(product.originalPrice)}</span>
-                          <span className="ml-2 text-green-600 text-xs font-semibold bg-green-50 px-2 py-0.5 rounded-full">
-                            Save {fmtNGN(product.originalPrice - product.price)}
-                          </span>
-                        </>
-                      )}
+                  {product.price > 0 && (
+                    <div className="flex items-center justify-between pb-3 border-b border-gray-100">
+                      <div>
+                        <span className="text-2xl font-bold text-gray-900">{fmtNGN(product.price)}</span>
+                        <span className="text-xs text-gray-400 ml-1">lowest</span>
+                        {product.originalPrice && product.originalPrice > product.price && (
+                          <>
+                            <span className="text-gray-400 line-through text-sm ml-2">{fmtNGN(product.originalPrice)}</span>
+                            <span className="ml-2 text-green-600 text-xs font-semibold bg-green-50 px-2 py-0.5 rounded-full">
+                              Save {fmtNGN(product.originalPrice - product.price)}
+                            </span>
+                          </>
+                        )}
+                      </div>
                     </div>
-                  </div>
+                  )}
 
-                  {/* Marketplace buttons */}
-                  {Object.entries(PLATFORM_CONFIG).map(([key, platform]) => (
-                    <a
-                      key={key}
-                      href={`https://www.${platform.label.toLowerCase()}.${key === 'JIJI' ? 'ng' : key === 'JUMIA' ? 'com.ng' : 'com'}/search?query=${encodeURIComponent(product.name)}`}
-                      target="_blank"
-                      rel="noopener noreferrer"
-                      className="flex items-center gap-3 w-full px-4 py-3 rounded-lg border border-gray-200 hover:border-gray-300 hover:shadow-sm transition-all group"
-                    >
-                      <img src={platform.logo} alt={platform.label} className="h-6 rounded" />
-                      <span className="flex-1 text-sm font-semibold text-gray-700 group-hover:text-gray-900">
-                        {platform.ctaText}
-                      </span>
-                      <FiExternalLink size={14} className="text-gray-400 group-hover:text-gray-600" />
-                    </a>
-                  ))}
+                  {/* Real listing links from DB */}
+                  {product.listings && product.listings.length > 0 ? (
+                    <>
+                      {product.listings.map((listing, idx) => {
+                        const pConfig = PLATFORM_CONFIG[listing.platform] || {
+                          label: listing.platform, logo: '', color: '#666', ctaText: `View on ${listing.platform}`,
+                        };
+                        const isCheapest = listing.price === product.price;
+                        return (
+                          <a
+                            key={`${listing.platform}-${idx}`}
+                            href={listing.url}
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            className={`flex items-center gap-3 w-full px-4 py-3 rounded-lg border transition-all group ${
+                              isCheapest
+                                ? 'border-green-200 bg-green-50 hover:border-green-300 hover:shadow-sm'
+                                : 'border-gray-200 hover:border-gray-300 hover:shadow-sm'
+                            }`}
+                          >
+                            {pConfig.logo ? (
+                              <img src={pConfig.logo} alt={pConfig.label} className="h-6 rounded" />
+                            ) : (
+                              <span className="text-xs font-bold text-gray-500">{pConfig.label}</span>
+                            )}
+                            <div className="flex-1 min-w-0">
+                              <span className={`text-sm font-bold ${isCheapest ? 'text-green-700' : 'text-gray-900'}`}>
+                                {fmtNGN(listing.price)}
+                              </span>
+                              {isCheapest && (
+                                <span className="ml-2 text-[10px] font-bold text-green-600 uppercase">Best Price</span>
+                              )}
+                              <p className="text-[10px] text-gray-500 truncate">
+                                {listing.vendorName || pConfig.label}
+                                {listing.condition && listing.condition !== 'UNKNOWN' && ` · ${listing.condition.replace(/_/g, ' ')}`}
+                              </p>
+                            </div>
+                            <div className="flex items-center gap-1 text-xs font-semibold" style={{ color: pConfig.color }}>
+                              {pConfig.ctaText} <FiExternalLink size={12} />
+                            </div>
+                          </a>
+                        );
+                      })}
+                    </>
+                  ) : (
+                    /* Fallback: search links when no listings in DB */
+                    <>
+                      {Object.entries(PLATFORM_CONFIG).map(([key, platform]) => (
+                        <a
+                          key={key}
+                          href={`https://www.${platform.label.toLowerCase()}.${key === 'JIJI' ? 'ng' : key === 'JUMIA' ? 'com.ng' : 'com'}/search?query=${encodeURIComponent(product.name)}`}
+                          target="_blank"
+                          rel="noopener noreferrer"
+                          className="flex items-center gap-3 w-full px-4 py-3 rounded-lg border border-gray-200 hover:border-gray-300 hover:shadow-sm transition-all group"
+                        >
+                          <img src={platform.logo} alt={platform.label} className="h-6 rounded" />
+                          <span className="flex-1 text-sm font-semibold text-gray-700 group-hover:text-gray-900">
+                            Search on {platform.label}
+                          </span>
+                          <FiExternalLink size={14} className="text-gray-400 group-hover:text-gray-600" />
+                        </a>
+                      ))}
+                    </>
+                  )}
 
                   <p className="text-[10px] text-gray-400 text-center mt-3 flex items-center justify-center gap-1">
                     <FiInfo size={10} />
