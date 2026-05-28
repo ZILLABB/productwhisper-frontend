@@ -74,6 +74,18 @@ interface ProductGroup {
   cheapestPlatform: string;
   savings: number;
   platformCount: number;
+  matchConfidence: number;
+  matchExplanation: string;
+  matchedAttributes: string[];
+  mismatchedAttributes: string[];
+  attributes: {
+    brand: string | null;
+    model: string | null;
+    storage: string | null;
+    category: string;
+    condition: string;
+  };
+  conditionWarning?: string;
 }
 
 interface PlatformResult {
@@ -81,6 +93,15 @@ interface PlatformResult {
   products: ScrapedProduct[];
   count: number;
   error?: string;
+}
+
+interface MatchingStats {
+  totalInput: number;
+  totalGrouped: number;
+  totalUnmatched: number;
+  totalFilteredAccessories: number;
+  groupCount: number;
+  avgConfidence: number;
 }
 
 interface LiveSearchData {
@@ -105,6 +126,8 @@ interface LiveSearchData {
   } | null;
   groups: ProductGroup[];
   unmatchedProducts: ScrapedProduct[];
+  filteredAsAccessories: number;
+  matchingStats?: MatchingStats;
   platforms: Record<string, PlatformResult>;
   allProducts: ScrapedProduct[];
 }
@@ -166,8 +189,9 @@ const TrustBadge: React.FC<{ level?: string; score?: number }> = ({ level, score
     verified: { icon: <FiShield size={10} />,      text: 'Verified', cls: 'text-blue-700 bg-blue-50 border-blue-200' },
     average:  { icon: <FiShield size={10} />,      text: 'Average',  cls: 'text-yellow-700 bg-yellow-50 border-yellow-200' },
     caution:  { icon: <FiAlertTriangle size={10} />, text: 'Caution', cls: 'text-red-700 bg-red-50 border-red-200' },
+    unknown:  { icon: <FiShield size={10} />,      text: 'Unrated',  cls: 'text-gray-500 bg-gray-50 border-gray-200' },
   };
-  const c = cfg[level || ''] || { icon: null, text: 'Unknown Seller', cls: 'text-gray-500 bg-gray-50 border-gray-200' };
+  const c = cfg[level || ''] || { icon: null, text: 'Unrated', cls: 'text-gray-500 bg-gray-50 border-gray-200' };
   return (
     <span className={`inline-flex items-center gap-1 text-[10px] font-medium border rounded-full px-1.5 py-0.5 ${c.cls}`} title={score ? `Trust score: ${score}/100` : undefined}>
       {c.icon} {c.text}{score ? ` ${score}` : ''}
@@ -241,8 +265,17 @@ const ComparisonCard: React.FC<{ group: ProductGroup; rank: number; searchQuery:
             )}
           </div>
           <h3 className="text-sm sm:text-[15px] font-semibold text-gray-900 leading-snug line-clamp-2">{group.name}</h3>
-          <div className="flex items-center gap-3 mt-1.5 text-xs text-gray-500">
+          <div className="flex items-center gap-3 mt-1.5 text-xs text-gray-500 flex-wrap">
             <span>{group.platformCount} platform{group.platformCount > 1 ? 's' : ''}</span>
+            {group.matchConfidence > 0 && (
+              <span className={`inline-flex items-center gap-1 font-semibold ${
+                group.matchConfidence >= 80 ? 'text-green-600' :
+                group.matchConfidence >= 60 ? 'text-blue-600' :
+                'text-yellow-600'
+              }`} title={group.matchExplanation || 'Match confidence'}>
+                <FiShield size={11} /> {group.matchConfidence}% match
+              </span>
+            )}
             {group.savings > 0 && (
               <span className="inline-flex items-center gap-1 text-green-600 font-semibold">
                 <FiTrendingDown size={12} /> Save {fmtNGN(group.savings)}
@@ -334,7 +367,7 @@ const ComparisonCard: React.FC<{ group: ProductGroup; rank: number; searchQuery:
                     }`}
                     style={isBest ? {} : { backgroundColor: p.color }}
                   >
-                    {isBest ? 'Buy Here' : 'View Deal'} <FiExternalLink size={11} />
+                    {isBest ? `Buy on ${p.label}` : `View on ${p.label}`} <FiExternalLink size={11} />
                   </a>
                 </>
               ) : (
@@ -356,7 +389,44 @@ const ComparisonCard: React.FC<{ group: ProductGroup; rank: number; searchQuery:
       </button>
 
       {open && (
-        <div className="px-4 sm:px-5 py-4 bg-gray-50 border-t border-gray-100 space-y-2">
+        <div className="px-4 sm:px-5 py-4 bg-gray-50 border-t border-gray-100 space-y-3">
+          {/* Condition warning */}
+          {group.conditionWarning && (
+            <div className="flex items-start gap-2 bg-amber-50 border border-amber-200 rounded-lg p-2.5 text-xs text-amber-700">
+              <FiAlertTriangle size={12} className="flex-shrink-0 mt-0.5" />
+              <span>{group.conditionWarning}</span>
+            </div>
+          )}
+
+          {/* Match details */}
+          {(group.matchedAttributes?.length > 0 || group.attributes) && (
+            <div className="flex flex-wrap gap-1.5 items-center">
+              {group.attributes?.brand && (
+                <span className="inline-flex items-center gap-1 px-2 py-0.5 bg-blue-50 text-blue-700 border border-blue-200 rounded-full text-[10px] font-medium">
+                  {group.attributes.brand}
+                </span>
+              )}
+              {group.attributes?.model && (
+                <span className="inline-flex items-center gap-1 px-2 py-0.5 bg-purple-50 text-purple-700 border border-purple-200 rounded-full text-[10px] font-medium">
+                  {group.attributes.model}
+                </span>
+              )}
+              {group.attributes?.storage && (
+                <span className="inline-flex items-center gap-1 px-2 py-0.5 bg-indigo-50 text-indigo-700 border border-indigo-200 rounded-full text-[10px] font-medium">
+                  {group.attributes.storage}
+                </span>
+              )}
+              {group.attributes?.category && (
+                <span className="inline-flex items-center gap-1 px-2 py-0.5 bg-gray-100 text-gray-600 border border-gray-200 rounded-full text-[10px] font-medium">
+                  {group.attributes.category.replace(/_/g, ' ')}
+                </span>
+              )}
+              {group.matchExplanation && (
+                <span className="text-[10px] text-gray-400 ml-1">{group.matchExplanation}</span>
+              )}
+            </div>
+          )}
+
           {group.listings.map((l, i) => (
             <div key={i} className="flex items-start gap-3 bg-white rounded-lg p-3 border border-gray-100">
               <PlatformBadge platform={l.platform} size="sm" />
@@ -695,6 +765,24 @@ const PriceComparePage: React.FC = () => {
                 })}
               </div>
             </div>
+
+            {/* ── Matching intelligence bar ── */}
+            {data.matchingStats && (data.filteredAsAccessories > 0 || data.matchingStats.avgConfidence > 0) && (
+              <div className="flex flex-wrap items-center gap-3 mb-4 px-3 py-2 bg-blue-50 border border-blue-100 rounded-xl text-xs text-blue-700">
+                <span className="inline-flex items-center gap-1 font-medium">
+                  <FiShield size={12} /> Smart Matching
+                </span>
+                {data.matchingStats.avgConfidence > 0 && (
+                  <span>Avg confidence: <strong>{data.matchingStats.avgConfidence}%</strong></span>
+                )}
+                {data.filteredAsAccessories > 0 && (
+                  <span className="text-blue-500">{data.filteredAsAccessories} accessor{data.filteredAsAccessories === 1 ? 'y' : 'ies'} filtered out</span>
+                )}
+                {data.matchingStats.totalGrouped > 0 && (
+                  <span>{data.matchingStats.totalGrouped} products matched across platforms</span>
+                )}
+              </div>
+            )}
 
             {/* ── Cross-platform groups ── */}
             {data.groups && data.groups.length > 0 && (

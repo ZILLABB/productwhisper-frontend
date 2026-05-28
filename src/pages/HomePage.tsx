@@ -317,21 +317,18 @@ const HomePage: React.FC = () => {
             Join thousands of smart shoppers who use ProductWhisper to find the best deals and avoid scam sellers across Jumia, Konga, and Jiji.
           </p>
           <div className="flex flex-col sm:flex-row gap-4 justify-center">
-            <Button
+            <Link
               to="/prices"
-              size="lg"
-              className="bg-white text-indigo-600 hover:bg-gray-100 px-8 py-3 text-base font-semibold"
+              className="inline-flex items-center justify-center px-8 py-3 text-base font-semibold rounded-lg bg-white text-[rgb(28,52,84)] hover:bg-gray-100 shadow-lg transition-all hover:scale-[1.02] active:scale-[0.98]"
             >
               Start Comparing
-            </Button>
-            <Button
+            </Link>
+            <Link
               to="/about"
-              variant="outline"
-              size="lg"
-              className="bg-transparent border-white text-white hover:bg-white/10 px-8 py-3 text-base font-semibold"
+              className="inline-flex items-center justify-center px-8 py-3 text-base font-semibold rounded-lg border-2 border-white text-white bg-transparent hover:bg-white/10 transition-all hover:scale-[1.02] active:scale-[0.98]"
             >
               Learn More
-            </Button>
+            </Link>
           </div>
         </div>
       </div>
