@@ -1,18 +1,17 @@
-import React, { useState, useRef } from 'react';
+import React, { useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
-import { motion, useInView } from 'framer-motion';
 import { apiService } from '../services/api';
+import useSEO from '../hooks/useSEO';
 import LoadingSpinner from '../components/common/LoadingSpinner';
 import useApi from '../hooks/useApi';
 import ApiErrorFallback from '../components/common/ApiErrorFallback';
-import AnimatedCircles from '../components/ui/AnimatedCircles';
 import {
   Search as MagnifyingGlassIcon,
   BarChart as ChartBarIcon,
   ArrowLeftRight as ArrowsRightLeftIcon,
-  Lightbulb as LightBulbIcon,
-  MessageSquare as ChatBubbleLeftRightIcon,
   ShieldCheck as ShieldCheckIcon,
+  TrendingDown,
+  Youtube,
   Star as StarIcon
 } from 'lucide-react';
 import { Button } from '../common/components';
@@ -33,13 +32,11 @@ const HomePage: React.FC = () => {
   const [searchQuery, setSearchQuery] = useState('');
   const navigate = useNavigate();
 
-  const heroRef = useRef<HTMLDivElement>(null);
-  const featuresRef = useRef<HTMLDivElement>(null);
-  const trendingRef = useRef<HTMLDivElement>(null);
-
-  const heroInView = useInView(heroRef, { once: false, amount: 0.3 });
-  const featuresInView = useInView(featuresRef, { once: false, amount: 0.3 });
-  const trendingInView = useInView(trendingRef, { once: false, amount: 0.3 });
+  useSEO({
+    title: 'Find the Best Prices Across Nigeria',
+    description: 'Compare prices across Jumia, Konga & Jiji in real-time. Save money, avoid scam sellers, and shop with confidence in Nigeria.',
+    keywords: 'price comparison Nigeria, Jumia, Konga, Jiji, best prices, online shopping Nigeria',
+  });
 
   const { data, loading, error, refetch } = useApi(
     () => apiService.getTrendingProducts(6),
@@ -68,45 +65,37 @@ const HomePage: React.FC = () => {
     }
   };
 
+  const popular = ['iPhone 15', 'Samsung Galaxy A15', 'Tecno Spark 20', 'PlayStation 5', 'MacBook Air', 'Infinix Hot 40'];
+
   return (
     <div>
-      <motion.div
-        ref={heroRef}
-        initial={{ opacity: 0 }}
-        animate={heroInView ? { opacity: 1 } : { opacity: 0 }}
-        transition={{ duration: 0.8 }}
+      {/* ─── Hero ─── */}
+      <div
         className="relative bg-gradient-primary rounded-premium shadow-premium overflow-hidden mb-12"
       >
-        <AnimatedCircles variant="primary" count={20} className="z-0" />
         <div className="max-w-7xl mx-auto px-4 py-16 sm:px-6 lg:px-8 lg:py-28 relative z-10">
-          <motion.div
-            className="max-w-3xl mx-auto text-center"
-            initial={{ y: 50 }}
-            animate={{ y: 0 }}
-            transition={{ duration: 0.8, delay: 0.2 }}
-          >
-            <motion.h1
-              className="font-display text-5xl font-bold text-white sm:text-6xl sm:tracking-tight lg:text-7xl"
-              initial={{ opacity: 0 }}
-              animate={{ opacity: 1 }}
-              transition={{ duration: 0.8, delay: 0.3 }}
-            >
-              Discover What People <span className="text-yellow-300">Really Think</span>
-            </motion.h1>
-            <motion.p
-              className="mt-8 text-xl font-light text-white leading-relaxed"
-              initial={{ opacity: 0 }}
-              animate={{ opacity: 1 }}
-              transition={{ duration: 0.8, delay: 0.5 }}
-            >
-              ProductWhisper analyzes thousands of reviews and comments to give you the real story behind products, helping you make informed decisions.
-            </motion.p>
-            <motion.div
-              className="mt-12"
-              initial={{ opacity: 0, y: 20 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ duration: 0.8, delay: 0.7 }}
-            >
+          <div className="max-w-3xl mx-auto text-center">
+            <h1 className="font-display text-4xl font-bold text-white sm:text-5xl lg:text-6xl sm:tracking-tight">
+              Find the <span className="text-yellow-300">Best Prices</span> Across Nigeria
+            </h1>
+            <p className="mt-8 text-xl font-light text-white leading-relaxed">
+              Compare prices on Jumia, Konga & Jiji in real-time. Save money, avoid scams, and shop with confidence.
+            </p>
+
+            {/* Platform logos */}
+            <div className="flex items-center justify-center gap-4 mt-8 mb-4">
+              {[
+                { logo: '/logos/jumia.svg', label: 'Jumia' },
+                { logo: '/logos/konga.svg', label: 'Konga' },
+                { logo: '/logos/jiji.svg', label: 'Jiji' },
+              ].map((p) => (
+                <div key={p.label} className="bg-white/10 rounded-xl px-4 py-2">
+                  <img src={p.logo} alt={p.label} className="h-7 rounded" />
+                </div>
+              ))}
+            </div>
+
+            <div className="mt-8">
               <form onSubmit={handleSearch} className="max-w-xl mx-auto">
                 <div className="flex shadow-premium rounded-premium overflow-hidden">
                   <div className="relative flex-grow focus-within:z-10">
@@ -123,91 +112,119 @@ const HomePage: React.FC = () => {
                     className="rounded-l-none px-8 text-base font-semibold"
                     leftIcon={<MagnifyingGlassIcon className="h-5 w-5" aria-hidden="true" />}
                   >
-                    Search
+                    Compare
                   </Button>
                 </div>
               </form>
-            </motion.div>
-          </motion.div>
-        </div>
-      </motion.div>
 
-      <motion.div
-        ref={featuresRef}
-        initial={{ opacity: 0 }}
-        animate={featuresInView ? { opacity: 1 } : { opacity: 0 }}
-        transition={{ duration: 0.8 }}
-        className="py-16 bg-gray-50 relative overflow-hidden"
-      >
-        <AnimatedCircles variant="accent" count={15} className="opacity-70" />
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 relative z-10">
-          <motion.div
-            className="lg:text-center"
-            initial={{ y: 30, opacity: 0 }}
-            animate={featuresInView ? { y: 0, opacity: 1 } : { y: 30, opacity: 0 }}
-            transition={{ duration: 0.6 }}
-          >
-            <h2 className="text-base text-blue-600 font-semibold tracking-wide uppercase font-sans">Premium Features</h2>
-            <p className="mt-2 text-4xl font-bold tracking-tight text-gray-900 font-display">
-              Make Smarter Purchasing Decisions
-            </p>
-            <p className="mt-6 max-w-2xl text-xl text-gray-600 lg:mx-auto font-sans leading-relaxed">
-              ProductWhisper helps you cut through marketing hype and discover what real users think about the products you're interested in.
-            </p>
-          </motion.div>
-
-          <div className="mt-16">
-            <div className="grid grid-cols-1 gap-8 md:grid-cols-3">
-              {[
-                { icon: MagnifyingGlassIcon, title: 'Sentiment Analysis', color: 'blue', desc: 'Our advanced AI analyzes thousands of reviews and comments to determine how people really feel about products, identifying both positive and negative aspects.' },
-                { icon: ChartBarIcon, title: 'Trend Analysis', color: 'indigo', desc: 'Track how sentiment changes over time and spot emerging issues or improvements. Stay ahead of the curve with our real-time trend monitoring.' },
-                { icon: ArrowsRightLeftIcon, title: 'Product Comparison', color: 'purple', desc: 'Compare products side-by-side based on real user sentiment and specific features. Make informed decisions with our comprehensive comparison tools.' },
-              ].map((feature, index) => (
-                <div key={index} className="relative p-6 bg-white rounded-premium shadow-premium hover:shadow-premium-hover transition-shadow duration-300">
-                  <div className={`flex items-center justify-center h-16 w-16 rounded-full bg-${feature.color}-100 text-${feature.color}-600 mb-6`}>
-                    <feature.icon className="h-8 w-8" aria-hidden="true" />
-                  </div>
-                  <h3 className="text-xl font-bold text-gray-900 font-display mb-3">{feature.title}</h3>
-                  <p className="text-base text-gray-600 leading-relaxed">{feature.desc}</p>
-                </div>
-              ))}
-            </div>
-
-            <div className="mt-16 grid grid-cols-1 gap-8 md:grid-cols-3">
-              {[
-                { icon: LightBulbIcon, title: 'Smart Recommendations', color: 'green', desc: 'Get personalized product recommendations based on your preferences and the collective wisdom of thousands of real users.' },
-                { icon: ChatBubbleLeftRightIcon, title: 'Review Summarization', color: 'yellow', desc: 'Save time with our AI-powered review summarization that distills thousands of reviews into key insights and takeaways.' },
-                { icon: ShieldCheckIcon, title: 'Fake Review Detection', color: 'red', desc: 'Our advanced algorithms identify and filter out fake or biased reviews, ensuring you get authentic insights from real users.' },
-              ].map((feature, index) => (
-                <div key={index} className="relative p-6 bg-white rounded-premium shadow-premium hover:shadow-premium-hover transition-shadow duration-300">
-                  <div className={`flex items-center justify-center h-16 w-16 rounded-full bg-${feature.color}-100 text-${feature.color}-600 mb-6`}>
-                    <feature.icon className="h-8 w-8" aria-hidden="true" />
-                  </div>
-                  <h3 className="text-xl font-bold text-gray-900 font-display mb-3">{feature.title}</h3>
-                  <p className="text-base text-gray-600 leading-relaxed">{feature.desc}</p>
-                </div>
-              ))}
+              {/* Popular searches */}
+              <div className="mt-5 flex flex-wrap justify-center gap-2">
+                {popular.map((s) => (
+                  <button
+                    key={s}
+                    onClick={() => { setSearchQuery(s); navigate(`/prices?q=${encodeURIComponent(s)}`); }}
+                    className="px-3 py-1 text-sm bg-white/15 text-white/80 rounded-full hover:bg-white/25 transition-colors"
+                  >
+                    {s}
+                  </button>
+                ))}
+              </div>
             </div>
           </div>
         </div>
-      </motion.div>
+      </div>
 
-      <motion.div
-        ref={trendingRef}
-        initial={{ opacity: 0 }}
-        animate={trendingInView ? { opacity: 1 } : { opacity: 0 }}
-        transition={{ duration: 0.8 }}
+      {/* ─── Features ─── */}
+      <div
+        className="py-16 bg-gray-50 relative overflow-hidden"
+      >
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 relative z-10">
+          <div className="lg:text-center">
+            <h2 className="text-base text-blue-600 font-semibold tracking-wide uppercase font-sans">Why ProductWhisper</h2>
+            <p className="mt-2 text-4xl font-bold tracking-tight text-gray-900 font-display">
+              Shop Smarter Across Nigeria
+            </p>
+            <p className="mt-6 max-w-2xl text-xl text-gray-600 lg:mx-auto font-sans leading-relaxed">
+              We search every major Nigerian e-commerce platform so you don't have to. Find the best price, the safest seller, and make informed decisions.
+            </p>
+          </div>
+
+          <div className="mt-16 grid grid-cols-1 gap-8 md:grid-cols-3">
+            {[
+              {
+                icon: TrendingDown,
+                title: 'Real-Time Price Comparison',
+                color: 'blue',
+                desc: 'Search once, see prices from Jumia, Konga, and Jiji side by side. We match the same product across platforms so you instantly see who has the cheapest deal.'
+              },
+              {
+                icon: ShieldCheckIcon,
+                title: 'Seller Trust Scores',
+                color: 'green',
+                desc: 'Every listing shows a trust badge for the seller. We analyze ratings, verification status, and sales history to flag trustworthy merchants and warn about risky ones.'
+              },
+              {
+                icon: ArrowsRightLeftIcon,
+                title: 'Product Comparison',
+                color: 'purple',
+                desc: 'Compare products side-by-side based on price, condition, and seller reputation. Perfect for deciding between similar models or different brands.'
+              },
+            ].map((feature, index) => (
+              <div key={index} className="relative p-6 bg-white rounded-premium shadow-premium hover:shadow-premium-hover transition-shadow duration-300">
+                <div className={`flex items-center justify-center h-16 w-16 rounded-full bg-${feature.color}-100 text-${feature.color}-600 mb-6`}>
+                  <feature.icon className="h-8 w-8" aria-hidden="true" />
+                </div>
+                <h3 className="text-xl font-bold text-gray-900 font-display mb-3">{feature.title}</h3>
+                <p className="text-base text-gray-600 leading-relaxed">{feature.desc}</p>
+              </div>
+            ))}
+          </div>
+
+          <div className="mt-8 grid grid-cols-1 gap-8 md:grid-cols-3">
+            {[
+              {
+                icon: ChartBarIcon,
+                title: 'Price Trend Tracking',
+                color: 'indigo',
+                desc: 'See how prices change over time. Know if you\'re getting a deal or if the price was raised before a "sale". Coming soon: price drop alerts.'
+              },
+              {
+                icon: Youtube,
+                title: 'Video Reviews',
+                color: 'red',
+                desc: 'See what real Nigerians are saying in YouTube reviews before you buy. We find the most relevant video reviews for every product you search.'
+              },
+              {
+                icon: MagnifyingGlassIcon,
+                title: 'Smart Search',
+                color: 'yellow',
+                desc: 'Search "iPhone 15" and we filter out cases, chargers, and screen protectors. You see actual phones, not accessories cluttering your results.'
+              },
+            ].map((feature, index) => (
+              <div key={index} className="relative p-6 bg-white rounded-premium shadow-premium hover:shadow-premium-hover transition-shadow duration-300">
+                <div className={`flex items-center justify-center h-16 w-16 rounded-full bg-${feature.color}-100 text-${feature.color}-600 mb-6`}>
+                  <feature.icon className="h-8 w-8" aria-hidden="true" />
+                </div>
+                <h3 className="text-xl font-bold text-gray-900 font-display mb-3">{feature.title}</h3>
+                <p className="text-base text-gray-600 leading-relaxed">{feature.desc}</p>
+              </div>
+            ))}
+          </div>
+        </div>
+      </div>
+
+      {/* ─── Trending ─── */}
+      <div
         className="py-16 relative overflow-hidden"
       >
-        <AnimatedCircles variant="primary" count={10} className="opacity-60" />
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 relative z-10">
           <div className="lg:text-center mb-12">
             <h2 className="text-base text-blue-600 font-semibold tracking-wide uppercase font-sans">Trending Now</h2>
             <p className="mt-2 text-4xl font-bold tracking-tight text-gray-900 font-display">
-              Popular Products People Are Talking About
+              Popular Products Nigerians Are Comparing
             </p>
             <p className="mt-6 max-w-2xl text-xl text-gray-600 lg:mx-auto font-sans leading-relaxed">
-              Discover what's trending based on real user sentiment and mentions across the web.
+              See what products are being searched and compared right now.
             </p>
           </div>
 
@@ -254,7 +271,7 @@ const HomePage: React.FC = () => {
                       </div>
                       {product.price && product.price > 0 && (
                         <p className="mt-2 text-xl font-bold text-gray-900">
-                          ₦{product.price.toLocaleString()}
+                          {'₦'}{product.price.toLocaleString()}
                         </p>
                       )}
                       <p className="mt-2 text-sm text-gray-600 line-clamp-2 font-sans leading-relaxed">
@@ -271,7 +288,7 @@ const HomePage: React.FC = () => {
                 ))
               ) : (
                 <div className="col-span-full text-center py-8 text-gray-500">
-                  No trending products found at this time.
+                  No trending products found. Try searching for a product above!
                 </div>
               )}
             </div>
@@ -279,33 +296,33 @@ const HomePage: React.FC = () => {
 
           <div className="mt-12 text-center">
             <Button
-              to="/search"
+              to="/prices"
               size="lg"
               className="px-8 py-3 text-base font-semibold"
               rightIcon={<MagnifyingGlassIcon className="h-5 w-5 ml-2" />}
             >
-              Explore More Products
+              Compare Prices Now
             </Button>
           </div>
         </div>
-      </motion.div>
+      </div>
 
+      {/* ─── CTA ─── */}
       <div className="bg-gradient-secondary py-16 mt-12 rounded-premium mx-4 sm:mx-8 lg:mx-12 relative overflow-hidden">
-        <AnimatedCircles variant="secondary" count={25} className="opacity-80" />
         <div className="max-w-5xl mx-auto px-4 sm:px-6 lg:px-8 text-center relative z-10">
           <h2 className="text-3xl sm:text-4xl font-bold text-white font-display mb-6">
-            Ready to Make Smarter Purchasing Decisions?
+            Stop Overpaying for Products in Nigeria
           </h2>
           <p className="text-xl text-white/90 font-light max-w-3xl mx-auto mb-10 leading-relaxed">
-            Join thousands of smart shoppers who use ProductWhisper to cut through marketing hype and discover products that truly meet their needs.
+            Join thousands of smart shoppers who use ProductWhisper to find the best deals and avoid scam sellers across Jumia, Konga, and Jiji.
           </p>
           <div className="flex flex-col sm:flex-row gap-4 justify-center">
             <Button
-              to="/search"
+              to="/prices"
               size="lg"
               className="bg-white text-indigo-600 hover:bg-gray-100 px-8 py-3 text-base font-semibold"
             >
-              Start Exploring
+              Start Comparing
             </Button>
             <Button
               to="/about"

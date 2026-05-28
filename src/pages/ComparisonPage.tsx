@@ -1,6 +1,5 @@
-import React, { useState, useEffect } from 'react';
-import { useSearchParams, useNavigate } from 'react-router-dom';
-import { motion } from 'framer-motion';
+import React, { useState, useCallback } from 'react';
+import { useSearchParams } from 'react-router-dom';
 import { FiBarChart2, FiCheck, FiX, FiPlus, FiSearch } from 'react-icons/fi';
 import { GitCompareArrows, Search } from 'lucide-react';
 import LoadingSpinner from '../components/common/LoadingSpinner';
@@ -29,14 +28,24 @@ interface Product {
   cons: string[];
 }
 
+/** Slugify a product name for URL usage */
+function slugify(name: string): string {
+  return name
+    .toLowerCase()
+    .replace(/[^a-z0-9\s-]/g, '')
+    .replace(/\s+/g, '-')
+    .replace(/-+/g, '-')
+    .trim();
+}
+
 const ComparisonPage: React.FC = () => {
   const [searchParams, setSearchParams] = useSearchParams();
-  const navigate = useNavigate();
   const { showToast } = useToast();
 
+  // Products are managed purely in local state — no API re-fetch on URL change.
+  // The URL ?ids= param is kept in sync for shareability / bookmarking,
+  // but all product data lives in-memory since we built the list interactively.
   const [products, setProducts] = useState<Product[]>([]);
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState('');
   const [features, setFeatures] = useState<string[]>([]);
 
   // Search functionality
@@ -45,187 +54,45 @@ const ComparisonPage: React.FC = () => {
   const [searchResults, setSearchResults] = useState<Product[]>([]);
   const [isSearching, setIsSearching] = useState(false);
 
-  useEffect(() => {
-    const fetchProducts = async () => {
-      try {
-        setLoading(true);
-        const productIds = searchParams.get('ids')?.split(',').filter(id => id) || [];
-
-        if (productIds.length < 2) {
-          setError('Please select at least two products to compare');
-          setLoading(false);
-          return;
-        }
-
-        try {
-          // Use the API service to fetch product details
-          const productPromises = productIds.map(id =>
-            apiService.getProductDetails(id)
-          );
-
-          const productsData = await Promise.all(productPromises);
-          setProducts(productsData);
-
-          // Extract all unique features
-          const allFeatures = new Set<string>();
-          productsData.forEach(product => {
-            if (product.features) {
-              Object.keys(product.features).forEach(feature => {
-                allFeatures.add(feature);
-              });
-            }
-          });
-
-          setFeatures(Array.from(allFeatures));
-        } catch (apiError) {
-          console.error('API error:', apiError);
-          setError('Failed to fetch product details from the API');
-
-          // Fallback to mock data for development
-          const mockProducts: Product[] = [
-            {
-              id: 1,
-              name: "Premium Wireless Headphones",
-              brand: "SoundMaster",
-              category: "Electronics",
-              description: "Experience crystal-clear audio with our premium wireless headphones.",
-              price: 249.99,
-              rating: 4.7,
-              reviewCount: 1243,
-              sentimentScore: 0.85,
-              features: {
-                "Sound Quality": { value: "Excellent", score: 0.92 },
-                "Battery Life": { value: "30 hours", score: 0.88 },
-                "Noise Cancellation": { value: "Active", score: 0.90 },
-                "Connectivity": { value: "Bluetooth 5.0", score: 0.75 },
-                "Comfort": { value: "Memory foam", score: 0.82 },
-                "Durability": { value: "High", score: 0.78 },
-                "Water Resistance": { value: "IPX4", score: 0.65 }
-              },
-              pros: ["Exceptional sound clarity", "Long battery life", "Comfortable for extended use"],
-              cons: ["Expensive", "Occasional Bluetooth connectivity issues"]
-            },
-            {
-              id: 2,
-              name: "Ultra Noise Cancelling Headphones",
-              brand: "AudioPro",
-              category: "Electronics",
-              description: "Block out the world with our advanced noise cancelling technology.",
-              price: 299.99,
-              rating: 4.5,
-              reviewCount: 876,
-              sentimentScore: 0.82,
-              features: {
-                "Sound Quality": { value: "Very Good", score: 0.85 },
-                "Battery Life": { value: "25 hours", score: 0.80 },
-                "Noise Cancellation": { value: "Advanced", score: 0.95 },
-                "Connectivity": { value: "Bluetooth 5.1", score: 0.88 },
-                "Comfort": { value: "Protein leather", score: 0.75 },
-                "Durability": { value: "Medium", score: 0.70 },
-                "Water Resistance": { value: "IPX5", score: 0.78 }
-              },
-              pros: ["Best-in-class noise cancellation", "Premium build quality", "Great app support"],
-              cons: ["Heavy", "Less comfortable for long sessions", "Higher price point"]
-            },
-            {
-              id: 3,
-              name: "Sport Wireless Earbuds",
-              brand: "FitSound",
-              category: "Electronics",
-              description: "Designed for active lifestyles with secure fit and water resistance.",
-              price: 179.99,
-              rating: 4.3,
-              reviewCount: 2156,
-              sentimentScore: 0.79,
-              features: {
-                "Sound Quality": { value: "Good", score: 0.78 },
-                "Battery Life": { value: "8 hours (24 with case)", score: 0.82 },
-                "Noise Cancellation": { value: "Passive", score: 0.60 },
-                "Connectivity": { value: "Bluetooth 5.0", score: 0.85 },
-                "Comfort": { value: "Silicone tips", score: 0.88 },
-                "Durability": { value: "Very High", score: 0.92 },
-                "Water Resistance": { value: "IPX7", score: 0.95 }
-              },
-              pros: ["Excellent for workouts", "Secure fit", "Fully waterproof"],
-              cons: ["Average sound quality", "Limited noise isolation"]
-            }
-          ];
-
-          // Filter products based on IDs from URL
-          const filteredProducts = mockProducts.filter(product =>
-            productIds.includes(product.id.toString())
-          );
-
-          setProducts(filteredProducts);
-
-          // Extract all unique features
-          const allFeatures = new Set<string>();
-          filteredProducts.forEach(product => {
-            Object.keys(product.features).forEach(feature => {
-              allFeatures.add(feature);
-            });
-          });
-
-          setFeatures(Array.from(allFeatures));
-        }
-      } catch (err) {
-        setError('Failed to load product data for comparison');
-        console.error('Error fetching products for comparison:', err);
-      } finally {
-        setLoading(false);
-      }
-    };
-
-    fetchProducts();
-  }, [searchParams]);
+  /** Recompute features from a product list */
+  const recomputeFeatures = useCallback((prods: Product[]) => {
+    const allFeatures = new Set<string>();
+    prods.forEach(p => {
+      if (p.features) Object.keys(p.features).forEach(f => allFeatures.add(f));
+    });
+    setFeatures(Array.from(allFeatures));
+  }, []);
 
   // Search for products to add to comparison
   const handleSearch = async (e: React.FormEvent) => {
     e.preventDefault();
-
     if (!searchQuery.trim()) return;
 
     setIsSearching(true);
-
     try {
       const response: any = await apiService.searchProducts(searchQuery);
-      const results = response?.data?.products || response?.products || [];
+      const raw = response?.data?.products || response?.products || [];
+      // Normalize API products into our Product interface
+      const results: Product[] = raw.map((p: any) => ({
+        id: p.id || slugify(p.name || p.title || ''),
+        name: p.name || p.title || 'Unknown Product',
+        brand: p.brand || p.category || 'Unknown',
+        category: p.category || '',
+        description: p.description || '',
+        price: p.price || 0,
+        rating: p.rating || p.sentimentScore || 0,
+        reviewCount: p.reviewCount || 0,
+        sentimentScore: p.sentimentScore || 0,
+        imageUrl: p.imageUrl || p.image || undefined,
+        features: p.features || {},
+        pros: p.pros || [],
+        cons: p.cons || [],
+      }));
       setSearchResults(results);
     } catch (error) {
       console.error('Error searching products:', error);
       showToast('error', 'Failed to search products');
-
-      // Fallback mock search results for development
-      setSearchResults([
-        {
-          id: 4,
-          name: "Budget Wireless Headphones",
-          brand: "ValueAudio",
-          category: "Electronics",
-          description: "Affordable wireless headphones with decent sound quality.",
-          price: 79.99,
-          rating: 4.0,
-          reviewCount: 3421,
-          sentimentScore: 0.72,
-          features: {},
-          pros: ["Affordable", "Good battery life"],
-          cons: ["Average sound quality", "Basic build quality"]
-        },
-        {
-          id: 5,
-          name: "Professional Studio Headphones",
-          brand: "ProSound",
-          category: "Electronics",
-          description: "Professional-grade studio headphones for audio production.",
-          price: 349.99,
-          rating: 4.8,
-          reviewCount: 567,
-          sentimentScore: 0.91,
-          features: {},
-          pros: ["Exceptional sound accuracy", "Durable build"],
-          cons: ["Expensive", "Requires amplifier for best performance"]
-        }
-      ]);
+      setSearchResults([]);
     } finally {
       setIsSearching(false);
     }
@@ -243,50 +110,37 @@ const ComparisonPage: React.FC = () => {
       return;
     }
 
-    // Get current product IDs and add the new one
-    const currentIds = searchParams.get('ids')?.split(',').filter(id => id) || [];
-    const newIds = [...currentIds, product.id.toString()];
+    const newProducts = [...products, product];
+    setProducts(newProducts);
+    recomputeFeatures(newProducts);
 
-    // Also add the product to local state immediately for responsive UI
-    setProducts(prev => [...prev, product]);
-
-    // Update URL with new product IDs
-    setSearchParams({ ids: newIds.join(',') });
+    // Update URL for bookmarking
+    const newIds = newProducts.map(p => String(p.id));
+    setSearchParams({ ids: newIds.join(',') }, { replace: true });
 
     // Only close search when we have enough products for comparison
-    if (newIds.length >= 2) {
+    if (newProducts.length >= 2) {
       setSearchQuery('');
       setSearchResults([]);
-      setShowSearch(false);
     } else {
-      showToast('info', `Added! Pick ${2 - newIds.length} more product(s) to compare.`);
+      showToast('info', `Added! Pick ${2 - newProducts.length} more product(s) to compare.`);
     }
   };
 
   // Remove product from comparison
   const removeProduct = (productId: number | string) => {
-    const currentIds = searchParams.get('ids')?.split(',').filter(id => id) || [];
-    const newIds = currentIds.filter(id => id !== String(productId));
+    const newProducts = products.filter(p => String(p.id) !== String(productId));
+    setProducts(newProducts);
+    recomputeFeatures(newProducts);
 
-    if (newIds.length < 2) {
-      // If less than 2 products remain, show a message
-      showToast('info', 'At least two products are required for comparison');
-      return;
+    if (newProducts.length > 0) {
+      setSearchParams({ ids: newProducts.map(p => String(p.id)).join(',') }, { replace: true });
+    } else {
+      setSearchParams({}, { replace: true });
     }
-
-    // Update URL with remaining product IDs
-    setSearchParams({ ids: newIds.join(',') });
   };
 
-  if (loading) {
-    return (
-      <div className="flex justify-center items-center min-h-[60vh]">
-        <LoadingSpinner size="large" text="Loading comparison data..." />
-      </div>
-    );
-  }
-
-  if (error || products.length < 2) {
+  if (products.length < 2) {
     return (
       <div className="min-h-screen bg-gradient-to-b from-gray-50 to-white">
         <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
@@ -407,10 +261,7 @@ const ComparisonPage: React.FC = () => {
 
   return (
     <div className="min-h-screen bg-gradient-to-b from-gray-50 to-white">
-      <motion.div
-        initial={{ opacity: 0, y: 20 }}
-        animate={{ opacity: 1, y: 0 }}
-        transition={{ duration: 0.5 }}
+      <div
         className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12"
       >
         {/* Hero Section */}
@@ -473,11 +324,7 @@ const ComparisonPage: React.FC = () => {
         {/* Search modal */}
         {showSearch && (
           <div className="fixed inset-0 bg-black/60 backdrop-blur-sm flex items-center justify-center z-50 p-4">
-            <motion.div
-              initial={{ opacity: 0, scale: 0.95 }}
-              animate={{ opacity: 1, scale: 1 }}
-              exit={{ opacity: 0, scale: 0.95 }}
-              transition={{ duration: 0.2 }}
+            <div
               className="bg-white rounded-xl shadow-2xl w-full max-w-2xl overflow-hidden"
             >
               <div className="p-6 border-b border-gray-100">
@@ -565,7 +412,7 @@ const ComparisonPage: React.FC = () => {
                   )}
                 </div>
               </div>
-            </motion.div>
+            </div>
           </div>
         )}
 
@@ -791,7 +638,7 @@ const ComparisonPage: React.FC = () => {
             </div>
           </div>
         </div>
-      </motion.div>
+      </div>
     </div>
   );
 };

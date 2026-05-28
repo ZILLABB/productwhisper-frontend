@@ -1,5 +1,4 @@
 import React, { useState } from 'react';
-import { motion, AnimatePresence } from 'framer-motion';
 import {
   FiMail,
   FiPhone,
@@ -11,8 +10,11 @@ import {
   FiAlertCircle,
   FiClock
 } from 'react-icons/fi';
+import { apiService } from '../services/api';
+import useSEO from '../hooks/useSEO';
 
 const ContactPage: React.FC = () => {
+  useSEO({ title: 'Contact Us', description: 'Get in touch with the ProductWhisper team. We\'d love to hear from you.' });
   const [formData, setFormData] = useState({
     name: '',
     email: '',
@@ -34,17 +36,12 @@ const ContactPage: React.FC = () => {
     setSubmitError('');
 
     try {
-      // Simulate API call
-      await new Promise(resolve => setTimeout(resolve, 1500));
-
-      // Reset form and show success message
+      await apiService.submitContactForm(formData);
       setFormData({ name: '', email: '', subject: '', message: '' });
       setSubmitSuccess(true);
-
-      // Hide success message after 5 seconds
       setTimeout(() => setSubmitSuccess(false), 5000);
-    } catch (_) {
-      setSubmitError('There was an error sending your message. Please try again.');
+    } catch (err: any) {
+      setSubmitError(err?.message || 'There was an error sending your message. Please try again.');
     } finally {
       setIsSubmitting(false);
     }
@@ -52,93 +49,66 @@ const ContactPage: React.FC = () => {
 
   return (
     <div className="min-h-screen bg-gradient-to-b from-gray-50 to-white">
-      <motion.div
-        initial={{ opacity: 0, y: 20 }}
-        animate={{ opacity: 1, y: 0 }}
-        transition={{ duration: 0.5 }}
-        className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12"
-      >
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
+
         {/* Hero Section */}
         <div className="relative mb-16 bg-gradient-primary rounded-premium overflow-hidden shadow-premium">
           <div className="absolute inset-0 opacity-10">
             <div className="absolute top-10 left-10 w-64 h-64 rounded-full bg-secondary/30 blur-3xl"></div>
             <div className="absolute bottom-10 right-10 w-80 h-80 rounded-full bg-accent/20 blur-3xl"></div>
-            <div className="absolute top-1/2 left-1/4 w-40 h-40 rounded-full bg-white/20 blur-2xl"></div>
-            <div className="absolute bottom-1/3 right-1/3 w-32 h-32 rounded-full bg-primary-light/20 blur-2xl"></div>
           </div>
-
-          <motion.div
-            className="relative z-10 px-6 py-16 sm:px-12 sm:py-20 text-center"
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.7, delay: 0.2 }}
-          >
+          <div className="relative z-10 px-6 py-16 sm:px-12 sm:py-20 text-center">
             <h1 className="text-3xl md:text-5xl font-display font-bold text-white mb-4">Get in Touch</h1>
             <p className="text-white/80 text-lg max-w-2xl mx-auto">
               Have questions about ProductWhisper? We're here to help and would love to hear from you.
             </p>
-            <motion.div
-              className="w-24 h-1 bg-secondary mx-auto mt-8"
-              initial={{ width: 0, opacity: 0 }}
-              animate={{ width: 96, opacity: 1 }}
-              transition={{ duration: 0.8, delay: 0.5 }}
-            />
-          </motion.div>
+            <div className="w-24 h-1 bg-secondary mx-auto mt-8"></div>
+          </div>
         </div>
 
         {/* Contact Cards */}
         <div className="grid grid-cols-1 md:grid-cols-3 gap-8 mb-16 -mt-24">
-          <motion.div
-            className="bg-white rounded-xl shadow-lg p-8 flex flex-col items-center text-center"
-            whileHover={{ y: -5, boxShadow: "0 15px 30px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04)" }}
-            transition={{ type: "spring", stiffness: 300, damping: 15 }}
-          >
-            <div className="bg-primary/10 p-4 rounded-full mb-6 text-primary">
-              <FiMail size={28} />
+          {[
+            {
+              icon: <FiMail size={28} />,
+              iconBg: 'bg-primary/10 text-primary',
+              title: 'Email Us',
+              desc: 'Our friendly team is here to help with any questions.',
+              link: 'mailto:hello@productwhisper.ng',
+              linkText: 'hello@productwhisper.ng',
+              linkClass: 'text-primary',
+            },
+            {
+              icon: <FiPhone size={28} />,
+              iconBg: 'bg-secondary/10 text-secondary',
+              title: 'Call Us',
+              desc: 'Mon-Fri from 9am to 5pm WAT.',
+              link: 'tel:+2348012345678',
+              linkText: '+234 801 234 5678',
+              linkClass: 'text-secondary',
+            },
+            {
+              icon: <FiMapPin size={28} />,
+              iconBg: 'bg-accent/10 text-accent',
+              title: 'Visit Us',
+              desc: 'Come say hello at our office in Lagos.',
+              linkText: '12 Admiralty Way\nLekki Phase 1, Lagos',
+              linkClass: 'text-accent',
+            },
+          ].map((card, i) => (
+            <div key={i} className="bg-white rounded-xl shadow-lg p-8 flex flex-col items-center text-center hover:-translate-y-1 transition-transform duration-200">
+              <div className={`${card.iconBg} p-4 rounded-full mb-6`}>{card.icon}</div>
+              <h3 className="text-xl font-display font-semibold mb-3 text-gray-900">{card.title}</h3>
+              <p className="text-gray-600 mb-6">{card.desc}</p>
+              {card.link ? (
+                <a href={card.link} className={`${card.linkClass} font-medium hover:opacity-80 transition-colors`}>
+                  {card.linkText}
+                </a>
+              ) : (
+                <p className={`${card.linkClass} font-medium whitespace-pre-line`}>{card.linkText}</p>
+              )}
             </div>
-            <h3 className="text-xl font-display font-semibold mb-3 text-gray-900">Email Us</h3>
-            <p className="text-gray-600 mb-6">Our friendly team is here to help with any questions.</p>
-            <a
-              href="mailto:hello@productwhisper.ng"
-              className="text-primary font-medium hover:text-primary-dark transition-colors inline-flex items-center"
-            >
-              hello@productwhisper.ng
-            </a>
-          </motion.div>
-
-          <motion.div
-            className="bg-white rounded-xl shadow-lg p-8 flex flex-col items-center text-center"
-            whileHover={{ y: -5, boxShadow: "0 15px 30px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04)" }}
-            transition={{ type: "spring", stiffness: 300, damping: 15 }}
-          >
-            <div className="bg-secondary/10 p-4 rounded-full mb-6 text-secondary">
-              <FiPhone size={28} />
-            </div>
-            <h3 className="text-xl font-display font-semibold mb-3 text-gray-900">Call Us</h3>
-            <p className="text-gray-600 mb-6">Mon-Fri from 9am to 5pm WAT. We'd love to hear from you.</p>
-            <a
-              href="tel:+2348012345678"
-              className="text-secondary font-medium hover:text-secondary-dark transition-colors inline-flex items-center"
-            >
-              +234 801 234 5678
-            </a>
-          </motion.div>
-
-          <motion.div
-            className="bg-white rounded-xl shadow-lg p-8 flex flex-col items-center text-center"
-            whileHover={{ y: -5, boxShadow: "0 15px 30px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04)" }}
-            transition={{ type: "spring", stiffness: 300, damping: 15 }}
-          >
-            <div className="bg-accent/10 p-4 rounded-full mb-6 text-accent">
-              <FiMapPin size={28} />
-            </div>
-            <h3 className="text-xl font-display font-semibold mb-3 text-gray-900">Visit Us</h3>
-            <p className="text-gray-600 mb-6">Come say hello at our office in Lagos.</p>
-            <p className="text-accent font-medium">
-              12 Admiralty Way<br />
-              Lekki Phase 1, Lagos
-            </p>
-          </motion.div>
+          ))}
         </div>
 
         {/* Contact Form Section */}
@@ -153,76 +123,47 @@ const ContactPage: React.FC = () => {
                 <h2 className="text-2xl font-display font-semibold text-gray-900">Send Us a Message</h2>
               </div>
 
-              <AnimatePresence>
-                {submitSuccess && (
-                  <motion.div
-                    className="bg-green-50 border border-green-200 text-green-700 px-6 py-4 rounded-lg mb-8 flex items-start"
-                    initial={{ opacity: 0, y: -10 }}
-                    animate={{ opacity: 1, y: 0 }}
-                    exit={{ opacity: 0, y: -10 }}
-                  >
-                    <FiCheckCircle className="mr-3 mt-0.5 flex-shrink-0" size={18} />
-                    <p>Thank you for your message! We'll get back to you soon.</p>
-                  </motion.div>
-                )}
+              {submitSuccess && (
+                <div className="bg-green-50 border border-green-200 text-green-700 px-6 py-4 rounded-lg mb-8 flex items-start">
+                  <FiCheckCircle className="mr-3 mt-0.5 flex-shrink-0" size={18} />
+                  <p>Thank you for your message! We'll get back to you soon.</p>
+                </div>
+              )}
 
-                {submitError && (
-                  <motion.div
-                    className="bg-red-50 border border-red-200 text-red-700 px-6 py-4 rounded-lg mb-8 flex items-start"
-                    initial={{ opacity: 0, y: -10 }}
-                    animate={{ opacity: 1, y: 0 }}
-                    exit={{ opacity: 0, y: -10 }}
-                  >
-                    <FiAlertCircle className="mr-3 mt-0.5 flex-shrink-0" size={18} />
-                    <p>{submitError}</p>
-                  </motion.div>
-                )}
-              </AnimatePresence>
+              {submitError && (
+                <div className="bg-red-50 border border-red-200 text-red-700 px-6 py-4 rounded-lg mb-8 flex items-start">
+                  <FiAlertCircle className="mr-3 mt-0.5 flex-shrink-0" size={18} />
+                  <p>{submitError}</p>
+                </div>
+              )}
 
               <form onSubmit={handleSubmit} className="space-y-6">
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                   <div>
-                    <label htmlFor="name" className="block text-sm font-medium text-gray-700 mb-2">
-                      Your Name
-                    </label>
+                    <label htmlFor="name" className="block text-sm font-medium text-gray-700 mb-2">Your Name</label>
                     <input
-                      type="text"
-                      id="name"
-                      name="name"
-                      value={formData.name}
-                      onChange={handleChange}
+                      type="text" id="name" name="name"
+                      value={formData.name} onChange={handleChange}
                       className="w-full px-4 py-3 rounded-lg border border-gray-200 focus:outline-none focus:ring-2 focus:ring-primary/30 focus:border-primary/30 transition-colors"
-                      placeholder="Chinedu Okafor"
-                      required
+                      placeholder="Chinedu Okafor" required
                     />
                   </div>
-
                   <div>
-                    <label htmlFor="email" className="block text-sm font-medium text-gray-700 mb-2">
-                      Your Email
-                    </label>
+                    <label htmlFor="email" className="block text-sm font-medium text-gray-700 mb-2">Your Email</label>
                     <input
-                      type="email"
-                      id="email"
-                      name="email"
-                      value={formData.email}
-                      onChange={handleChange}
+                      type="email" id="email" name="email"
+                      value={formData.email} onChange={handleChange}
                       className="w-full px-4 py-3 rounded-lg border border-gray-200 focus:outline-none focus:ring-2 focus:ring-primary/30 focus:border-primary/30 transition-colors"
-                      placeholder="chinedu@example.com"
-                      required
+                      placeholder="chinedu@example.com" required
                     />
                   </div>
                 </div>
 
                 <div>
-                  <label htmlFor="subject" className="block text-sm font-medium text-gray-700 mb-2">
-                    Subject
-                  </label>
+                  <label htmlFor="subject" className="block text-sm font-medium text-gray-700 mb-2">Subject</label>
                   <select
-                    id="subject"
-                    name="subject"
-                    value={formData.subject}
-                    onChange={handleChange}
+                    id="subject" name="subject"
+                    value={formData.subject} onChange={handleChange}
                     className="w-full px-4 py-3 rounded-lg border border-gray-200 focus:outline-none focus:ring-2 focus:ring-primary/30 focus:border-primary/30 transition-colors"
                     required
                   >
@@ -236,28 +177,20 @@ const ContactPage: React.FC = () => {
                 </div>
 
                 <div>
-                  <label htmlFor="message" className="block text-sm font-medium text-gray-700 mb-2">
-                    Your Message
-                  </label>
+                  <label htmlFor="message" className="block text-sm font-medium text-gray-700 mb-2">Your Message</label>
                   <textarea
-                    id="message"
-                    name="message"
-                    rows={6}
-                    value={formData.message}
-                    onChange={handleChange}
+                    id="message" name="message" rows={6}
+                    value={formData.message} onChange={handleChange}
                     className="w-full px-4 py-3 rounded-lg border border-gray-200 focus:outline-none focus:ring-2 focus:ring-primary/30 focus:border-primary/30 transition-colors"
-                    placeholder="How can we help you?"
-                    required
+                    placeholder="How can we help you?" required
                   ></textarea>
                 </div>
 
                 <div>
-                  <motion.button
+                  <button
                     type="submit"
-                    className="px-6 py-3 bg-primary text-white font-medium rounded-lg shadow-sm hover:bg-primary-dark transition-colors flex items-center justify-center"
+                    className="px-6 py-3 bg-primary text-white font-medium rounded-lg shadow-sm hover:bg-primary-dark transition-colors flex items-center justify-center disabled:opacity-50"
                     disabled={isSubmitting}
-                    whileHover={{ scale: 1.02 }}
-                    whileTap={{ scale: 0.98 }}
                   >
                     {isSubmitting ? (
                       <span className="flex items-center">
@@ -273,7 +206,7 @@ const ContactPage: React.FC = () => {
                         Send Message
                       </span>
                     )}
-                  </motion.button>
+                  </button>
                 </div>
               </form>
             </div>
@@ -292,17 +225,15 @@ const ContactPage: React.FC = () => {
               <div className="space-y-6">
                 <div>
                   <h3 className="font-medium text-gray-900 mb-2">How does ProductWhisper work?</h3>
-                  <p className="text-gray-600 text-sm">ProductWhisper uses advanced sentiment analysis to analyze product reviews and provide insights into what people really think.</p>
+                  <p className="text-gray-600 text-sm">We search Jumia, Konga, and Jiji in real-time to compare prices on the same product, helping you find the cheapest deal across Nigerian e-commerce platforms.</p>
                 </div>
-
                 <div>
-                  <h3 className="font-medium text-gray-900 mb-2">Is there a free trial available?</h3>
-                  <p className="text-gray-600 text-sm">Yes, we offer a 14-day free trial with full access to all features. No credit card required.</p>
+                  <h3 className="font-medium text-gray-900 mb-2">How do I know if a seller is trustworthy?</h3>
+                  <p className="text-gray-600 text-sm">Each listing shows a seller trust badge based on their rating, verification status, and sales history. Look for "Trusted" or "Verified" badges for safer purchases.</p>
                 </div>
-
                 <div>
-                  <h3 className="font-medium text-gray-900 mb-2">How accurate is the sentiment analysis?</h3>
-                  <p className="text-gray-600 text-sm">Our sentiment analysis has been trained on millions of reviews and achieves over 90% accuracy in most product categories.</p>
+                  <h3 className="font-medium text-gray-900 mb-2">Is ProductWhisper free to use?</h3>
+                  <p className="text-gray-600 text-sm">Yes! ProductWhisper is completely free. We help Nigerian shoppers save money by comparing prices across all major platforms.</p>
                 </div>
               </div>
             </div>
@@ -328,7 +259,6 @@ const ContactPage: React.FC = () => {
                   <span className="text-gray-700">Sunday</span>
                   <span className="font-medium text-gray-900">Closed</span>
                 </div>
-
                 <div className="pt-4 mt-4 border-t border-gray-200">
                   <p className="text-gray-600 text-sm">
                     All times are in West Africa Time (WAT/GMT+1).
@@ -339,7 +269,7 @@ const ContactPage: React.FC = () => {
             </div>
           </div>
         </div>
-      </motion.div>
+      </div>
     </div>
   );
 };

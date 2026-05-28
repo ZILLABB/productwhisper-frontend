@@ -12,8 +12,25 @@ import {
   FiLoader,
   FiChevronDown,
   FiChevronUp,
+  FiAward,
+  FiTag,
+  FiX,
+  FiYoutube,
+  FiZap,
 } from 'react-icons/fi';
 import { apiService } from '../services/api';
+import {
+  addAlert,
+  updateAlertPrice,
+  isTracked,
+  getTriggeredAlerts,
+  dismissAlert,
+  removeAlert,
+  getAlerts,
+  getPriceChange,
+  type PriceAlert,
+} from '../utils/priceAlerts';
+import useSEO from '../hooks/useSEO';
 
 /* ─── Types ─────────────────────────────────────────────── */
 
@@ -44,6 +61,8 @@ interface GroupListing {
   product: ScrapedProduct;
   vendorName?: string;
   trustLevel?: string;
+  trustScore?: number;
+  scamFlags?: string[];
 }
 
 interface ProductGroup {
@@ -57,24 +76,6 @@ interface ProductGroup {
   platformCount: number;
 }
 
-interface PriceSummary {
-  lowestPrice: number;
-  highestPrice: number;
-  averagePrice: number;
-  currency: string;
-  cheapestPlatform: string;
-  savings: number;
-}
-
-interface Recommendation {
-  platform: string;
-  title: string;
-  price: number;
-  url: string;
-  vendor: string;
-  reason: string;
-}
-
 interface PlatformResult {
   platform: string;
   products: ScrapedProduct[];
@@ -86,294 +87,359 @@ interface LiveSearchData {
   query: string;
   totalResults: number;
   searchTimeMs: number;
-  priceSummary: PriceSummary;
-  recommendation: Recommendation | null;
+  priceSummary: {
+    lowestPrice: number;
+    highestPrice: number;
+    averagePrice: number;
+    currency: string;
+    cheapestPlatform: string;
+    savings: number;
+  };
+  recommendation: {
+    platform: string;
+    title: string;
+    price: number;
+    url: string;
+    vendor: string;
+    reason: string;
+  } | null;
   groups: ProductGroup[];
   unmatchedProducts: ScrapedProduct[];
   platforms: Record<string, PlatformResult>;
   allProducts: ScrapedProduct[];
 }
 
-/* ─── Platform Branding ────────────────────────────────── */
+interface YouTubeVideo {
+  videoId: string;
+  title: string;
+  channelName: string;
+  publishedAt: string;
+  viewCount?: number;
+  likeCount?: number;
+  url: string;
+}
+
+/* ─── Platform Config ──────────────────────────────────── */
 
 const PLATFORMS = ['JUMIA', 'KONGA', 'JIJI'] as const;
 
-const PLATFORM_META: Record<string, { color: string; bg: string; border: string; logoUrl: string; siteUrl: string }> = {
-  JUMIA: {
-    color: '#f68b1e',
-    bg: 'bg-orange-50',
-    border: 'border-orange-200',
-    logoUrl: 'https://upload.wikimedia.org/wikipedia/commons/thumb/2/2e/Jumia_logo.svg/512px-Jumia_logo.svg.png',
-    siteUrl: 'https://www.jumia.com.ng',
-  },
-  KONGA: {
-    color: '#ed1c24',
-    bg: 'bg-red-50',
-    border: 'border-red-200',
-    logoUrl: 'https://www-konga-com-res.cloudinary.com/image/upload/v1618837814/content/konga_logo.png',
-    siteUrl: 'https://www.konga.com',
-  },
-  JIJI: {
-    color: '#00a651',
-    bg: 'bg-green-50',
-    border: 'border-green-200',
-    logoUrl: 'https://upload.wikimedia.org/wikipedia/commons/thumb/5/55/Jiji-logo.svg/512px-Jiji-logo.svg.png',
-    siteUrl: 'https://jiji.ng',
-  },
+const PM: Record<string, {
+  color: string;
+  lightBg: string;
+  logo: string;
+  label: string;
+}> = {
+  JUMIA: { color: '#F68B1E', lightBg: '#FFF7ED', logo: '/logos/jumia.svg', label: 'Jumia' },
+  KONGA: { color: '#ED017F', lightBg: '#FDF2F8', logo: '/logos/konga.svg', label: 'Konga' },
+  JIJI:  { color: '#00A651', lightBg: '#F0FDF4', logo: '/logos/jiji.svg',  label: 'Jiji' },
 };
+
+/* ─── localStorage helpers ────────────────────────────── */
+
+const LS_RECENT_KEY = 'pw_price_recent_searches';
+const LS_MAX_RECENT = 10;
+
+function getRecentSearches(): string[] {
+  try {
+    return JSON.parse(localStorage.getItem(LS_RECENT_KEY) || '[]');
+  } catch { return []; }
+}
+
+function addRecentSearch(q: string) {
+  const recent = getRecentSearches().filter(s => s.toLowerCase() !== q.toLowerCase());
+  recent.unshift(q);
+  localStorage.setItem(LS_RECENT_KEY, JSON.stringify(recent.slice(0, LS_MAX_RECENT)));
+}
+
+function removeRecentSearch(q: string) {
+  const recent = getRecentSearches().filter(s => s !== q);
+  localStorage.setItem(LS_RECENT_KEY, JSON.stringify(recent));
+}
 
 /* ─── Helpers ──────────────────────────────────────────── */
 
-function formatNGN(amount: number): string {
-  return '₦' + amount.toLocaleString();
-}
+const fmtNGN = (n: number) => '₦' + n.toLocaleString();
 
-function trustBadge(level?: string) {
-  switch (level) {
-    case 'trusted':
-      return <span className="inline-flex items-center gap-1 text-[10px] font-semibold text-green-700 bg-green-100 rounded-full px-1.5 py-0.5"><FiCheckCircle size={10} /> Trusted</span>;
-    case 'verified':
-      return <span className="inline-flex items-center gap-1 text-[10px] font-semibold text-blue-700 bg-blue-100 rounded-full px-1.5 py-0.5"><FiShield size={10} /> Verified</span>;
-    case 'average':
-      return <span className="inline-flex items-center gap-1 text-[10px] font-semibold text-yellow-700 bg-yellow-100 rounded-full px-1.5 py-0.5"><FiShield size={10} /> Average</span>;
-    case 'caution':
-      return <span className="inline-flex items-center gap-1 text-[10px] font-semibold text-red-700 bg-red-100 rounded-full px-1.5 py-0.5"><FiAlertTriangle size={10} /> Caution</span>;
-    default:
-      return <span className="inline-flex items-center gap-1 text-[10px] font-semibold text-gray-500 bg-gray-100 rounded-full px-1.5 py-0.5">Unknown</span>;
-  }
-}
-
-/* ─── Platform Logo Component ──────────────────────────── */
-
-const PlatformLogo: React.FC<{ platform: string; size?: number }> = ({ platform, size = 24 }) => {
-  const meta = PLATFORM_META[platform];
-  const [imgError, setImgError] = useState(false);
-
-  if (!meta || imgError) {
-    return (
-      <div
-        className="rounded flex items-center justify-center text-white font-bold"
-        style={{ width: size, height: size, backgroundColor: meta?.color || '#666', fontSize: size * 0.5 }}
-      >
-        {platform?.[0] || '?'}
-      </div>
-    );
-  }
-
+const TrustBadge: React.FC<{ level?: string; score?: number }> = ({ level, score }) => {
+  const cfg: Record<string, { icon: React.ReactNode; text: string; cls: string }> = {
+    trusted:  { icon: <FiCheckCircle size={10} />, text: 'Trusted',  cls: 'text-green-700 bg-green-50 border-green-200' },
+    verified: { icon: <FiShield size={10} />,      text: 'Verified', cls: 'text-blue-700 bg-blue-50 border-blue-200' },
+    average:  { icon: <FiShield size={10} />,      text: 'Average',  cls: 'text-yellow-700 bg-yellow-50 border-yellow-200' },
+    caution:  { icon: <FiAlertTriangle size={10} />, text: 'Caution', cls: 'text-red-700 bg-red-50 border-red-200' },
+  };
+  const c = cfg[level || ''] || { icon: null, text: 'Unknown Seller', cls: 'text-gray-500 bg-gray-50 border-gray-200' };
   return (
-    <img
-      src={meta.logoUrl}
-      alt={platform}
-      className="object-contain"
-      style={{ width: size, height: size }}
-      onError={() => setImgError(true)}
-    />
+    <span className={`inline-flex items-center gap-1 text-[10px] font-medium border rounded-full px-1.5 py-0.5 ${c.cls}`} title={score ? `Trust score: ${score}/100` : undefined}>
+      {c.icon} {c.text}{score ? ` ${score}` : ''}
+    </span>
   );
 };
 
-/* ─── Comparison Row (one product across platforms) ─────── */
+/* ─── Platform Logo (local SVG) ────────────────────────── */
 
-const ComparisonRow: React.FC<{
-  group: ProductGroup;
-  index: number;
-}> = ({ group, index }) => {
-  const [expanded, setExpanded] = useState(false);
+const PlatformBadge: React.FC<{ platform: string; size?: 'sm' | 'md' | 'lg' }> = ({ platform, size = 'md' }) => {
+  const p = PM[platform];
+  if (!p) return null;
+  const h = size === 'sm' ? 'h-5' : size === 'md' ? 'h-7' : 'h-9';
+  return <img src={p.logo} alt={p.label} className={`${h} rounded`} />;
+};
 
-  // Build a map: platform → listing (or null if not found)
-  const listingMap: Record<string, GroupListing | null> = {};
-  for (const p of PLATFORMS) {
-    listingMap[p] = group.listings.find(l => l.platform === p) || null;
-  }
+/* ─── Skeleton loader ─────────────────────────────────── */
 
-  // Best image from any listing
-  const bestImage = group.listings.find(l => l.product.imageUrl)?.product.imageUrl;
-  const placeholder = `https://placehold.co/120x120/f3f4f6/9ca3af?text=${encodeURIComponent(group.name.substring(0, 12))}`;
+const SkeletonCard: React.FC = () => (
+  <div className="bg-white rounded-2xl shadow-sm border border-gray-200 overflow-hidden animate-pulse">
+    <div className="flex items-start gap-4 p-5 pb-4">
+      <div className="w-20 h-20 rounded-xl bg-gray-200" />
+      <div className="flex-1 space-y-2">
+        <div className="h-3 bg-gray-200 rounded w-1/3" />
+        <div className="h-4 bg-gray-200 rounded w-full" />
+        <div className="h-3 bg-gray-200 rounded w-2/3" />
+      </div>
+    </div>
+    <div className="grid grid-cols-3 border-t border-gray-100">
+      {[1, 2, 3].map(i => (
+        <div key={i} className="p-4 text-center border-r last:border-r-0 border-gray-100 space-y-2">
+          <div className="h-6 bg-gray-200 rounded mx-auto w-16" />
+          <div className="h-5 bg-gray-200 rounded mx-auto w-20" />
+          <div className="h-3 bg-gray-200 rounded mx-auto w-12" />
+          <div className="h-8 bg-gray-200 rounded mx-auto w-24 mt-2" />
+        </div>
+      ))}
+    </div>
+  </div>
+);
+
+/* ─── Comparison Card ──────────────────────────────────── */
+
+const ComparisonCard: React.FC<{ group: ProductGroup; rank: number; searchQuery: string; onTrack?: () => void }> = ({ group, rank, searchQuery, onTrack }) => {
+  const [open, setOpen] = useState(false);
+  const bestImg = group.listings.find(l => l.product.imageUrl)?.product.imageUrl;
+  const bestListing = group.listings.find(l => l.product.price === group.lowestPrice) || group.listings[0];
+  const tracked = isTracked(bestListing.product.url);
 
   return (
-    <div className={`bg-white rounded-xl border border-gray-100 shadow-sm overflow-hidden hover:shadow-md transition-shadow ${index === 0 ? 'ring-2 ring-green-200' : ''}`}>
-      {/* Main row */}
-      <div className="p-4 sm:p-5">
-        <div className="flex gap-4">
-          {/* Product image */}
-          <div className="flex-shrink-0 w-20 h-20 sm:w-24 sm:h-24 bg-gray-50 rounded-lg overflow-hidden flex items-center justify-center">
-            {bestImage ? (
-              <img src={bestImage} alt={group.name} loading="lazy" decoding="async" className="w-full h-full object-contain p-1" onError={(e) => { (e.target as HTMLImageElement).src = placeholder; }} />
-            ) : (
-              <div className="text-gray-300 text-3xl font-bold">{group.name[0]}</div>
-            )}
-          </div>
+    <div className={`bg-white rounded-2xl shadow-sm border overflow-hidden transition-all hover:shadow-md ${rank === 0 ? 'border-green-200 ring-1 ring-green-100' : 'border-gray-200'}`}>
 
-          {/* Product info + platform prices */}
-          <div className="flex-1 min-w-0">
-            {/* Title + savings badge */}
-            <div className="flex items-start justify-between gap-2 mb-3">
-              <h3 className="text-sm sm:text-base font-semibold text-gray-900 line-clamp-2">{group.name}</h3>
-              {group.savings > 0 && (
-                <span className="flex-shrink-0 inline-flex items-center gap-1 px-2 py-1 bg-green-100 text-green-700 text-xs font-bold rounded-full whitespace-nowrap">
-                  <FiTrendingDown size={12} />
-                  Save {formatNGN(group.savings)}
-                </span>
-              )}
-            </div>
-
-            {/* Platform price columns */}
-            <div className="grid grid-cols-3 gap-2 sm:gap-3">
-              {PLATFORMS.map((platform) => {
-                const listing = listingMap[platform];
-                const meta = PLATFORM_META[platform];
-                const isCheapest = listing && listing.product.price === group.lowestPrice;
-
-                return (
-                  <div
-                    key={platform}
-                    className={`relative rounded-lg p-2 sm:p-3 text-center transition-colors ${
-                      listing
-                        ? isCheapest
-                          ? 'bg-green-50 border-2 border-green-300'
-                          : `${meta.bg} border border-gray-200`
-                        : 'bg-gray-50 border border-dashed border-gray-200'
-                    }`}
-                  >
-                    {/* Platform logo */}
-                    <div className="flex items-center justify-center gap-1.5 mb-1.5">
-                      <PlatformLogo platform={platform} size={18} />
-                      <span className="text-[11px] font-medium text-gray-600">{platform}</span>
-                    </div>
-
-                    {listing ? (
-                      <>
-                        {/* Price */}
-                        <div className={`text-base sm:text-lg font-bold ${isCheapest ? 'text-green-600' : 'text-gray-900'}`}>
-                          {formatNGN(listing.product.price)}
-                        </div>
-
-                        {/* Cheapest badge */}
-                        {isCheapest && (
-                          <div className="text-[10px] font-semibold text-green-600 mt-0.5">BEST PRICE</div>
-                        )}
-
-                        {/* How much more */}
-                        {!isCheapest && listing.product.price > group.lowestPrice && (
-                          <div className="flex items-center justify-center gap-0.5 text-[10px] text-red-500 mt-0.5">
-                            <FiTrendingUp size={10} />
-                            +{formatNGN(listing.product.price - group.lowestPrice)}
-                          </div>
-                        )}
-
-                        {/* Vendor */}
-                        <div className="mt-1.5">
-                          {listing.vendorName ? (
-                            <div className="flex flex-col items-center gap-0.5">
-                              <span className="text-[10px] text-gray-500 truncate max-w-full">{listing.vendorName}</span>
-                              {trustBadge(listing.trustLevel)}
-                            </div>
-                          ) : (
-                            <span className="text-[10px] text-gray-400">Seller N/A</span>
-                          )}
-                        </div>
-
-                        {/* Buy button */}
-                        <a
-                          href={listing.product.url}
-                          target="_blank"
-                          rel="noopener noreferrer"
-                          className="mt-2 w-full inline-flex items-center justify-center gap-1 px-2 py-1.5 rounded-md text-[11px] font-semibold text-white transition-colors"
-                          style={{ backgroundColor: isCheapest ? '#16a34a' : meta.color }}
-                        >
-                          {isCheapest ? 'Buy Here' : 'View'} <FiExternalLink size={10} />
-                        </a>
-                      </>
-                    ) : (
-                      <div className="py-3">
-                        <span className="text-xs text-gray-400">Not found</span>
-                      </div>
-                    )}
-                  </div>
-                );
-              })}
-            </div>
-          </div>
+      {/* ── Header row ── */}
+      <div className="flex items-start gap-3 sm:gap-4 p-4 sm:p-5 pb-3 sm:pb-4">
+        {/* Image */}
+        <div className="flex-shrink-0 w-16 h-16 sm:w-20 sm:h-20 rounded-xl bg-gray-50 overflow-hidden flex items-center justify-center border border-gray-100">
+          {bestImg ? (
+            <img src={bestImg} alt="" loading="lazy" decoding="async" className="w-full h-full object-contain p-1.5" onError={(e) => { (e.target as HTMLImageElement).style.display = 'none'; }} />
+          ) : (
+            <FiTag className="text-gray-300" size={28} />
+          )}
         </div>
 
-        {/* Expand toggle for details */}
-        {group.listings.length > 0 && (
-          <button
-            onClick={() => setExpanded(!expanded)}
-            className="mt-3 w-full flex items-center justify-center gap-1 text-xs text-gray-500 hover:text-gray-700 transition-colors"
-          >
-            {expanded ? 'Hide details' : 'Show details'}
-            {expanded ? <FiChevronUp size={14} /> : <FiChevronDown size={14} />}
-          </button>
-        )}
+        {/* Title + badge */}
+        <div className="flex-1 min-w-0">
+          <div className="flex items-start gap-2 mb-1">
+            {rank === 0 && (
+              <span className="flex-shrink-0 inline-flex items-center gap-1 bg-green-500 text-white text-[10px] font-bold px-2 py-0.5 rounded-full">
+                <FiAward size={10} /> TOP DEAL
+              </span>
+            )}
+          </div>
+          <h3 className="text-sm sm:text-[15px] font-semibold text-gray-900 leading-snug line-clamp-2">{group.name}</h3>
+          <div className="flex items-center gap-3 mt-1.5 text-xs text-gray-500">
+            <span>{group.platformCount} platform{group.platformCount > 1 ? 's' : ''}</span>
+            {group.savings > 0 && (
+              <span className="inline-flex items-center gap-1 text-green-600 font-semibold">
+                <FiTrendingDown size={12} /> Save {fmtNGN(group.savings)}
+              </span>
+            )}
+            <button
+              onClick={(e) => {
+                e.stopPropagation();
+                if (!tracked) {
+                  addAlert({
+                    query: searchQuery,
+                    productTitle: group.name,
+                    platform: bestListing.platform,
+                    url: bestListing.product.url,
+                    imageUrl: bestImg,
+                    price: group.lowestPrice,
+                  });
+                  onTrack?.();
+                }
+              }}
+              className={`inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-medium transition-colors ${
+                tracked
+                  ? 'bg-blue-50 text-blue-600 border border-blue-200'
+                  : 'bg-gray-100 text-gray-600 hover:bg-blue-50 hover:text-blue-600 border border-transparent'
+              }`}
+              title={tracked ? 'Tracking this price' : 'Get notified when price drops'}
+            >
+              <FiClock size={10} />
+              {tracked ? 'Tracking' : 'Track Price'}
+            </button>
+          </div>
+        </div>
       </div>
 
-      {/* Expanded details */}
-      {expanded && (
-        <div className="border-t border-gray-100 px-4 sm:px-5 py-3 bg-gray-50">
-          <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
-            {group.listings.map((listing, idx) => {
-              const meta = PLATFORM_META[listing.platform];
-              return (
-                <div key={idx} className="bg-white rounded-lg p-3 border border-gray-100">
-                  <div className="flex items-center gap-2 mb-2">
-                    <PlatformLogo platform={listing.platform} size={16} />
-                    <span className="text-xs font-medium" style={{ color: meta?.color }}>{listing.platform}</span>
-                    <span className="text-[10px] text-gray-400 bg-gray-100 rounded px-1 py-0.5">
-                      {listing.product.condition.replace(/_/g, ' ')}
-                    </span>
+      {/* ── Platform price grid ── */}
+      <div className="grid grid-cols-3 border-t border-gray-100">
+        {PLATFORMS.map((platform) => {
+          const listing = group.listings.find(l => l.platform === platform);
+          const p = PM[platform];
+          const isBest = listing && listing.product.price === group.lowestPrice;
+
+          return (
+            <div
+              key={platform}
+              className={`relative p-3 sm:p-4 text-center border-r last:border-r-0 border-gray-100 ${
+                isBest ? 'bg-green-50' : listing ? '' : 'bg-gray-50'
+              }`}
+            >
+              {/* Platform logo */}
+              <div className="flex justify-center mb-2">
+                <PlatformBadge platform={platform} size="md" />
+              </div>
+
+              {listing ? (
+                <>
+                  {/* Price */}
+                  <div className={`text-base sm:text-lg font-bold mb-0.5 ${isBest ? 'text-green-600' : 'text-gray-900'}`}>
+                    {fmtNGN(listing.product.price)}
                   </div>
-                  <p className="text-xs text-gray-700 line-clamp-2 mb-1">{listing.product.title}</p>
-                  {listing.product.description && (
-                    <p className="text-[10px] text-gray-500 line-clamp-2">{listing.product.description}</p>
+
+                  {isBest ? (
+                    <div className="text-[10px] font-bold text-green-600 uppercase tracking-wide">Best Price</div>
+                  ) : (
+                    <div className="flex items-center justify-center gap-0.5 text-[10px] text-red-400">
+                      <FiTrendingUp size={10} /> +{fmtNGN(listing.product.price - group.lowestPrice)}
+                    </div>
                   )}
+
+                  {/* Vendor + Trust */}
+                  <div className="mt-2 flex flex-col items-center gap-1">
+                    {listing.vendorName && (
+                      <span className="text-[10px] text-gray-500 truncate max-w-[110px]">{listing.vendorName}</span>
+                    )}
+                    <TrustBadge level={listing.trustLevel} score={listing.trustScore} />
+                    {listing.scamFlags && listing.scamFlags.length > 0 && (
+                      <span className="text-[9px] text-red-500 leading-tight text-center" title={listing.scamFlags.join(', ')}>
+                        <FiAlertTriangle className="inline" size={9} /> {listing.scamFlags.length} warning{listing.scamFlags.length > 1 ? 's' : ''}
+                      </span>
+                    )}
+                  </div>
+
+                  {/* CTA */}
+                  <a
+                    href={listing.product.url}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className={`mt-3 inline-flex items-center justify-center gap-1 w-full py-2 rounded-lg text-xs font-semibold text-white transition-colors ${
+                      isBest ? 'bg-green-500 hover:bg-green-600' : 'hover:opacity-90'
+                    }`}
+                    style={isBest ? {} : { backgroundColor: p.color }}
+                  >
+                    {isBest ? 'Buy Here' : 'View Deal'} <FiExternalLink size={11} />
+                  </a>
+                </>
+              ) : (
+                <div className="py-6">
+                  <div className="text-xs text-gray-400">Not available</div>
                 </div>
-              );
-            })}
-          </div>
+              )}
+            </div>
+          );
+        })}
+      </div>
+
+      {/* ── Expandable details ── */}
+      <button
+        onClick={() => setOpen(!open)}
+        className="w-full flex items-center justify-center gap-1 py-2.5 text-xs text-gray-400 hover:text-gray-600 transition-colors border-t border-gray-100 bg-gray-50/50"
+      >
+        {open ? 'Hide' : 'Details'} {open ? <FiChevronUp size={14} /> : <FiChevronDown size={14} />}
+      </button>
+
+      {open && (
+        <div className="px-4 sm:px-5 py-4 bg-gray-50 border-t border-gray-100 space-y-2">
+          {group.listings.map((l, i) => (
+            <div key={i} className="flex items-start gap-3 bg-white rounded-lg p-3 border border-gray-100">
+              <PlatformBadge platform={l.platform} size="sm" />
+              <div className="min-w-0 flex-1">
+                <p className="text-xs font-medium text-gray-800 line-clamp-1">{l.product.title}</p>
+                <p className="text-[10px] text-gray-500 mt-0.5">
+                  {l.product.condition.replace(/_/g, ' ')}
+                  {l.product.metadata?.location ? ` · ${l.product.metadata.location}` : ''}
+                </p>
+                {l.scamFlags && l.scamFlags.length > 0 && (
+                  <div className="mt-1 space-y-0.5">
+                    {l.scamFlags.map((flag, fi) => (
+                      <p key={fi} className="text-[10px] text-red-500 flex items-center gap-1">
+                        <FiAlertTriangle size={9} /> {flag}
+                      </p>
+                    ))}
+                  </div>
+                )}
+              </div>
+            </div>
+          ))}
         </div>
       )}
     </div>
   );
 };
 
-/* ─── Unmatched product card (single platform) ─────────── */
+/* ─── Unmatched Card ───────────────────────────────────── */
 
 const UnmatchedCard: React.FC<{ product: ScrapedProduct }> = ({ product }) => {
-  const meta = PLATFORM_META[product.platform];
-  const placeholder = `https://placehold.co/80x80/${meta?.color?.replace('#', '') || '666'}/ffffff?text=${product.platform[0]}`;
-
+  const p = PM[product.platform];
   return (
-    <div className="bg-white rounded-lg border border-gray-100 p-3 hover:shadow-sm transition-shadow">
-      <div className="flex gap-3">
-        <div className="flex-shrink-0 w-16 h-16 bg-gray-50 rounded-lg overflow-hidden flex items-center justify-center">
-          {product.imageUrl ? (
-            <img src={product.imageUrl} alt={product.title} loading="lazy" decoding="async" className="w-full h-full object-contain p-1" onError={(e) => { (e.target as HTMLImageElement).src = placeholder; }} />
-          ) : (
-            <div className="text-gray-300 text-xl font-bold">{product.title[0]}</div>
-          )}
-        </div>
-        <div className="flex-1 min-w-0">
-          <div className="flex items-center gap-1.5 mb-1">
-            <PlatformLogo platform={product.platform} size={14} />
-            <span className="text-[10px] font-medium text-gray-500">{product.platform}</span>
-          </div>
-          <h4 className="text-xs font-medium text-gray-900 line-clamp-1">{product.title}</h4>
-          <div className="flex items-center justify-between mt-1">
-            <span className="text-sm font-bold" style={{ color: meta?.color || '#333' }}>{formatNGN(product.price)}</span>
-            <a
-              href={product.url}
-              target="_blank"
-              rel="noopener noreferrer"
-              className="text-[10px] font-medium text-gray-500 hover:text-gray-700 flex items-center gap-0.5"
-            >
-              View <FiExternalLink size={10} />
-            </a>
-          </div>
-        </div>
+    <div className="bg-white rounded-xl border border-gray-100 p-3 hover:shadow-sm transition-shadow flex gap-3 items-center">
+      <div className="flex-shrink-0 w-12 h-12 rounded-lg bg-gray-50 border border-gray-100 overflow-hidden flex items-center justify-center">
+        {product.imageUrl ? (
+          <img src={product.imageUrl} alt="" loading="lazy" decoding="async" className="w-full h-full object-contain p-0.5" onError={(e) => { (e.target as HTMLImageElement).style.display = 'none'; }} />
+        ) : (
+          <FiTag className="text-gray-300" size={16} />
+        )}
       </div>
+      <div className="flex-1 min-w-0">
+        <div className="flex items-center gap-1.5 mb-0.5">
+          <PlatformBadge platform={product.platform} size="sm" />
+        </div>
+        <h4 className="text-xs font-medium text-gray-800 line-clamp-1">{product.title}</h4>
+        <span className="text-sm font-bold" style={{ color: p?.color }}>{fmtNGN(product.price)}</span>
+      </div>
+      <a href={product.url} target="_blank" rel="noopener noreferrer" className="flex-shrink-0 text-gray-400 hover:text-gray-600">
+        <FiExternalLink size={14} />
+      </a>
     </div>
   );
 };
+
+/* ─── YouTube Review Card ─────────────────────────────── */
+
+const YouTubeCard: React.FC<{ video: YouTubeVideo }> = ({ video }) => (
+  <a
+    href={video.url}
+    target="_blank"
+    rel="noopener noreferrer"
+    className="flex gap-3 bg-white rounded-xl border border-gray-100 p-3 hover:shadow-sm transition-shadow group"
+  >
+    <div className="flex-shrink-0 w-28 h-20 rounded-lg bg-gray-100 overflow-hidden relative">
+      <img
+        src={`https://img.youtube.com/vi/${video.videoId}/mqdefault.jpg`}
+        alt=""
+        className="w-full h-full object-cover"
+        loading="lazy"
+      />
+      <div className="absolute inset-0 flex items-center justify-center bg-black/20 group-hover:bg-black/30 transition-colors">
+        <FiYoutube className="text-red-500" size={24} />
+      </div>
+    </div>
+    <div className="flex-1 min-w-0">
+      <h4 className="text-xs font-semibold text-gray-800 line-clamp-2 group-hover:text-blue-600 transition-colors">{video.title}</h4>
+      <p className="text-[10px] text-gray-500 mt-1">{video.channelName}</p>
+      <div className="flex items-center gap-2 mt-1 text-[10px] text-gray-400">
+        {video.viewCount != null && <span>{video.viewCount.toLocaleString()} views</span>}
+      </div>
+    </div>
+  </a>
+);
 
 /* ─── Main Page ────────────────────────────────────────── */
 
@@ -386,32 +452,70 @@ const PriceComparePage: React.FC = () => {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
   const [showUnmatched, setShowUnmatched] = useState(false);
+  const [recentSearches, setRecentSearches] = useState<string[]>(getRecentSearches);
+  const [cacheInfo, setCacheInfo] = useState<{ hit: boolean; layer: string; ageSeconds?: number } | null>(null);
+
+  // YouTube reviews
+  const [ytVideos, setYtVideos] = useState<YouTubeVideo[]>([]);
+  const [ytLoading, setYtLoading] = useState(false);
+
+  // Platform search progress
+  const [searchPhase, setSearchPhase] = useState('');
+
+  // Price alerts
+  const [trackedCount, setTrackedCount] = useState(() => getAlerts().filter(a => !a.dismissed).length);
+  const [triggeredAlerts, setTriggeredAlerts] = useState<PriceAlert[]>([]);
 
   const doSearch = useCallback(async (q: string) => {
     if (!q.trim()) return;
-
     setLoading(true);
     setError('');
     setData(null);
+    setCacheInfo(null);
+    setYtVideos([]);
     setSearchParams({ q: q.trim() });
+
+    setSearchPhase('Connecting to platforms...');
 
     try {
       const response = await apiService.liveSearch(q.trim(), 10);
       if (response?.data) {
         setData(response.data);
+        setCacheInfo(response._cache || null);
       }
+
+      // Save to recent searches
+      addRecentSearch(q.trim());
+      setRecentSearches(getRecentSearches());
+
+      // Update tracked price alerts with new prices
+      if (response?.data?.allProducts) {
+        for (const product of response.data.allProducts) {
+          updateAlertPrice(product.url, product.price);
+        }
+        setTriggeredAlerts(getTriggeredAlerts());
+        setTrackedCount(getAlerts().filter((a: PriceAlert) => !a.dismissed).length);
+      }
+
+      // Fetch YouTube reviews in background
+      setYtLoading(true);
+      apiService.getYouTubeReviews(q.trim(), 4)
+        .then((ytData: any) => {
+          if (ytData?.videos?.length > 0) setYtVideos(ytData.videos);
+        })
+        .catch(() => {})
+        .finally(() => setYtLoading(false));
+
     } catch (err: any) {
-      console.error('Live search failed:', err);
-      setError(err?.message || 'Failed to search. Please try again.');
+      setError(err?.message || 'Search failed. Please try again.');
     } finally {
       setLoading(false);
+      setSearchPhase('');
     }
   }, [setSearchParams]);
 
   useEffect(() => {
-    if (initialQuery) {
-      doSearch(initialQuery);
-    }
+    if (initialQuery) doSearch(initialQuery);
   }, []); // eslint-disable-line react-hooks/exhaustive-deps
 
   const handleSubmit = (e: React.FormEvent) => {
@@ -419,58 +523,85 @@ const PriceComparePage: React.FC = () => {
     doSearch(query);
   };
 
-  const popularSearches = [
-    'iPhone 15', 'Samsung Galaxy', 'Tecno Spark', 'Infinix Hot',
-    'PlayStation 5', 'MacBook', 'Oraimo FreePods', 'Hisense TV',
-  ];
+  const handleRemoveRecent = (q: string) => {
+    removeRecentSearch(q);
+    setRecentSearches(getRecentSearches());
+  };
+
+  const popular = ['iPhone 15', 'Samsung Galaxy A15', 'Tecno Spark 20', 'PlayStation 5', 'MacBook Air', 'Infinix Hot 40'];
+
+  useSEO({
+    title: data ? `${data.query} prices — Compare across Jumia, Konga & Jiji` : 'Compare Prices',
+    description: data
+      ? `Compare ${data.query} prices across Nigerian stores. Found ${data.totalResults} listings. Lowest: ₦${data.priceSummary?.lowestPrice?.toLocaleString()}.`
+      : 'Compare product prices across Jumia, Konga & Jiji in Nigeria. Find the best deals and avoid scam sellers.',
+    keywords: data ? `${data.query}, price comparison, Nigeria, Jumia, Konga, Jiji, best price` : 'price comparison Nigeria, Jumia prices, Konga prices, Jiji prices',
+  });
 
   return (
-    <div className="min-h-screen bg-gradient-to-b from-gray-50 to-white">
-      {/* Hero / Search */}
-      <div className="relative bg-gradient-primary overflow-hidden">
-        <div className="absolute inset-0 opacity-10">
-          <div className="absolute top-10 left-10 w-64 h-64 rounded-full bg-secondary/30 blur-3xl" />
-          <div className="absolute bottom-10 right-10 w-80 h-80 rounded-full bg-accent/20 blur-3xl" />
-        </div>
-
-        <div className="relative z-10 max-w-4xl mx-auto px-4 py-10 sm:py-14 text-center">
-          <h1 className="text-3xl sm:text-4xl md:text-5xl font-display font-bold text-white mb-3">
+    <div className="min-h-screen bg-gray-50">
+      {/* ─── Hero ─── */}
+      <div className="bg-gradient-primary">
+        <div className="max-w-4xl mx-auto px-4 pt-8 sm:pt-10 pb-10 sm:pb-12 text-center">
+          <h1 className="text-2xl sm:text-3xl md:text-4xl font-display font-bold text-white mb-2">
             Compare Prices Across Nigeria
           </h1>
-          <p className="text-white/80 text-lg mb-8 max-w-2xl mx-auto">
-            Search any product and instantly see prices from Jumia, Konga & Jiji side-by-side.
+          <p className="text-white/70 text-sm sm:text-base mb-6 sm:mb-8">
+            Real-time prices from Jumia, Konga & Jiji — side by side
           </p>
 
+          {/* Platform logos */}
+          <div className="flex items-center justify-center gap-3 sm:gap-4 mb-6 sm:mb-8">
+            {PLATFORMS.map((p) => (
+              <div key={p} className="bg-white/10 rounded-xl px-3 sm:px-4 py-2">
+                <PlatformBadge platform={p} size="lg" />
+              </div>
+            ))}
+          </div>
+
+          {/* Search bar */}
           <form onSubmit={handleSubmit} className="max-w-2xl mx-auto">
-            <div className="relative flex items-center bg-white rounded-2xl shadow-xl overflow-hidden">
-              <FiSearch className="absolute left-4 text-gray-400" size={22} />
+            <div className="relative flex bg-white rounded-2xl shadow-xl overflow-hidden">
+              <FiSearch className="absolute left-4 top-1/2 -translate-y-1/2 text-gray-400" size={20} />
               <input
                 type="text"
                 value={query}
                 onChange={(e) => setQuery(e.target.value)}
-                placeholder="What product are you looking for?"
-                className="flex-1 pl-12 pr-4 py-4 sm:py-5 text-lg text-gray-900 placeholder:text-gray-400 outline-none bg-transparent"
+                placeholder="Search a product... e.g. iPhone 15, Samsung Galaxy"
+                className="flex-1 pl-12 pr-4 py-3.5 sm:py-4 text-sm sm:text-base text-gray-900 placeholder:text-gray-400 outline-none"
               />
               <button
                 type="submit"
                 disabled={loading || !query.trim()}
-                className="mr-2 px-6 py-3 bg-primary text-white font-semibold rounded-xl hover:bg-primary-dark transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+                className="m-1.5 px-4 sm:px-6 bg-primary text-white font-semibold rounded-xl hover:bg-primary-dark transition-colors disabled:opacity-50 text-sm sm:text-base"
               >
-                {loading ? 'Searching...' : 'Compare'}
+                {loading ? <FiLoader className="animate-spin" size={20} /> : 'Compare'}
               </button>
             </div>
           </form>
 
-          {/* Popular searches */}
-          {!data && !loading && (
-            <div className="mt-6 flex flex-wrap justify-center gap-2">
-              <span className="text-white/60 text-sm mr-1">Popular:</span>
-              {popularSearches.map((s) => (
-                <button
-                  key={s}
-                  onClick={() => { setQuery(s); doSearch(s); }}
-                  className="px-3 py-1 text-sm bg-white/15 text-white rounded-full hover:bg-white/25 transition-colors"
-                >
+          {/* Recent searches */}
+          {!data && !loading && recentSearches.length > 0 && (
+            <div className="mt-4">
+              <p className="text-white/50 text-xs mb-2">Recent searches</p>
+              <div className="flex flex-wrap justify-center gap-2">
+                {recentSearches.slice(0, 6).map((s) => (
+                  <span key={s} className="inline-flex items-center gap-1 px-3 py-1 text-sm bg-white/15 text-white/80 rounded-full group">
+                    <button onClick={() => { setQuery(s); doSearch(s); }} className="hover:text-white">{s}</button>
+                    <button onClick={() => handleRemoveRecent(s)} className="opacity-0 group-hover:opacity-100 transition-opacity hover:text-red-300" title="Remove">
+                      <FiX size={12} />
+                    </button>
+                  </span>
+                ))}
+              </div>
+            </div>
+          )}
+
+          {/* Popular (only when no recent and no results) */}
+          {!data && !loading && recentSearches.length === 0 && (
+            <div className="mt-5 flex flex-wrap justify-center gap-2">
+              {popular.map((s) => (
+                <button key={s} onClick={() => { setQuery(s); doSearch(s); }} className="px-3 py-1 text-sm bg-white/15 text-white/80 rounded-full hover:bg-white/25 transition-colors">
                   {s}
                 </button>
               ))}
@@ -479,128 +610,160 @@ const PriceComparePage: React.FC = () => {
         </div>
       </div>
 
-      {/* Content */}
-      <div className="max-w-5xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
-        {/* Loading state */}
+      {/* ─── Content ─── */}
+      <div className="max-w-4xl mx-auto px-4 py-6 sm:py-8">
+
+        {/* Loading — skeleton cards */}
         {loading && (
-          <div className="flex flex-col items-center justify-center py-16">
-            <FiLoader className="animate-spin text-primary mb-4" size={48} />
-            <h3 className="text-xl font-display font-semibold text-gray-900 mb-2">
-              Searching across platforms...
-            </h3>
-            <p className="text-gray-500 mb-6">Finding the best prices for you</p>
-            <div className="flex gap-6">
-              {PLATFORMS.map((p) => (
-                <div key={p} className="flex flex-col items-center gap-2 animate-pulse">
-                  <PlatformLogo platform={p} size={40} />
-                  <span className="text-xs text-gray-500">{p}</span>
-                </div>
-              ))}
+          <div className="space-y-4">
+            <div className="flex flex-col items-center py-6">
+              <FiLoader className="animate-spin text-primary mb-3" size={32} />
+              <p className="text-gray-600 font-medium text-sm">{searchPhase || 'Searching all platforms...'}</p>
+              <div className="flex gap-5 mt-4">
+                {PLATFORMS.map((p) => (
+                  <div key={p} className="animate-pulse"><PlatformBadge platform={p} size="lg" /></div>
+                ))}
+              </div>
             </div>
+            <SkeletonCard />
+            <SkeletonCard />
           </div>
         )}
 
-        {/* Error state */}
+        {/* Error */}
         {error && (
           <div className="bg-red-50 border border-red-200 rounded-xl p-6 text-center">
-            <FiAlertTriangle className="mx-auto text-red-500 mb-2" size={32} />
-            <p className="text-red-700 font-medium">{error}</p>
-            <button
-              onClick={() => doSearch(query)}
-              className="mt-3 px-4 py-2 bg-red-100 text-red-700 rounded-lg hover:bg-red-200 transition-colors text-sm"
-            >
-              Try Again
+            <FiAlertTriangle className="mx-auto text-red-500 mb-2" size={28} />
+            <p className="text-red-700 font-medium text-sm">{error}</p>
+            <button onClick={() => doSearch(query)} className="mt-3 px-4 py-2 bg-red-100 text-red-700 rounded-lg text-sm hover:bg-red-200">
+              Retry
             </button>
           </div>
         )}
 
-        {/* Results */}
+        {/* ─── Triggered price alerts ─── */}
+        {triggeredAlerts.length > 0 && (
+          <div className="mb-6 space-y-2">
+            {triggeredAlerts.map(alert => (
+              <div key={alert.id} className="flex items-center gap-3 bg-green-50 border border-green-200 rounded-xl p-3">
+                <FiTrendingDown className="text-green-500 flex-shrink-0" size={20} />
+                <div className="flex-1 min-w-0">
+                  <p className="text-sm font-medium text-green-800">Price drop alert!</p>
+                  <p className="text-xs text-green-600 truncate">
+                    <strong>{alert.productTitle}</strong> dropped to {fmtNGN(alert.currentPrice)} (was {fmtNGN(alert.initialPrice)}, {getPriceChange(alert)}%)
+                  </p>
+                </div>
+                <a href={alert.url} target="_blank" rel="noopener noreferrer" className="flex-shrink-0 px-3 py-1.5 bg-green-500 text-white rounded-lg text-xs font-semibold hover:bg-green-600">
+                  Buy Now
+                </a>
+                <button onClick={() => { dismissAlert(alert.id); setTriggeredAlerts(getTriggeredAlerts()); }} className="flex-shrink-0 text-green-400 hover:text-green-600">
+                  <FiX size={16} />
+                </button>
+              </div>
+            ))}
+          </div>
+        )}
+
+        {/* ─── Results ─── */}
         {data && !loading && (
-          <div>
-            {/* Search meta */}
-            <div className="flex flex-col sm:flex-row sm:items-center justify-between mb-6 gap-3">
-              <div className="text-gray-600">
-                <span className="font-medium text-gray-900">{data.totalResults}</span> results for{' '}
-                <span className="font-medium text-gray-900">"{data.query}"</span>
-                <span className="text-gray-400 ml-2 text-sm">
-                  <FiClock className="inline mr-1" size={12} />
-                  {(data.searchTimeMs / 1000).toFixed(1)}s
-                </span>
+          <>
+            {/* Meta bar */}
+            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 mb-6">
+              <div>
+                <p className="text-sm text-gray-500">
+                  <span className="font-semibold text-gray-800">{data.totalResults}</span> results for "<span className="font-semibold text-gray-800">{data.query}</span>"
+                  <span className="ml-2 text-gray-400"><FiClock className="inline -mt-0.5 mr-0.5" size={12} />{(data.searchTimeMs / 1000).toFixed(1)}s</span>
+                </p>
+                {cacheInfo?.hit && (
+                  <p className="text-[10px] text-gray-400 mt-0.5 flex items-center gap-1">
+                    <FiZap size={10} className="text-yellow-500" />
+                    Cached result ({cacheInfo.ageSeconds ? `${Math.round(cacheInfo.ageSeconds / 60)}min ago` : 'instant'}) — <button onClick={() => { apiService.liveSearch(data.query, 10).then(r => { if (r?.data) { setData(r.data); setCacheInfo(r._cache || null); } }); }} className="text-blue-500 hover:underline">refresh</button>
+                  </p>
+                )}
               </div>
 
-              {/* Platform status pills */}
+              {/* Platform pills */}
               <div className="flex gap-2">
-                {PLATFORMS.map((p) => {
-                  const plat = data.platforms[p];
-                  const meta = PLATFORM_META[p];
+                {PLATFORMS.map((platform) => {
+                  const pl = data.platforms[platform];
                   return (
-                    <div key={p} className={`flex items-center gap-1.5 px-3 py-1.5 rounded-full border ${plat?.error ? 'border-red-200 bg-red-50' : 'border-gray-200 bg-white'}`}>
-                      <PlatformLogo platform={p} size={16} />
-                      <span className="text-xs font-medium text-gray-700">{p}</span>
-                      {plat?.error ? (
-                        <span className="text-[10px] text-red-500">Failed</span>
-                      ) : (
-                        <span className="text-[10px] text-gray-500">{plat?.count || 0}</span>
-                      )}
+                    <div key={platform} className={`flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-medium border ${pl?.error ? 'border-red-200 bg-red-50 text-red-600' : 'border-gray-200 bg-white text-gray-600'}`}>
+                      <PlatformBadge platform={platform} size="sm" />
+                      <span>{pl?.count ?? 0}</span>
                     </div>
                   );
                 })}
               </div>
             </div>
 
-            {/* ─── Column Headers ───────────────────────────── */}
-            <div className="hidden sm:flex items-center bg-gray-100 rounded-xl px-5 py-3 mb-4">
-              <div className="w-24 mr-4" /> {/* image spacer */}
-              <div className="flex-1 text-xs font-semibold text-gray-500 uppercase tracking-wide">Product</div>
-              <div className="grid grid-cols-3 gap-3 w-[420px] flex-shrink-0">
-                {PLATFORMS.map((p) => (
-                  <div key={p} className="flex items-center justify-center gap-1.5">
-                    <PlatformLogo platform={p} size={20} />
-                    <span className="text-xs font-semibold text-gray-700">{p}</span>
-                  </div>
-                ))}
-              </div>
-            </div>
-
-            {/* ─── Grouped Comparison Rows ──────────────────── */}
+            {/* ── Cross-platform groups ── */}
             {data.groups && data.groups.length > 0 && (
-              <div className="space-y-3 mb-8">
-                <h2 className="text-sm font-semibold text-gray-500 uppercase tracking-wide flex items-center gap-2">
+              <div className="space-y-4 mb-8">
+                <div className="flex items-center gap-2 mb-1">
                   <FiCheckCircle className="text-green-500" size={16} />
-                  Cross-Platform Matches ({data.groups.length})
-                </h2>
+                  <h2 className="text-sm font-bold text-gray-700 uppercase tracking-wide">
+                    Price Comparison ({data.groups.length} matched)
+                  </h2>
+                </div>
+
                 {data.groups.map((group, idx) => (
-                  <ComparisonRow key={group.groupId} group={group} index={idx} />
+                  <ComparisonCard key={group.groupId} group={group} rank={idx} searchQuery={data.query} onTrack={() => setTrackedCount(getAlerts().filter(a => !a.dismissed).length)} />
                 ))}
               </div>
             )}
 
-            {/* ─── No groups found message ──────────────────── */}
-            {data.groups && data.groups.length === 0 && data.totalResults > 0 && (
-              <div className="bg-yellow-50 border border-yellow-200 rounded-xl p-5 mb-8 text-center">
-                <FiAlertTriangle className="mx-auto text-yellow-500 mb-2" size={24} />
-                <p className="text-sm text-yellow-800 font-medium">
-                  No exact cross-platform matches found for this search.
-                </p>
-                <p className="text-xs text-yellow-600 mt-1">
-                  Try a more specific search (e.g. "iPhone 15 128GB" instead of just "iPhone")
-                </p>
+            {/* ── No matches hint ── */}
+            {data.groups?.length === 0 && data.totalResults > 0 && (
+              <div className="bg-amber-50 border border-amber-200 rounded-xl p-5 text-center mb-8">
+                <FiAlertTriangle className="mx-auto text-amber-500 mb-2" size={22} />
+                <p className="text-sm font-medium text-amber-800">No cross-platform matches found</p>
+                <p className="text-xs text-amber-600 mt-1">Try a more specific search like "iPhone 15 Pro Max 256GB"</p>
               </div>
             )}
 
-            {/* ─── Unmatched / Other Results ────────────────── */}
+            {/* ── YouTube Reviews ── */}
+            {(ytVideos.length > 0 || ytLoading) && (
+              <div className="mb-8">
+                <div className="flex items-center gap-2 mb-3">
+                  <FiYoutube className="text-red-500" size={16} />
+                  <h2 className="text-sm font-bold text-gray-700 uppercase tracking-wide">
+                    Video Reviews
+                  </h2>
+                </div>
+                {ytLoading ? (
+                  <div className="flex gap-3 overflow-hidden">
+                    {[1, 2].map(i => (
+                      <div key={i} className="flex gap-3 bg-white rounded-xl border border-gray-100 p-3 animate-pulse w-1/2">
+                        <div className="w-28 h-20 rounded-lg bg-gray-200" />
+                        <div className="flex-1 space-y-2">
+                          <div className="h-3 bg-gray-200 rounded w-full" />
+                          <div className="h-3 bg-gray-200 rounded w-3/4" />
+                          <div className="h-2 bg-gray-200 rounded w-1/2" />
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                ) : (
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
+                    {ytVideos.map(v => <YouTubeCard key={v.videoId} video={v} />)}
+                  </div>
+                )}
+              </div>
+            )}
+
+            {/* ── Other results ── */}
             {data.unmatchedProducts && data.unmatchedProducts.length > 0 && (
-              <div>
+              <div className="mb-8">
                 <button
                   onClick={() => setShowUnmatched(!showUnmatched)}
-                  className="flex items-center gap-2 text-sm font-semibold text-gray-500 uppercase tracking-wide mb-3 hover:text-gray-700 transition-colors"
+                  className="flex items-center gap-2 text-sm font-bold text-gray-500 uppercase tracking-wide mb-3 hover:text-gray-700"
                 >
                   Other Results ({data.unmatchedProducts.length})
                   {showUnmatched ? <FiChevronUp size={16} /> : <FiChevronDown size={16} />}
                 </button>
 
                 {showUnmatched && (
-                  <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
                     {data.unmatchedProducts.map((product, idx) => (
                       <UnmatchedCard key={`${product.platform}-${product.externalId}-${idx}`} product={product} />
                     ))}
@@ -609,71 +772,44 @@ const PriceComparePage: React.FC = () => {
               </div>
             )}
 
-            {/* No results at all */}
+            {/* Zero results */}
             {data.totalResults === 0 && (
               <div className="text-center py-16">
-                <FiSearch className="mx-auto text-gray-300 mb-4" size={48} />
-                <h3 className="text-xl font-display font-semibold text-gray-700 mb-2">No products found</h3>
-                <p className="text-gray-500 mb-6">Try a different search term or check back later.</p>
+                <FiSearch className="mx-auto text-gray-300 mb-4" size={40} />
+                <p className="text-gray-700 font-medium">No products found</p>
+                <p className="text-sm text-gray-500 mt-1 mb-6">Try a different search term</p>
                 <div className="flex flex-wrap justify-center gap-2">
-                  {popularSearches.slice(0, 4).map((s) => (
-                    <button
-                      key={s}
-                      onClick={() => { setQuery(s); doSearch(s); }}
-                      className="px-4 py-2 bg-gray-100 text-gray-700 rounded-lg hover:bg-gray-200 transition-colors text-sm"
-                    >
+                  {popular.slice(0, 4).map((s) => (
+                    <button key={s} onClick={() => { setQuery(s); doSearch(s); }} className="px-3 py-1.5 bg-gray-100 text-gray-700 rounded-lg text-sm hover:bg-gray-200">
                       {s}
                     </button>
                   ))}
                 </div>
               </div>
             )}
-          </div>
+          </>
         )}
 
-        {/* Empty state — no search yet */}
+        {/* ─── Empty state ─── */}
         {!data && !loading && !error && (
-          <div className="text-center py-16">
-            <div className="inline-flex items-center justify-center w-20 h-20 rounded-full bg-primary/10 mb-6">
-              <FiSearch className="text-primary" size={32} />
-            </div>
-            <h2 className="text-2xl font-display font-semibold text-gray-900 mb-3">
-              Find the Best Price in Nigeria
+          <div className="text-center py-12">
+            <h2 className="text-xl font-display font-semibold text-gray-900 mb-2">
+              How it works
             </h2>
-            <p className="text-gray-500 max-w-md mx-auto mb-8">
-              Search for any product and we'll check Jumia, Konga, and Jiji in real-time to find you the lowest price.
+            <p className="text-gray-500 text-sm max-w-md mx-auto mb-10">
+              Search for any product and we compare prices across all major Nigerian platforms in real-time.
             </p>
 
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-6 max-w-3xl mx-auto">
-              <div className="bg-white rounded-xl p-6 shadow-sm border border-gray-100">
-                <div className="w-12 h-12 rounded-full bg-orange-100 flex items-center justify-center mx-auto mb-3">
-                  <FiSearch className="text-orange-600" size={20} />
-                </div>
-                <h3 className="font-medium text-gray-900 mb-1">1. Search</h3>
-                <p className="text-sm text-gray-500">Type the product you want to buy</p>
-              </div>
-              <div className="bg-white rounded-xl p-6 shadow-sm border border-gray-100">
-                <div className="w-12 h-12 rounded-full bg-blue-100 flex items-center justify-center mx-auto mb-3">
-                  <FiTrendingDown className="text-blue-600" size={20} />
-                </div>
-                <h3 className="font-medium text-gray-900 mb-1">2. Compare</h3>
-                <p className="text-sm text-gray-500">See the same product on all platforms</p>
-              </div>
-              <div className="bg-white rounded-xl p-6 shadow-sm border border-gray-100">
-                <div className="w-12 h-12 rounded-full bg-green-100 flex items-center justify-center mx-auto mb-3">
-                  <FiCheckCircle className="text-green-600" size={20} />
-                </div>
-                <h3 className="font-medium text-gray-900 mb-1">3. Save</h3>
-                <p className="text-sm text-gray-500">Buy from the cheapest trusted seller</p>
-              </div>
-            </div>
-
-            {/* Platform logos */}
-            <div className="mt-10 flex items-center justify-center gap-8">
-              {PLATFORMS.map((p) => (
-                <div key={p} className="flex flex-col items-center gap-2 opacity-60">
-                  <PlatformLogo platform={p} size={40} />
-                  <span className="text-xs text-gray-500">{p}</span>
+            <div className="grid grid-cols-3 gap-4 sm:gap-6 max-w-lg mx-auto">
+              {[
+                { step: '1', title: 'Search', desc: 'Type a product name', color: 'bg-orange-100 text-orange-600' },
+                { step: '2', title: 'Compare', desc: 'See prices side-by-side', color: 'bg-blue-100 text-blue-600' },
+                { step: '3', title: 'Save', desc: 'Buy the cheapest deal', color: 'bg-green-100 text-green-600' },
+              ].map((s) => (
+                <div key={s.step} className="text-center">
+                  <div className={`w-10 h-10 rounded-full ${s.color} flex items-center justify-center mx-auto mb-2 text-sm font-bold`}>{s.step}</div>
+                  <h3 className="text-sm font-semibold text-gray-800">{s.title}</h3>
+                  <p className="text-xs text-gray-500 mt-0.5">{s.desc}</p>
                 </div>
               ))}
             </div>

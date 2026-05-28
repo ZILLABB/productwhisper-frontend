@@ -8,8 +8,6 @@ import {
   FiRefreshCw,
   FiDollarSign,
   FiChevronDown,
-  FiBell,
-  FiSettings
 } from 'react-icons/fi';
 
 const Header = () => {
@@ -85,7 +83,7 @@ const Header = () => {
               />
               <div className="flex flex-col leading-none">
                 <span className="text-primary font-bold">Product<span className="text-secondary">Whisper</span></span>
-                <span className="text-xs text-gray-500 font-normal mt-0.5">Sentiment Analysis</span>
+                <span className="text-xs text-gray-500 font-normal mt-0.5">Compare. Save. Shop Smart.</span>
               </div>
             </Link>
           </div>
@@ -120,12 +118,7 @@ const Header = () => {
               </button>
 
               {isDropdownOpen && (
-                <div
-                  initial={{ opacity: 0, y: -10 }}
-                  animate={{ opacity: 1, y: 0 }}
-                  transition={{ duration: 0.2 }}
-                  className="absolute right-0 mt-2 w-48 rounded-md shadow-lg bg-white ring-1 ring-black ring-opacity-5 z-50"
-                >
+                <div className="absolute right-0 mt-2 w-48 rounded-md shadow-lg bg-white ring-1 ring-black ring-opacity-5 z-50">
                   <div className="py-1">
                     {secondaryNavItems.map((item) => (
                       <Link
@@ -145,16 +138,7 @@ const Header = () => {
               )}
             </div>
 
-            {/* Notification and user buttons */}
-            <div className="flex items-center ml-4 pl-4 border-l border-gray-200">
-              <button className="p-2 rounded-full text-gray-500 hover:text-primary hover:bg-gray-100 transition-all duration-200">
-                <FiBell size={20} />
-              </button>
-              <button className="p-2 rounded-full text-gray-500 hover:text-primary hover:bg-gray-100 transition-all duration-200 ml-1">
-                <FiSettings size={20} />
-              </button>
-              {/* Login/Signup buttons removed */}
-            </div>
+            {/* Future: notification/account buttons will go here */}
           </nav>
 
           {/* Mobile Menu Button */}
@@ -166,11 +150,6 @@ const Header = () => {
             >
               <FiSearch size={20} />
             </Link>
-            <button
-              className="p-2 rounded-full text-gray-500 hover:text-primary hover:bg-gray-100 transition-all duration-200"
-            >
-              <FiBell size={20} />
-            </button>
             <button
               onClick={toggleMenu}
               className="p-2 rounded-full text-gray-700 hover:text-primary hover:bg-gray-100 transition-all duration-200"

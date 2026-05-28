@@ -2,8 +2,10 @@ import React from 'react';
 import { motion } from 'framer-motion';
 import { FiAward, FiBarChart2, FiUsers, FiTrendingUp, FiCheckCircle } from 'react-icons/fi';
 import AnimatedCircles from '../components/ui/AnimatedCircles';
+import useSEO from '../hooks/useSEO';
 
 const AboutPage: React.FC = () => {
+  useSEO({ title: 'About', description: 'Learn about ProductWhisper — Nigeria\'s price comparison platform helping shoppers find the best deals and avoid scams.' });
   return (
     <div className="min-h-screen bg-gradient-to-b from-gray-50 to-white relative overflow-hidden">
       <div className="absolute inset-0 opacity-20 pointer-events-none">

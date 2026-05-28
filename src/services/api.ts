@@ -1,14 +1,10 @@
-import axios from 'axios';
-import type { AxiosInstance, AxiosRequestConfig, AxiosResponse, AxiosError } from 'axios';
+import axios, { AxiosError } from 'axios';
+import type { AxiosInstance, AxiosRequestConfig, AxiosResponse } from 'axios';
 import { ApiError } from './apiError';
 import type {
   Product,
   SearchFilters,
   SearchResult,
-  TrendData,
-  User,
-  AuthTokens,
-  Notification
 } from '../types/api';
 import { getMockProduct, getMockSearchResults, getMockTrendingProducts, getMockTrendData } from '../utils/mockData';
 
@@ -61,29 +57,6 @@ class ApiService {
         throw new ApiError(errorMessage, undefined, null, null, error as Error);
       }
     }
-  }
-
-  // Auth stubs — NG backend uses API key auth, no user accounts
-  async register(_username: string, _email: string, _password: string): Promise<User> {
-    return { id: 1, name: 'API User', email: '', createdAt: new Date().toISOString() };
-  }
-
-  async login(_email: string, _password: string): Promise<User> {
-    return { id: 1, name: 'API User', email: _email, createdAt: new Date().toISOString() };
-  }
-
-  logout(): void {}
-
-  async getCurrentUser(): Promise<any> {
-    return { id: 1, username: 'ProductWhisper User', name: 'ProductWhisper User', email: 'user@productwhisper.ng', createdAt: new Date().toISOString() };
-  }
-
-  async updateProfile(profileData: Partial<User>): Promise<User> {
-    return { ...profileData, id: 1, createdAt: new Date().toISOString() } as User;
-  }
-
-  async updatePassword(_currentPassword: string, _newPassword: string): Promise<{ success: boolean }> {
-    return { success: true };
   }
 
   async searchProducts(query: string, filters?: SearchFilters): Promise<SearchResult> {
@@ -233,10 +206,6 @@ class ApiService {
     );
   }
 
-  async getNotifications(): Promise<Notification[]> {
-    return [];
-  }
-
   /**
    * Live cross-platform search — hits Jumia, Konga, Jiji in real time.
    * Returns products grouped by platform with price comparison.
@@ -263,6 +232,31 @@ class ApiService {
       null,
       'Failed to fetch trust score'
     );
+  }
+
+  /**
+   * Fetch YouTube review videos for a product query.
+   */
+  async getYouTubeReviews(query: string, maxResults: number = 5): Promise<any> {
+    return this.handleRequest(
+      async () => {
+        const response = await this.api.get('/products/youtube-reviews', {
+          params: { q: query, maxResults },
+          timeout: 15000,
+        });
+        return response;
+      },
+      { videos: [], configured: false },
+      'Failed to fetch YouTube reviews'
+    );
+  }
+
+  /**
+   * Submit a contact form.
+   */
+  async submitContactForm(data: { name: string; email: string; subject: string; message: string }): Promise<any> {
+    const response = await this.api.post('/contact/submit', data);
+    return response.data?.data || response.data;
   }
 
   async get(url: string, config?: AxiosRequestConfig): Promise<any> {

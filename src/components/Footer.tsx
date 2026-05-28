@@ -58,11 +58,11 @@ const Footer = () => {
               />
               <div className="flex flex-col leading-none">
                 <span className="text-white font-bold">Product<span className="text-secondary">Whisper</span></span>
-                <span className="text-xs text-white/70 font-normal mt-0.5">Sentiment Analysis</span>
+                <span className="text-xs text-white/70 font-normal mt-0.5">Compare. Save. Shop Smart.</span>
               </div>
             </Link>
             <p className="text-white/80 mb-4 text-sm leading-relaxed pr-4">
-              Discover what people really think about products with our advanced sentiment analysis platform.
+              Compare prices across Jumia, Konga & Jiji. Find the best deals and avoid scam sellers.
             </p>
             <div className="flex space-x-3">
               {[FiTwitter, FiFacebook, FiInstagram, FiLinkedin].map((Icon, index) => (
@@ -106,7 +106,7 @@ const Footer = () => {
                   {['About', 'Contact', 'Privacy', 'Terms'].map((item, index) => (
                     <li key={index}>
                       <Link
-                        to={index < 2 ? `/${item.toLowerCase()}` : '#'}
+                        to={`/${item.toLowerCase()}`}
                         className="text-white/70 hover:text-secondary transition-colors flex items-center group text-sm"
                       >
                         <FiChevronRight className="mr-1.5 text-secondary transition-transform duration-300 group-hover:translate-x-1" size={12} />
