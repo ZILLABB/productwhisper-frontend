@@ -25,6 +25,7 @@ import SentimentChart from '../components/product/SentimentChart';
 import ReviewCard from '../components/product/ReviewCard';
 import useSEO from '../hooks/useSEO';
 import SafetyDisclaimer from '../components/common/SafetyDisclaimer';
+import { recordClick, incrementClickStat } from '../utils/purchaseTracker';
 
 import type { Product } from '../types/api';
 
@@ -238,6 +239,10 @@ const ProductPage: React.FC = () => {
                             href={listing.url}
                             target="_blank"
                             rel="noopener noreferrer"
+                            onClick={() => {
+                              recordClick(product.name, listing.platform, listing.price, listing.url);
+                              incrementClickStat(listing.platform);
+                            }}
                             className={`flex items-center gap-3 w-full px-4 py-3 rounded-lg border transition-all group ${
                               isCheapest
                                 ? 'border-green-200 bg-green-50 hover:border-green-300 hover:shadow-sm'

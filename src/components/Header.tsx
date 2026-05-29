@@ -40,14 +40,14 @@ const Header = () => {
     setIsDropdownOpen(!isDropdownOpen);
   };
 
-  // Navigation items
+  // Navigation items — streamlined to avoid overlap
+  // "Search" is the live cross-platform search (was "Prices")
+  // "Compare" and "Trends" still exist as routes but aren't top-nav
   const navItems = [
     { name: 'Home', path: '/', icon: null },
-    { name: 'Search', path: '/search', icon: <FiSearch className="mr-2" /> },
-    { name: 'Trends', path: '/trends', icon: <FiBarChart2 className="mr-2" /> },
-    { name: 'Prices', path: '/prices', icon: <FiDollarSign className="mr-2" /> },
-    { name: 'Compare', path: '/compare', icon: <FiRefreshCw className="mr-2" /> },
+    { name: 'Search', path: '/prices', icon: <FiSearch className="mr-2" /> },
     { name: 'Deals', path: '/deals', icon: <FiDollarSign className="mr-2" /> },
+    { name: 'Compare', path: '/compare', icon: <FiRefreshCw className="mr-2" /> },
   ];
 
   // Secondary navigation items
@@ -145,7 +145,7 @@ const Header = () => {
           {/* Mobile Menu Button */}
           <div className="lg:hidden flex items-center space-x-2">
             <Link
-              to="/search"
+              to="/prices"
               className="p-2 rounded-full text-gray-500 hover:text-primary hover:bg-gray-100 transition-all duration-200"
               aria-label="Search"
             >

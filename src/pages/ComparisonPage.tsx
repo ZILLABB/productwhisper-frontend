@@ -243,7 +243,7 @@ const ComparisonPage: React.FC = () => {
               title="Compare Products Side by Side"
               description="Search and pick at least two products above to compare their features, prices, pros, cons, and get a recommendation."
               actions={[
-                { label: 'Browse Products', to: '/search', variant: 'primary', icon: Search },
+                { label: 'Browse Products', to: '/prices', variant: 'primary', icon: Search },
               ]}
             />
           )}

@@ -85,14 +85,19 @@ const Footer = () => {
               <div className="w-1/2 sm:w-1/3 px-4 mb-8">
                 <h3 className="text-base font-display font-semibold mb-4 text-white">Quick Links</h3>
                 <ul className="space-y-2">
-                  {['Home', 'Search', 'Trends', 'Compare'].map((item, index) => (
+                  {[
+                    { label: 'Home', path: '/' },
+                    { label: 'Search', path: '/prices' },
+                    { label: 'Deals', path: '/deals' },
+                    { label: 'Compare', path: '/compare' },
+                  ].map((item, index) => (
                     <li key={index}>
                       <Link
-                        to={item === 'Home' ? '/' : `/${item.toLowerCase()}`}
+                        to={item.path}
                         className="text-white/70 hover:text-secondary transition-colors flex items-center group text-sm"
                       >
                         <FiChevronRight className="mr-1.5 text-secondary transition-transform duration-300 group-hover:translate-x-1" size={12} />
-                        {item}
+                        {item.label}
                       </Link>
                     </li>
                   ))}

@@ -32,6 +32,7 @@ import {
 } from '../utils/priceAlerts';
 import useSEO from '../hooks/useSEO';
 import SafetyDisclaimer from '../components/common/SafetyDisclaimer';
+import { recordClick, incrementClickStat } from '../utils/purchaseTracker';
 
 /* ─── Types ─────────────────────────────────────────────── */
 
@@ -363,6 +364,10 @@ const ComparisonCard: React.FC<{ group: ProductGroup; rank: number; searchQuery:
                     href={listing.product.url}
                     target="_blank"
                     rel="noopener noreferrer"
+                    onClick={() => {
+                      recordClick(listing.product.title, listing.product.platform, listing.product.price, listing.product.url);
+                      incrementClickStat(listing.product.platform);
+                    }}
                     className={`mt-3 inline-flex items-center justify-center gap-1 w-full py-2 rounded-lg text-xs font-semibold text-white transition-colors ${
                       isBest ? 'bg-green-500 hover:bg-green-600' : 'hover:opacity-90'
                     }`}
@@ -475,7 +480,16 @@ const UnmatchedCard: React.FC<{ product: ScrapedProduct }> = ({ product }) => {
         <h4 className="text-xs font-medium text-gray-800 line-clamp-1">{product.title}</h4>
         <span className="text-sm font-bold" style={{ color: p?.color }}>{fmtNGN(product.price)}</span>
       </div>
-      <a href={product.url} target="_blank" rel="noopener noreferrer" className="flex-shrink-0 text-gray-400 hover:text-gray-600">
+      <a
+        href={product.url}
+        target="_blank"
+        rel="noopener noreferrer"
+        onClick={() => {
+          recordClick(product.title, product.platform, product.price, product.url);
+          incrementClickStat(product.platform);
+        }}
+        className="flex-shrink-0 text-gray-400 hover:text-gray-600"
+      >
         <FiExternalLink size={14} />
       </a>
     </div>

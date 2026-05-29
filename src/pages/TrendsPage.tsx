@@ -191,7 +191,7 @@ const TrendsPage: React.FC = () => {
               title="No Product Selected"
               description="Search for a product above to see what buyers are saying, price trends, and key strengths and weaknesses over time."
               actions={[
-                { label: 'Browse Products', to: '/search', variant: 'primary', icon: Search },
+                { label: 'Browse Products', to: '/prices', variant: 'primary', icon: Search },
               ]}
             />
           )}
@@ -209,7 +209,7 @@ const TrendsPage: React.FC = () => {
             title="Trend Data Unavailable"
             description={error || "We couldn't load trend data for this product. It may not have enough reviews yet."}
             actions={[
-              { label: 'Browse Products', to: '/search', variant: 'primary', icon: Search },
+              { label: 'Browse Products', to: '/prices', variant: 'primary', icon: Search },
               { label: 'Go Back', onClick: () => navigate(-1), variant: 'secondary' },
             ]}
           />

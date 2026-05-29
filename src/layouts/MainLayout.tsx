@@ -3,6 +3,7 @@ import { Outlet } from 'react-router-dom';
 import Header from '../components/Header';
 import Footer from '../components/Footer';
 import MemoryBank from '../components/common/MemoryBank';
+import PurchaseFollowUp from '../components/common/PurchaseFollowUp';
 import ErrorBoundary from '../components/common/ErrorBoundary';
 
 const MainLayout: React.FC = () => {
@@ -16,6 +17,7 @@ const MainLayout: React.FC = () => {
       </main>
       <Footer />
       <MemoryBank />
+      <PurchaseFollowUp />
     </div>
   );
 };

@@ -22,7 +22,7 @@ const NotFoundPage: React.FC = () => {
             <Home className="w-4 h-4" /> Go Home
           </Link>
           <Link
-            to="/search"
+            to="/prices"
             className="inline-flex items-center gap-2 px-5 py-2.5 bg-gray-100 text-gray-700 rounded-lg font-medium hover:bg-gray-200 transition-colors"
           >
             <Search className="w-4 h-4" /> Search Products

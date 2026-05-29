@@ -1,5 +1,5 @@
 import React, { Suspense, lazy } from 'react';
-import { BrowserRouter as Router, Routes, Route } from 'react-router-dom';
+import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-dom';
 import './App.css';
 
 // Import components
@@ -11,7 +11,6 @@ import { MainLayout } from './layouts';
  * Lazy-loaded page components to improve initial load time
  */
 const HomePage = lazy(() => import('./pages/HomePage'));
-const SearchPage = lazy(() => import('./pages/SearchPage'));
 const TrendsPage = lazy(() => import('./pages/TrendsPage'));
 const ComparisonPage = lazy(() => import('./pages/ComparisonPage'));
 const AboutPage = lazy(() => import('./pages/AboutPage'));
@@ -54,7 +53,8 @@ function App() {
             <Route index element={withErrorBoundaryAndSuspense(HomePage)} />
 
             {/* Main Pages */}
-            <Route path="search" element={withErrorBoundaryAndSuspense(SearchPage)} />
+            {/* Redirect old /search to /prices */}
+            <Route path="search" element={<Navigate to="/prices" replace />} />
             <Route path="trends" element={withErrorBoundaryAndSuspense(TrendsPage)} />
             <Route path="trends/:productId" element={withErrorBoundaryAndSuspense(TrendsPage)} />
             <Route path="compare" element={withErrorBoundaryAndSuspense(ComparisonPage)} />
