@@ -74,7 +74,7 @@ class ApiService {
         const response = await this.api.get('/search/', { params });
         const body = response.data;
 
-        const products: Product[] = (body.data || []).map(this.mapProduct);
+        const products: Product[] = (body.data || []).map((p: any) => this.mapProduct(p));
 
         const categoriesRes = await this.api.get('/products/categories').catch(() => ({ data: { data: [] } }));
         const brandsRes = await this.api.get('/products/brands').catch(() => ({ data: { data: [] } }));
@@ -171,7 +171,7 @@ class ApiService {
     return this.handleRequest<Product[]>(
       async () => {
         const response = await this.api.get('/products/trending', { params: { limit } });
-        const products = (response.data.data || []).map(this.mapProduct);
+        const products = (response.data.data || []).map((p: any) => this.mapProduct(p));
         return { data: products } as any;
       },
       undefined,
