@@ -1,8 +1,9 @@
-import React, { useState, useEffect } from 'react';
-import { Link } from 'react-router-dom';
+import React, { useState, useEffect, useCallback } from 'react';
+import { Link, useSearchParams } from 'react-router-dom';
 import { TrendingDown, AlertTriangle, RefreshCw, Tag, ArrowDown } from 'lucide-react';
 import LoadingSpinner from '../components/common/LoadingSpinner';
 import EmptyState from '../components/common/EmptyState';
+import Pagination from '../components/common/Pagination';
 import { apiService } from '../services/api';
 import { formatPrice } from '../utils/formatPrice';
 import useSEO from '../hooks/useSEO';
@@ -24,34 +25,52 @@ const PLATFORM_COLORS: Record<string, string> = {
   JIJI: 'bg-green-100 text-green-800',
 };
 
+const PAGE_SIZE = 12;
+
 const DealsPage: React.FC = () => {
   useSEO({
     title: 'Price Drops & Deals',
     description: 'Find the best price drops across Nigerian e-commerce platforms. Track savings on phones, laptops, and electronics.',
   });
 
+  const [searchParams, setSearchParams] = useSearchParams();
+  const currentPage = Number(searchParams.get('page')) || 1;
+
   const [deals, setDeals] = useState<Deal[]>([]);
+  const [totalPages, setTotalPages] = useState(1);
+  const [total, setTotal] = useState(0);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
   const [sortBy, setSortBy] = useState<'dropPercent' | 'currentPrice' | 'savings'>('dropPercent');
 
-  useEffect(() => {
-    fetchDeals();
-  }, []);
-
-  const fetchDeals = async () => {
+  const fetchDeals = useCallback(async (page: number) => {
     setLoading(true);
     setError('');
     try {
-      const response = await apiService.get('/prices/deals');
-      const data = response.data?.data || response.data || [];
+      const response = await apiService.get(`/prices/deals?limit=${PAGE_SIZE}&page=${page}`);
+      const body = response.data;
+      const data = body?.data || [];
+      const pagination = body?.pagination;
       setDeals(Array.isArray(data) ? data : []);
+      if (pagination) {
+        setTotalPages(pagination.totalPages || 1);
+        setTotal(pagination.total || data.length);
+      }
     } catch (err) {
       console.error('Failed to fetch deals:', err);
       setError('Failed to load deals. Please try again.');
     } finally {
       setLoading(false);
     }
+  }, []);
+
+  useEffect(() => {
+    fetchDeals(currentPage);
+  }, [currentPage, fetchDeals]);
+
+  const handlePageChange = (page: number) => {
+    setSearchParams({ page: String(page) });
+    window.scrollTo({ top: 0, behavior: 'smooth' });
   };
 
   const sortedDeals = [...deals].sort((a, b) => {
@@ -78,7 +97,7 @@ const DealsPage: React.FC = () => {
           icon={AlertTriangle}
           title="Couldn't load deals"
           description={error}
-          actions={[{ label: 'Retry', onClick: fetchDeals, variant: 'primary', icon: RefreshCw }]}
+          actions={[{ label: 'Retry', onClick: () => fetchDeals(currentPage), variant: 'primary', icon: RefreshCw }]}
         />
       </div>
     );
@@ -120,7 +139,7 @@ const DealsPage: React.FC = () => {
           </button>
         ))}
         <button
-          onClick={fetchDeals}
+          onClick={() => fetchDeals(currentPage)}
           className="ml-auto p-2 text-gray-400 hover:text-gray-600 transition-colors"
           title="Refresh deals"
         >
@@ -137,15 +156,19 @@ const DealsPage: React.FC = () => {
         />
       ) : (
         <>
-          <div className="text-sm text-gray-500 mb-4">{sortedDeals.length} deal{sortedDeals.length !== 1 ? 's' : ''} found</div>
+          <div className="text-sm text-gray-500 mb-4">
+            {total} deal{total !== 1 ? 's' : ''} found
+            {totalPages > 1 && ` — page ${currentPage} of ${totalPages}`}
+          </div>
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-            {sortedDeals.map((deal) => {
+            {sortedDeals.map((deal, idx) => {
               const savings = deal.previousPrice - deal.currentPrice;
 
               return (
-                <div
-                  key={deal.id}
-                  className="bg-white border border-gray-200 rounded-xl overflow-hidden hover:shadow-lg transition-shadow"
+                <Link
+                  key={`${deal.id}-${deal.platform}-${idx}`}
+                  to={`/product/${deal.slug || deal.id}`}
+                  className="bg-white border border-gray-200 rounded-xl overflow-hidden hover:shadow-lg transition-all hover:-translate-y-0.5 group"
                 >
                   {/* Deal Badge */}
                   <div className="relative">
@@ -166,7 +189,7 @@ const DealsPage: React.FC = () => {
                         <img
                           src={deal.imageUrl}
                           alt={deal.name}
-                          className="max-h-full max-w-full object-contain"
+                          className="max-h-full max-w-full object-contain group-hover:scale-105 transition-transform duration-300"
                           onError={(e) => {
                             (e.target as HTMLImageElement).src = `https://placehold.co/300x300/1e3a5f/ffffff?text=${encodeURIComponent(deal.name.split(' ').slice(0, 3).join(' '))}`;
                           }}
@@ -182,12 +205,9 @@ const DealsPage: React.FC = () => {
 
                   {/* Content */}
                   <div className="p-4">
-                    <Link
-                      to={`/product/${deal.slug || deal.id}`}
-                      className="text-sm font-medium text-gray-900 hover:text-blue-600 transition-colors line-clamp-2 mb-3"
-                    >
+                    <h3 className="text-sm font-medium text-gray-900 group-hover:text-blue-600 transition-colors line-clamp-2 mb-3">
                       {deal.name}
-                    </Link>
+                    </h3>
 
                     <div className="flex items-end justify-between">
                       <div>
@@ -200,15 +220,26 @@ const DealsPage: React.FC = () => {
                       </div>
                       <div className="text-right">
                         <div className="text-sm font-semibold text-red-600">
-                          Save {formatPrice(savings)}
+                          Save {formatPrice(savings, true)}
                         </div>
                       </div>
                     </div>
                   </div>
-                </div>
+                </Link>
               );
             })}
           </div>
+
+          {/* Pagination */}
+          {totalPages > 1 && (
+            <div className="mt-8">
+              <Pagination
+                page={currentPage}
+                totalPages={totalPages}
+                onPageChange={handlePageChange}
+              />
+            </div>
+          )}
         </>
       )}
     </div>

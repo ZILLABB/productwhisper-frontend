@@ -43,6 +43,7 @@ import {
 import ProductCard from "../components/product/ProductCard";
 import { apiService } from "../services/api";
 import type { Product, SearchFilters } from "../types/api";
+import Pagination from "../components/common/Pagination";
 import useSEO from "../hooks/useSEO";
 
 const sortOptions = [
@@ -91,6 +92,8 @@ export default function SearchPage() {
 
   const [products, setProducts] = useState<Product[]>([]);
   const [total, setTotal] = useState(0);
+  const [resultsPage, setResultsPage] = useState(1);
+  const RESULTS_PER_PAGE = 12;
   const [isSearching, setIsSearching] = useState(false);
   const [categories, setCategories] = useState<string[]>(["All"]);
   const [brands, setBrands] = useState<string[]>(["All"]);
@@ -106,6 +109,7 @@ export default function SearchPage() {
   const doSearch = useCallback(async (query: string) => {
     setIsSearching(true);
     setHasSearched(true);
+    setResultsPage(1);
     try {
       const filters: SearchFilters = {};
       if (category !== "All") filters.category = category;
@@ -152,6 +156,12 @@ export default function SearchPage() {
     if (inStockOnly) result = result.filter(() => true);
     return result;
   }, [products, minRating, inStockOnly]);
+
+  const resultsTotalPages = Math.ceil(filteredProducts.length / RESULTS_PER_PAGE);
+  const paginatedProducts = filteredProducts.slice(
+    (resultsPage - 1) * RESULTS_PER_PAGE,
+    resultsPage * RESULTS_PER_PAGE
+  );
 
   useEffect(() => {
     const filters: string[] = [];
@@ -574,8 +584,9 @@ export default function SearchPage() {
                       <span className="flex items-center gap-2"><Loader2 className="h-4 w-4 animate-spin" /> Searching...</span>
                     ) : (
                       <>
-                        Showing <span className="font-semibold text-gray-900">{filteredProducts.length}</span> results
+                        Showing <span className="font-semibold text-gray-900">{filteredProducts.length}</span> result{filteredProducts.length !== 1 ? 's' : ''}
                         {search && <span> for "<span className="font-semibold text-primary">{search}</span>"</span>}
+                        {resultsTotalPages > 1 && <span className="text-gray-400"> — page {resultsPage} of {resultsTotalPages}</span>}
                       </>
                     )}
                   </p>
@@ -623,13 +634,14 @@ export default function SearchPage() {
                 <Loader2 className="h-12 w-12 animate-spin text-primary mx-auto mb-4" />
                 <p className="text-gray-500">Searching products...</p>
               </div>
-            ) : filteredProducts.length > 0 ? (
+            ) : paginatedProducts.length > 0 ? (
+              <>
               <div className={`grid gap-4 ${
                 viewMode === "grid"
                   ? "grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4"
                   : "grid-cols-1"
               }`}>
-                {filteredProducts.map((product) => (
+                {paginatedProducts.map((product) => (
                   <ProductCard
                     key={product.id}
                     id={product.id}
@@ -661,6 +673,16 @@ export default function SearchPage() {
                   />
                 ))}
               </div>
+              {resultsTotalPages > 1 && (
+                <div className="mt-8">
+                  <Pagination
+                    page={resultsPage}
+                    totalPages={resultsTotalPages}
+                    onPageChange={(p) => { setResultsPage(p); window.scrollTo({ top: 0, behavior: 'smooth' }); }}
+                  />
+                </div>
+              )}
+              </>
             ) : hasSearched ? (
               <div className="text-center py-16 px-8 bg-white rounded-xl border border-gray-100 shadow-sm">
                 <div className="inline-flex items-center justify-center w-16 h-16 rounded-full bg-gray-100 mb-6">
