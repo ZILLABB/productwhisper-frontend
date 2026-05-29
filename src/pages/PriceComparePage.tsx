@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useCallback } from 'react';
+import React, { useState, useEffect, useCallback, useMemo } from 'react';
 import { useSearchParams } from 'react-router-dom';
 import {
   FiSearch,
@@ -17,6 +17,7 @@ import {
   FiX,
   FiYoutube,
   FiZap,
+  FiGrid,
 } from 'react-icons/fi';
 import { apiService } from '../services/api';
 import {
@@ -25,7 +26,6 @@ import {
   isTracked,
   getTriggeredAlerts,
   dismissAlert,
-  removeAlert,
   getAlerts,
   getPriceChange,
   type PriceAlert,
@@ -33,6 +33,7 @@ import {
 import useSEO from '../hooks/useSEO';
 import SafetyDisclaimer from '../components/common/SafetyDisclaimer';
 import { recordClick, incrementClickStat } from '../utils/purchaseTracker';
+import SearchAutocomplete from '../components/common/SearchAutocomplete';
 
 /* ─── Types ─────────────────────────────────────────────── */
 
@@ -174,11 +175,6 @@ function addRecentSearch(q: string) {
   const recent = getRecentSearches().filter(s => s.toLowerCase() !== q.toLowerCase());
   recent.unshift(q);
   localStorage.setItem(LS_RECENT_KEY, JSON.stringify(recent.slice(0, LS_MAX_RECENT)));
-}
-
-function removeRecentSearch(q: string) {
-  const recent = getRecentSearches().filter(s => s !== q);
-  localStorage.setItem(LS_RECENT_KEY, JSON.stringify(recent));
 }
 
 /* ─── Helpers ──────────────────────────────────────────── */
@@ -496,6 +492,177 @@ const UnmatchedCard: React.FC<{ product: ScrapedProduct }> = ({ product }) => {
   );
 };
 
+/* ─── Browse Product Card (for broad queries) ────────── */
+
+const BrowseProductCard: React.FC<{ product: ScrapedProduct; onRefineSearch: (q: string) => void }> = ({ product, onRefineSearch }) => {
+  const p = PM[product.platform];
+  // Extract a short product type from title for the "search this" button
+  return (
+    <div className="bg-white rounded-xl border border-gray-200 overflow-hidden hover:shadow-md transition-all group">
+      {/* Image */}
+      <div className="relative h-36 bg-gray-50 flex items-center justify-center overflow-hidden">
+        {product.imageUrl ? (
+          <img
+            src={product.imageUrl}
+            alt=""
+            loading="lazy"
+            decoding="async"
+            className="w-full h-full object-contain p-3"
+            onError={(e) => { (e.target as HTMLImageElement).style.display = 'none'; }}
+          />
+        ) : (
+          <FiTag className="text-gray-200" size={40} />
+        )}
+        {/* Platform badge */}
+        <div className="absolute top-2 left-2">
+          <div className="bg-white/90 backdrop-blur-sm rounded-lg px-1.5 py-1 shadow-sm">
+            <PlatformBadge platform={product.platform} size="sm" />
+          </div>
+        </div>
+      </div>
+
+      {/* Info */}
+      <div className="p-3">
+        <h4 className="text-xs font-medium text-gray-800 line-clamp-2 leading-relaxed mb-2 min-h-[2.5rem]">{product.title}</h4>
+        <div className="flex items-center justify-between">
+          <span className="text-base font-bold" style={{ color: p?.color }}>{fmtNGN(product.price)}</span>
+          {product.condition && product.condition !== 'UNKNOWN' && (
+            <span className="text-[10px] text-gray-400 bg-gray-100 px-1.5 py-0.5 rounded">
+              {product.condition.replace(/_/g, ' ')}
+            </span>
+          )}
+        </div>
+
+        {/* Actions */}
+        <div className="flex gap-2 mt-3">
+          <button
+            onClick={() => onRefineSearch(product.title.split(/\s+/).slice(0, 4).join(' '))}
+            className="flex-1 flex items-center justify-center gap-1 px-2 py-1.5 bg-primary/5 text-primary text-xs font-medium rounded-lg hover:bg-primary/10 transition-colors"
+            title="Search for this specific product to compare prices"
+          >
+            <FiSearch size={11} /> Compare Prices
+          </button>
+          <a
+            href={product.url}
+            target="_blank"
+            rel="noopener noreferrer"
+            onClick={() => {
+              recordClick(product.title, product.platform, product.price, product.url);
+              incrementClickStat(product.platform);
+            }}
+            className="flex items-center justify-center gap-1 px-2 py-1.5 text-xs font-medium rounded-lg transition-colors hover:opacity-80 text-white"
+            style={{ backgroundColor: p?.color }}
+          >
+            View <FiExternalLink size={11} />
+          </a>
+        </div>
+      </div>
+    </div>
+  );
+};
+
+/* ─── Category Label Helper ──────────────────────────── */
+
+const CATEGORY_LABELS: Record<string, { label: string; icon: string }> = {
+  AUDIO: { label: 'Audio & Earphones', icon: '🎧' },
+  PHONE: { label: 'Phones', icon: '📱' },
+  PHONE_ACCESSORY: { label: 'Phone Accessories', icon: '📱' },
+  APPLIANCE: { label: 'Home & Appliances', icon: '🏠' },
+  LAPTOP: { label: 'Laptops', icon: '💻' },
+  LAPTOP_ACCESSORY: { label: 'Laptop Accessories', icon: '💻' },
+  WEARABLE: { label: 'Smartwatches & Wearables', icon: '⌚' },
+  TV: { label: 'TVs & Displays', icon: '📺' },
+  GAMING_CONSOLE: { label: 'Gaming', icon: '🎮' },
+  GAMING_ACCESSORY: { label: 'Gaming Accessories', icon: '🎮' },
+  STORAGE_DEVICE: { label: 'Storage Devices', icon: '💾' },
+  NETWORKING: { label: 'Networking', icon: '📡' },
+  SOLAR_POWER: { label: 'Solar & Power', icon: '☀️' },
+  GENERAL_ACCESSORY: { label: 'Accessories', icon: '🔌' },
+  OTHER: { label: 'Other Products', icon: '📦' },
+};
+
+/** Guess product category from title using simple keywords */
+function guessCategory(title: string): string {
+  const t = title.toLowerCase();
+  if (/\b(earbuds?|earpods?|headphones?|speakers?|soundbar|earphones?|freepods|spacebuds|necklace)\b/.test(t)) return 'AUDIO';
+  if (/\b(power\s*bank|charger|cable|adapter|case|screen\s*protector|tempered\s*glass|phone\s*holder)\b/.test(t)) return 'PHONE_ACCESSORY';
+  if (/\b(iphone|galaxy\s*[asz]|redmi|tecno|infinix|itel|smartphone|android\s*phone)\b/.test(t)) return 'PHONE';
+  if (/\b(laptop|macbook|thinkpad|chromebook|notebook)\b/.test(t)) return 'LAPTOP';
+  if (/\b(smart\s*watch|smartwatch|watch|band|fitbit)\b/.test(t)) return 'WEARABLE';
+  if (/\b(extension|stabilizer|surge|blender|iron|fan|kettle|microwave|fridge|cooker)\b/.test(t)) return 'APPLIANCE';
+  if (/\b(tv|television|oled|qled)\b/.test(t)) return 'TV';
+  if (/\b(playstation|ps[45]|xbox|nintendo|controller|gamepad)\b/.test(t)) return 'GAMING_CONSOLE';
+  if (/\b(ssd|hdd|hard\s*drive|flash\s*drive|memory\s*card|sd\s*card)\b/.test(t)) return 'STORAGE_DEVICE';
+  if (/\b(router|wifi|modem|mesh)\b/.test(t)) return 'NETWORKING';
+  if (/\b(solar|inverter|generator)\b/.test(t)) return 'SOLAR_POWER';
+  if (/\b(clipper|trimmer|hair)\b/.test(t)) return 'OTHER';
+  return 'OTHER';
+}
+
+/* ─── Browse Grid (broad query results) ──────────────── */
+
+const BrowseGrid: React.FC<{
+  products: ScrapedProduct[];
+  query: string;
+  onRefineSearch: (q: string) => void;
+}> = ({ products, query, onRefineSearch }) => {
+  // Group products by guessed category
+  const grouped = useMemo(() => {
+    const map = new Map<string, ScrapedProduct[]>();
+    for (const p of products) {
+      const cat = guessCategory(p.title);
+      if (!map.has(cat)) map.set(cat, []);
+      map.get(cat)!.push(p);
+    }
+    // Sort categories by count descending
+    return [...map.entries()].sort((a, b) => b[1].length - a[1].length);
+  }, [products]);
+
+  return (
+    <div className="space-y-8">
+      {/* Hint banner */}
+      <div className="flex items-start gap-3 bg-blue-50 border border-blue-100 rounded-xl p-4">
+        <FiGrid className="flex-shrink-0 text-blue-500 mt-0.5" size={18} />
+        <div>
+          <p className="text-sm font-medium text-blue-800">
+            Showing all "{query}" products — pick one to compare prices
+          </p>
+          <p className="text-xs text-blue-600 mt-0.5">
+            Tap "Compare Prices" on any product to find the same item across Jumia, Konga & Jiji
+          </p>
+        </div>
+      </div>
+
+      {grouped.map(([category, items]) => {
+        const catInfo = CATEGORY_LABELS[category] || { label: category, icon: '📦' };
+        return (
+          <div key={category}>
+            <h3 className="flex items-center gap-2 text-sm font-bold text-gray-700 uppercase tracking-wide mb-3">
+              <span>{catInfo.icon}</span>
+              {catInfo.label}
+              <span className="text-xs font-normal text-gray-400 lowercase tracking-normal">({items.length})</span>
+            </h3>
+            <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-3">
+              {items.slice(0, 8).map((product, idx) => (
+                <BrowseProductCard
+                  key={`${product.platform}-${product.externalId}-${idx}`}
+                  product={product}
+                  onRefineSearch={onRefineSearch}
+                />
+              ))}
+            </div>
+            {items.length > 8 && (
+              <p className="text-xs text-gray-400 mt-2 text-center">
+                + {items.length - 8} more — search for a specific product to see all
+              </p>
+            )}
+          </div>
+        );
+      })}
+    </div>
+  );
+};
+
 /* ─── YouTube Review Card ─────────────────────────────── */
 
 const YouTubeCard: React.FC<{ video: YouTubeVideo }> = ({ video }) => (
@@ -548,7 +715,7 @@ const PriceComparePage: React.FC = () => {
   const [searchPhase, setSearchPhase] = useState('');
 
   // Price alerts
-  const [trackedCount, setTrackedCount] = useState(() => getAlerts().filter(a => !a.dismissed).length);
+  const [, setTrackedCount] = useState(() => getAlerts().filter(a => !a.dismissed).length);
   const [triggeredAlerts, setTriggeredAlerts] = useState<PriceAlert[]>([]);
 
   const doSearch = useCallback(async (q: string) => {
@@ -608,10 +775,38 @@ const PriceComparePage: React.FC = () => {
     doSearch(query);
   };
 
-  const handleRemoveRecent = (q: string) => {
-    removeRecentSearch(q);
-    setRecentSearches(getRecentSearches());
-  };
+  /** Refine search from browse mode — user tapped "Compare Prices" on a product */
+  const handleRefineSearch = useCallback((refinedQuery: string) => {
+    setQuery(refinedQuery);
+    doSearch(refinedQuery);
+    // Scroll to top
+    window.scrollTo({ top: 0, behavior: 'smooth' });
+  }, [doSearch]);
+
+  /**
+   * Detect "browse mode" — when query is broad (brand-only or very short)
+   * and results are mostly unmatched (no good cross-platform matches).
+   * In browse mode we show all products organized by category instead of
+   * the comparison view.
+   */
+  const isBrowseMode = useMemo(() => {
+    if (!data) return false;
+    const groupedCount = data.groups?.length || 0;
+    const unmatchedCount = data.unmatchedProducts?.length || 0;
+    const totalProducts = data.totalResults || 0;
+    // Browse mode triggers when:
+    //  - Very few groups relative to total (< 20% matched) OR no groups at all
+    //  - AND we have a decent number of unmatched products
+    //  - AND query is short (likely brand-only or broad)
+    const queryWords = data.query.trim().split(/\s+/).length;
+    const matchRatio = totalProducts > 0 ? (groupedCount / Math.max(totalProducts, 1)) : 0;
+
+    return (
+      (groupedCount === 0 || matchRatio < 0.15) &&
+      unmatchedCount >= 4 &&
+      queryWords <= 2
+    );
+  }, [data]);
 
   const popular = ['iPhone 15', 'Samsung Galaxy A15', 'Tecno Spark 20', 'PlayStation 5', 'MacBook Air', 'Infinix Hot 40'];
 
@@ -644,46 +839,20 @@ const PriceComparePage: React.FC = () => {
             ))}
           </div>
 
-          {/* Search bar */}
+          {/* Search bar with autocomplete */}
           <form onSubmit={handleSubmit} className="max-w-2xl mx-auto">
-            <div className="relative flex bg-white rounded-2xl shadow-xl overflow-hidden">
-              <FiSearch className="absolute left-4 top-1/2 -translate-y-1/2 text-gray-400" size={20} />
-              <input
-                type="text"
-                value={query}
-                onChange={(e) => setQuery(e.target.value)}
-                placeholder="Search a product... e.g. iPhone 15, Samsung Galaxy"
-                className="flex-1 pl-12 pr-4 py-3.5 sm:py-4 text-sm sm:text-base text-gray-900 placeholder:text-gray-400 outline-none"
-              />
-              <button
-                type="submit"
-                disabled={loading || !query.trim()}
-                className="m-1.5 px-4 sm:px-6 bg-primary text-white font-semibold rounded-xl hover:bg-primary-dark transition-colors disabled:opacity-50 text-sm sm:text-base"
-              >
-                {loading ? <FiLoader className="animate-spin" size={20} /> : 'Compare'}
-              </button>
-            </div>
+            <SearchAutocomplete
+              value={query}
+              onChange={setQuery}
+              onSearch={doSearch}
+              loading={loading}
+              recentSearches={recentSearches}
+              placeholder="Search a product... e.g. Oraimo FreePods, iPhone 15"
+            />
           </form>
 
-          {/* Recent searches */}
-          {!data && !loading && recentSearches.length > 0 && (
-            <div className="mt-4">
-              <p className="text-white/50 text-xs mb-2">Recent searches</p>
-              <div className="flex flex-wrap justify-center gap-2">
-                {recentSearches.slice(0, 6).map((s) => (
-                  <span key={s} className="inline-flex items-center gap-1 px-3 py-1 text-sm bg-white/15 text-white/80 rounded-full group">
-                    <button onClick={() => { setQuery(s); doSearch(s); }} className="hover:text-white">{s}</button>
-                    <button onClick={() => handleRemoveRecent(s)} className="opacity-0 group-hover:opacity-100 transition-opacity hover:text-red-300" title="Remove">
-                      <FiX size={12} />
-                    </button>
-                  </span>
-                ))}
-              </div>
-            </div>
-          )}
-
-          {/* Popular (only when no recent and no results) */}
-          {!data && !loading && recentSearches.length === 0 && (
+          {/* Popular searches (when no results shown) */}
+          {!data && !loading && (
             <div className="mt-5 flex flex-wrap justify-center gap-2">
               {popular.map((s) => (
                 <button key={s} onClick={() => { setQuery(s); doSearch(s); }} className="px-3 py-1 text-sm bg-white/15 text-white/80 rounded-full hover:bg-white/25 transition-colors">
@@ -781,101 +950,122 @@ const PriceComparePage: React.FC = () => {
               </div>
             </div>
 
-            {/* ── Matching intelligence bar ── */}
-            {data.matchingStats && (data.filteredAsAccessories > 0 || data.matchingStats.avgConfidence > 0) && (
-              <div className="flex flex-wrap items-center gap-3 mb-4 px-3 py-2 bg-blue-50 border border-blue-100 rounded-xl text-xs text-blue-700">
-                <span className="inline-flex items-center gap-1 font-medium">
-                  <FiShield size={12} /> Smart Matching
-                </span>
-                {data.matchingStats.avgConfidence > 0 && (
-                  <span>Avg confidence: <strong>{data.matchingStats.avgConfidence}%</strong></span>
+            {/* ── BROWSE MODE: Broad query with mixed products ── */}
+            {isBrowseMode ? (
+              <>
+                <BrowseGrid
+                  products={[
+                    ...(data.allProducts || []),
+                    ...(data.unmatchedProducts || []),
+                  ].filter((p, i, arr) =>
+                    arr.findIndex(x => x.externalId === p.externalId && x.platform === p.platform) === i
+                  )}
+                  query={data.query}
+                  onRefineSearch={handleRefineSearch}
+                />
+
+                {/* Safety Disclaimer */}
+                <SafetyDisclaimer variant="compact" className="mt-8 mb-8" />
+              </>
+            ) : (
+              <>
+                {/* ── Matching intelligence bar ── */}
+                {data.matchingStats && (data.filteredAsAccessories > 0 || data.matchingStats.avgConfidence > 0) && (
+                  <div className="flex flex-wrap items-center gap-3 mb-4 px-3 py-2 bg-blue-50 border border-blue-100 rounded-xl text-xs text-blue-700">
+                    <span className="inline-flex items-center gap-1 font-medium">
+                      <FiShield size={12} /> Smart Matching
+                    </span>
+                    {data.matchingStats.avgConfidence > 0 && (
+                      <span>Avg confidence: <strong>{data.matchingStats.avgConfidence}%</strong></span>
+                    )}
+                    {data.filteredAsAccessories > 0 && (
+                      <span className="text-blue-500">{data.filteredAsAccessories} accessor{data.filteredAsAccessories === 1 ? 'y' : 'ies'} filtered out</span>
+                    )}
+                    {data.matchingStats.totalGrouped > 0 && (
+                      <span>{data.matchingStats.totalGrouped} products matched across platforms</span>
+                    )}
+                  </div>
                 )}
-                {data.filteredAsAccessories > 0 && (
-                  <span className="text-blue-500">{data.filteredAsAccessories} accessor{data.filteredAsAccessories === 1 ? 'y' : 'ies'} filtered out</span>
+
+                {/* ── Cross-platform groups ── */}
+                {data.groups && data.groups.length > 0 && (
+                  <div className="space-y-4 mb-8">
+                    <div className="flex items-center gap-2 mb-1">
+                      <FiCheckCircle className="text-green-500" size={16} />
+                      <h2 className="text-sm font-bold text-gray-700 uppercase tracking-wide">
+                        Price Comparison ({data.groups.length} matched)
+                      </h2>
+                    </div>
+
+                    {data.groups.map((group, idx) => (
+                      <ComparisonCard key={group.groupId} group={group} rank={idx} searchQuery={data.query} onTrack={() => setTrackedCount(getAlerts().filter(a => !a.dismissed).length)} />
+                    ))}
+                  </div>
                 )}
-                {data.matchingStats.totalGrouped > 0 && (
-                  <span>{data.matchingStats.totalGrouped} products matched across platforms</span>
+
+                {/* ── No matches hint ── */}
+                {data.groups?.length === 0 && data.totalResults > 0 && (
+                  <div className="bg-amber-50 border border-amber-200 rounded-xl p-5 text-center mb-8">
+                    <FiAlertTriangle className="mx-auto text-amber-500 mb-2" size={22} />
+                    <p className="text-sm font-medium text-amber-800">No cross-platform matches found</p>
+                    <p className="text-xs text-amber-600 mt-1">Try a more specific search like "iPhone 15 Pro Max 256GB"</p>
+                  </div>
                 )}
-              </div>
-            )}
 
-            {/* ── Cross-platform groups ── */}
-            {data.groups && data.groups.length > 0 && (
-              <div className="space-y-4 mb-8">
-                <div className="flex items-center gap-2 mb-1">
-                  <FiCheckCircle className="text-green-500" size={16} />
-                  <h2 className="text-sm font-bold text-gray-700 uppercase tracking-wide">
-                    Price Comparison ({data.groups.length} matched)
-                  </h2>
-                </div>
+                {/* ── Safety Disclaimer ── */}
+                <SafetyDisclaimer variant="compact" className="mb-8" />
 
-                {data.groups.map((group, idx) => (
-                  <ComparisonCard key={group.groupId} group={group} rank={idx} searchQuery={data.query} onTrack={() => setTrackedCount(getAlerts().filter(a => !a.dismissed).length)} />
-                ))}
-              </div>
-            )}
-
-            {/* ── No matches hint ── */}
-            {data.groups?.length === 0 && data.totalResults > 0 && (
-              <div className="bg-amber-50 border border-amber-200 rounded-xl p-5 text-center mb-8">
-                <FiAlertTriangle className="mx-auto text-amber-500 mb-2" size={22} />
-                <p className="text-sm font-medium text-amber-800">No cross-platform matches found</p>
-                <p className="text-xs text-amber-600 mt-1">Try a more specific search like "iPhone 15 Pro Max 256GB"</p>
-              </div>
-            )}
-
-            {/* ── Safety Disclaimer ── */}
-            <SafetyDisclaimer variant="compact" className="mb-8" />
-
-            {/* ── YouTube Reviews ── */}
-            {(ytVideos.length > 0 || ytLoading) && (
-              <div className="mb-8">
-                <div className="flex items-center gap-2 mb-3">
-                  <FiYoutube className="text-red-500" size={16} />
-                  <h2 className="text-sm font-bold text-gray-700 uppercase tracking-wide">
-                    Video Reviews
-                  </h2>
-                </div>
-                {ytLoading ? (
-                  <div className="flex gap-3 overflow-hidden">
-                    {[1, 2].map(i => (
-                      <div key={i} className="flex gap-3 bg-white rounded-xl border border-gray-100 p-3 animate-pulse w-1/2">
-                        <div className="w-28 h-20 rounded-lg bg-gray-200" />
-                        <div className="flex-1 space-y-2">
-                          <div className="h-3 bg-gray-200 rounded w-full" />
-                          <div className="h-3 bg-gray-200 rounded w-3/4" />
-                          <div className="h-2 bg-gray-200 rounded w-1/2" />
-                        </div>
+                {/* ── YouTube Reviews ── */}
+                {(ytVideos.length > 0 || ytLoading) && (
+                  <div className="mb-8">
+                    <div className="flex items-center gap-2 mb-3">
+                      <FiYoutube className="text-red-500" size={16} />
+                      <h2 className="text-sm font-bold text-gray-700 uppercase tracking-wide">
+                        Video Reviews
+                      </h2>
+                    </div>
+                    {ytLoading ? (
+                      <div className="flex gap-3 overflow-hidden">
+                        {[1, 2].map(i => (
+                          <div key={i} className="flex gap-3 bg-white rounded-xl border border-gray-100 p-3 animate-pulse w-1/2">
+                            <div className="w-28 h-20 rounded-lg bg-gray-200" />
+                            <div className="flex-1 space-y-2">
+                              <div className="h-3 bg-gray-200 rounded w-full" />
+                              <div className="h-3 bg-gray-200 rounded w-3/4" />
+                              <div className="h-2 bg-gray-200 rounded w-1/2" />
+                            </div>
+                          </div>
+                        ))}
                       </div>
-                    ))}
-                  </div>
-                ) : (
-                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
-                    {ytVideos.map(v => <YouTubeCard key={v.videoId} video={v} />)}
-                  </div>
-                )}
-              </div>
-            )}
-
-            {/* ── Other results ── */}
-            {data.unmatchedProducts && data.unmatchedProducts.length > 0 && (
-              <div className="mb-8">
-                <button
-                  onClick={() => setShowUnmatched(!showUnmatched)}
-                  className="flex items-center gap-2 text-sm font-bold text-gray-500 uppercase tracking-wide mb-3 hover:text-gray-700"
-                >
-                  Other Results ({data.unmatchedProducts.length})
-                  {showUnmatched ? <FiChevronUp size={16} /> : <FiChevronDown size={16} />}
-                </button>
-
-                {showUnmatched && (
-                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
-                    {data.unmatchedProducts.map((product, idx) => (
-                      <UnmatchedCard key={`${product.platform}-${product.externalId}-${idx}`} product={product} />
-                    ))}
+                    ) : (
+                      <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
+                        {ytVideos.map(v => <YouTubeCard key={v.videoId} video={v} />)}
+                      </div>
+                    )}
                   </div>
                 )}
-              </div>
+
+                {/* ── Other results ── */}
+                {data.unmatchedProducts && data.unmatchedProducts.length > 0 && (
+                  <div className="mb-8">
+                    <button
+                      onClick={() => setShowUnmatched(!showUnmatched)}
+                      className="flex items-center gap-2 text-sm font-bold text-gray-500 uppercase tracking-wide mb-3 hover:text-gray-700"
+                    >
+                      Other Results ({data.unmatchedProducts.length})
+                      {showUnmatched ? <FiChevronUp size={16} /> : <FiChevronDown size={16} />}
+                    </button>
+
+                    {showUnmatched && (
+                      <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
+                        {data.unmatchedProducts.map((product, idx) => (
+                          <UnmatchedCard key={`${product.platform}-${product.externalId}-${idx}`} product={product} />
+                        ))}
+                      </div>
+                    )}
+                  </div>
+                )}
+              </>
             )}
 
             {/* Zero results */}

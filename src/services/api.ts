@@ -99,6 +99,23 @@ class ApiService {
     );
   }
 
+  /**
+   * Get autocomplete suggestions as user types.
+   * Hits /search/suggestions which queries product names & brands.
+   */
+  async getSearchSuggestions(query: string, limit = 8): Promise<string[]> {
+    if (query.length < 2) return [];
+    try {
+      const response = await this.api.get('/search/suggestions', {
+        params: { q: query, limit },
+        timeout: 3000,
+      });
+      return response.data?.data || [];
+    } catch {
+      return [];
+    }
+  }
+
   async getRecentSearches(): Promise<string[]> {
     const stored = localStorage.getItem('pw_recent_searches');
     return stored ? JSON.parse(stored) : [];
