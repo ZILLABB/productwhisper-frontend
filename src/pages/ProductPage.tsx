@@ -163,7 +163,7 @@ const ProductPage: React.FC = () => {
               <div className={`flex items-center gap-1 ${getSentimentColor(product.sentimentScore)}`}>
                 <FiBarChart2 size={16} />
                 <span className="font-semibold">{Math.round(product.sentimentScore * 100)}%</span>
-                <span className="text-gray-500 text-xs">sentiment</span>
+                <span className="text-gray-500 text-xs">buyer satisfaction</span>
               </div>
               <button
                 onClick={() => {
@@ -312,7 +312,7 @@ const ProductPage: React.FC = () => {
                   }`}>
                     <FiBarChart2 size={18} />
                   </div>
-                  <h3 className="font-semibold text-lg text-gray-900">Sentiment Summary</h3>
+                  <h3 className="font-semibold text-lg text-gray-900">Buyer Satisfaction</h3>
                 </div>
 
                 <SentimentChart score={product.sentimentScore} size="lg" />
@@ -341,7 +341,7 @@ const ProductPage: React.FC = () => {
               <nav className="flex border-b border-gray-100">
                 {[
                   { id: 'overview', label: 'Overview', icon: FiInfo },
-                  { id: 'sentiment', label: 'Sentiment', icon: FiBarChart2 },
+                  { id: 'sentiment', label: 'Reviews', icon: FiBarChart2 },
                   { id: 'specifications', label: 'Specs', icon: FiList },
                   { id: 'reviews', label: 'Reviews', icon: FiMessageCircle }
                 ].map((tab) => (
@@ -449,7 +449,7 @@ const ProductPage: React.FC = () => {
                     <div className="bg-primary/10 p-2 rounded-full text-primary mr-3">
                       <FiBarChart2 size={18} />
                     </div>
-                    <h2 className="text-xl font-semibold font-display text-gray-900">Sentiment Analysis</h2>
+                    <h2 className="text-xl font-semibold font-display text-gray-900">What Buyers Are Saying</h2>
                   </div>
 
                   <p className="text-gray-600 mb-6 text-sm">
@@ -459,7 +459,7 @@ const ProductPage: React.FC = () => {
                   <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-6">
                     {/* Overall Sentiment */}
                     <div className="bg-gradient-to-br from-primary/5 to-secondary/5 rounded-xl p-6 border border-gray-100">
-                      <h3 className="font-semibold mb-4 text-gray-900">Overall Sentiment</h3>
+                      <h3 className="font-semibold mb-4 text-gray-900">Overall Satisfaction</h3>
                       <div className="flex items-center justify-center mb-4">
                         <div className={`relative w-28 h-28 rounded-full flex items-center justify-center border-8 ${
                           product.sentimentScore > 0.7 ? 'border-green-500 text-green-700' :
@@ -476,7 +476,7 @@ const ProductPage: React.FC = () => {
 
                     {/* Distribution */}
                     <div className="bg-white rounded-xl p-6 border border-gray-100">
-                      <h3 className="font-semibold mb-4 text-gray-900">Sentiment Distribution</h3>
+                      <h3 className="font-semibold mb-4 text-gray-900">Review Breakdown</h3>
                       <div className="space-y-3">
                         {[
                           { label: 'Very Positive', pct: 65, color: 'bg-green-500' },

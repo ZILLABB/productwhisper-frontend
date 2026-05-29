@@ -365,7 +365,7 @@ export default function SearchPage() {
               Discover Products in Nigeria
             </h1>
             <p className="text-white/80 text-lg max-w-2xl mx-auto mb-8 font-light">
-              Search and compare products across Nigerian e-commerce platforms with AI-powered sentiment analysis
+              Search and compare products across Jumia, Konga, and Jiji — find the best prices and trusted sellers
             </p>
 
             <form onSubmit={handleSearch} className="relative max-w-3xl mx-auto">

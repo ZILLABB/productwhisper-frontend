@@ -20,9 +20,9 @@ const TermsPage: React.FC = () => {
         <section>
           <h2 className="text-xl font-semibold text-gray-900 mt-8 mb-3">2. Service Description</h2>
           <p>
-            ProductWhisper provides AI-powered product sentiment analysis for the Nigerian
-            market. We aggregate and analyze product reviews from various e-commerce platforms
-            to help consumers make informed purchasing decisions.
+            ProductWhisper is a price comparison and product review platform for the Nigerian
+            market. We aggregate product listings and reviews from e-commerce platforms
+            to help consumers compare prices and make informed purchasing decisions.
           </p>
         </section>
 

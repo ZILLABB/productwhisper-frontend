@@ -21,7 +21,7 @@ const PrivacyPage: React.FC = () => {
         <section>
           <h2 className="text-xl font-semibold text-gray-900 mt-8 mb-3">2. How We Use Your Data</h2>
           <p>
-            Your data is used solely to provide product sentiment analysis, personalized
+            Your data is used solely to provide product comparisons, personalized
             recommendations, and to improve our platform. We do not sell your personal
             information to third parties.
           </p>

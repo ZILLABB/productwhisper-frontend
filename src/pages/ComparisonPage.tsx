@@ -154,7 +154,7 @@ const ComparisonPage: React.FC = () => {
             </div>
             <div className="relative z-10 px-6 py-10 sm:px-12 sm:py-14 text-white text-center">
               <h1 className="text-3xl md:text-4xl font-display font-bold text-white mb-2">Product Comparison</h1>
-              <p className="text-white/80 text-lg">Compare features, sentiment, and value across products</p>
+              <p className="text-white/80 text-lg">Compare features, reviews, and value across products</p>
             </div>
           </div>
 
@@ -241,7 +241,7 @@ const ComparisonPage: React.FC = () => {
             <EmptyState
               icon={GitCompareArrows}
               title="Compare Products Side by Side"
-              description="Search and pick at least two products above to compare their features, sentiment scores, pros, cons, and get a recommendation."
+              description="Search and pick at least two products above to compare their features, prices, pros, cons, and get a recommendation."
               actions={[
                 { label: 'Browse Products', to: '/search', variant: 'primary', icon: Search },
               ]}
@@ -278,7 +278,7 @@ const ComparisonPage: React.FC = () => {
               <div>
                 <h1 className="text-3xl md:text-4xl font-display font-bold text-white mb-2">Product Comparison</h1>
                 <p className="text-white/80 text-lg">
-                  Compare features, specs, and sentiment across multiple products
+                  Compare features, specs, and reviews across multiple products
                 </p>
               </div>
 
@@ -630,8 +630,8 @@ const ComparisonPage: React.FC = () => {
                     </div>
                     <p className="text-sm text-gray-600">
                       {isRecommended
-                        ? `Best overall choice based on sentiment analysis, user ratings, and value for money.`
-                        : `Good option with some trade-offs in ${product.sentimentScore < 0.7 ? 'user sentiment' : product.rating < 4.3 ? 'ratings' : 'price'}.`
+                        ? `Best overall choice based on buyer reviews, ratings, and value for money.`
+                        : `Good option with some trade-offs in ${product.sentimentScore < 0.7 ? 'buyer satisfaction' : product.rating < 4.3 ? 'ratings' : 'price'}.`
                       }
                     </p>
                   </div>

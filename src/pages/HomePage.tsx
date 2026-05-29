@@ -414,7 +414,7 @@ const HomePage: React.FC = () => {
                 icon: BarChart3,
                 step: '2',
                 title: 'Compare Prices & Sellers',
-                desc: 'See prices side by side, check seller trust scores, and read sentiment analysis powered by Nigerian Pidgin NLP.',
+                desc: 'See prices side by side, check seller ratings, and read what real buyers are saying about each product.',
                 color: 'green',
               },
               {
@@ -460,8 +460,8 @@ const HomePage: React.FC = () => {
 
                   <div className="space-y-4">
                     {[
-                      { icon: Zap, text: 'Real-time scraping from all platforms', color: 'text-yellow-300' },
-                      { icon: ShieldCheck, text: 'Trust scores for every seller', color: 'text-green-400' },
+                      { icon: Zap, text: 'Real-time prices from all platforms', color: 'text-yellow-300' },
+                      { icon: ShieldCheck, text: 'Seller ratings and trust indicators', color: 'text-green-400' },
                       { icon: TrendingDown, text: 'Price history & drop alerts', color: 'text-red-400' },
                     ].map((item, i) => (
                       <div key={i} className="flex items-center gap-3">

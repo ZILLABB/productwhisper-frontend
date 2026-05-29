@@ -40,7 +40,7 @@ interface ProductInfo {
 }
 
 const TrendsPage: React.FC = () => {
-  useSEO({ title: 'Sentiment Trends', description: 'Track product sentiment and price trends across Nigerian marketplaces.' });
+  useSEO({ title: 'Product Trends', description: 'Track product reviews and price trends across Nigerian marketplaces.' });
   const { productId } = useParams<{ productId?: string }>();
   const [searchParams, setSearchParams] = useSearchParams();
   const { showToast } = useToast();
@@ -127,7 +127,7 @@ const TrendsPage: React.FC = () => {
               <div className="absolute bottom-10 right-10 w-80 h-80 rounded-full bg-accent/20 blur-3xl"></div>
             </div>
             <div className="relative z-10 px-6 py-10 sm:px-12 sm:py-14 text-white text-center">
-              <h1 className="text-3xl md:text-4xl font-display font-bold text-white mb-2">Sentiment Trends</h1>
+              <h1 className="text-3xl md:text-4xl font-display font-bold text-white mb-2">Product Trends</h1>
               <p className="text-white/80 text-lg">Track how people feel about products over time</p>
             </div>
           </div>
@@ -189,7 +189,7 @@ const TrendsPage: React.FC = () => {
             <EmptyState
               icon={TrendingUp}
               title="No Product Selected"
-              description="Search for a product above to view its sentiment trends, platform mentions, and key aspects over time."
+              description="Search for a product above to see what buyers are saying, price trends, and key strengths and weaknesses over time."
               actions={[
                 { label: 'Browse Products', to: '/search', variant: 'primary', icon: Search },
               ]}
@@ -252,7 +252,7 @@ const TrendsPage: React.FC = () => {
               <div className="mt-6 md:mt-0">
                 <div className="inline-flex items-center px-4 py-2 rounded-xl backdrop-blur-sm bg-white/20 text-white border border-white/30">
                   <FiTrendingUp className="mr-2" size={20} />
-                  <span className="font-medium">{Math.round(avgSentiment * 100)}% sentiment</span>
+                  <span className="font-medium">{Math.round(avgSentiment * 100)}% satisfaction</span>
                 </div>
               </div>
             </div>
@@ -314,10 +314,10 @@ const TrendsPage: React.FC = () => {
           <div className="bg-amber-50 border border-amber-200 rounded-xl p-4 mb-6 flex items-start gap-3">
             <FiAlertCircle className="text-amber-500 mt-0.5 flex-shrink-0" size={18} />
             <div>
-              <p className="text-sm font-medium text-amber-800">Limited sentiment data</p>
+              <p className="text-sm font-medium text-amber-800">Limited review data</p>
               <p className="text-xs text-amber-700 mt-1">
-                This product doesn't have enough reviews yet for detailed sentiment analysis.
-                Data improves as more reviews are collected from marketplaces.
+                This product doesn't have enough reviews yet for detailed analysis.
+                More data will be available as buyers leave reviews on marketplaces.
               </p>
             </div>
           </div>
@@ -327,7 +327,7 @@ const TrendsPage: React.FC = () => {
           {/* Sentiment Score Card */}
           <div className="bg-white rounded-xl shadow-md border border-gray-100 p-6 hover:shadow-lg transition-shadow duration-300">
             <div className="flex items-start justify-between mb-4">
-              <h2 className="text-lg font-display font-semibold text-gray-900">Average Sentiment</h2>
+              <h2 className="text-lg font-display font-semibold text-gray-900">Buyer Satisfaction</h2>
               <div className="flex items-center justify-center w-10 h-10 rounded-full bg-primary/10 text-primary">
                 <FiTrendingUp size={20} />
               </div>
@@ -463,8 +463,8 @@ const TrendsPage: React.FC = () => {
           <div className="bg-white rounded-xl shadow-md border border-gray-100 p-6 hover:shadow-lg transition-shadow duration-300 mb-10">
             <div className="flex items-start justify-between mb-6">
               <div>
-                <h2 className="text-lg font-display font-semibold text-gray-900">Sentiment by Platform</h2>
-                <p className="text-sm text-gray-500 mt-1">How sentiment compares across different sources</p>
+                <h2 className="text-lg font-display font-semibold text-gray-900">Reviews by Platform</h2>
+                <p className="text-sm text-gray-500 mt-1">How buyer satisfaction compares across different platforms</p>
               </div>
             </div>
 
