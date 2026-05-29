@@ -247,12 +247,12 @@ const SearchAutocomplete: React.FC<SearchAutocompleteProps> = ({
         <FiSearch className="absolute left-4 top-1/2 -translate-y-1/2 text-gray-400" size={20} />
         <input
           {...inputProps}
-          className="flex-1 pl-12 pr-4 py-3.5 sm:py-4 text-sm sm:text-base text-gray-900 placeholder:text-gray-400 outline-none"
+          className="flex-1 min-w-0 pl-12 pr-2 py-3.5 sm:py-4 text-sm sm:text-base text-gray-900 placeholder:text-gray-400 outline-none"
         />
         <button
           type="submit"
           disabled={loading || !value.trim()}
-          className="m-1.5 px-4 sm:px-6 bg-primary text-white font-semibold rounded-xl hover:bg-primary-dark transition-colors disabled:opacity-50 text-sm sm:text-base"
+          className="flex-shrink-0 m-1.5 px-3 sm:px-6 bg-primary text-white font-semibold rounded-xl hover:bg-primary-dark transition-colors disabled:opacity-50 text-sm sm:text-base whitespace-nowrap"
         >
           {loading ? (
             <svg className="animate-spin h-5 w-5" viewBox="0 0 24 24">

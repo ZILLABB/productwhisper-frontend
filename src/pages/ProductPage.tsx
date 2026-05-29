@@ -123,7 +123,7 @@ const ProductPage: React.FC = () => {
 
   if (error || !product) {
     return (
-      <div className="container mx-auto px-4 py-12">
+      <div className="container mx-auto px-4 py-6 sm:py-12">
         <ApiErrorFallback
           error={error instanceof Error ? error : new Error(String(error))}
           message="We couldn't load this product's information."

@@ -93,7 +93,7 @@ const DealsPage: React.FC = () => {
 
   if (error) {
     return (
-      <div className="max-w-4xl mx-auto px-4 py-12">
+      <div className="max-w-4xl mx-auto px-4 py-6 sm:py-12">
         <EmptyState
           icon={AlertTriangle}
           title="Couldn't load deals"

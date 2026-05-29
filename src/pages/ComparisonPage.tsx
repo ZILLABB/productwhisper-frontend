@@ -150,16 +150,16 @@ const ComparisonPage: React.FC = () => {
   if (products.length < 2) {
     return (
       <div className="min-h-screen bg-gradient-to-b from-gray-50 to-white">
-        <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
+        <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-6 sm:py-12">
           {/* Hero header */}
-          <div className="relative mb-10 bg-gradient-primary rounded-2xl overflow-hidden shadow-lg">
+          <div className="relative mb-6 sm:mb-10 bg-gradient-primary rounded-2xl overflow-hidden shadow-lg">
             <div className="absolute inset-0 opacity-10">
               <div className="absolute top-10 left-10 w-64 h-64 rounded-full bg-secondary/30 blur-3xl"></div>
               <div className="absolute bottom-10 right-10 w-80 h-80 rounded-full bg-accent/20 blur-3xl"></div>
             </div>
-            <div className="relative z-10 px-6 py-10 sm:px-12 sm:py-14 text-white text-center">
-              <h1 className="text-3xl md:text-4xl font-display font-bold text-white mb-2">Product Comparison</h1>
-              <p className="text-white/80 text-lg">Compare features, reviews, and value across products</p>
+            <div className="relative z-10 px-4 py-8 sm:px-12 sm:py-14 text-white text-center">
+              <h1 className="text-2xl sm:text-3xl md:text-4xl font-display font-bold text-white mb-2">Product Comparison</h1>
+              <p className="text-white/80 text-base sm:text-lg">Compare features, reviews, and value across products</p>
             </div>
           </div>
 
@@ -271,20 +271,20 @@ const ComparisonPage: React.FC = () => {
   return (
     <div className="min-h-screen bg-gradient-to-b from-gray-50 to-white">
       <div
-        className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12"
+        className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6 sm:py-12"
       >
         {/* Hero Section */}
-        <div className="relative mb-10 bg-gradient-primary rounded-2xl overflow-hidden shadow-lg">
+        <div className="relative mb-6 sm:mb-10 bg-gradient-primary rounded-2xl overflow-hidden shadow-lg">
           <div className="absolute inset-0 opacity-10">
             <div className="absolute top-10 left-10 w-64 h-64 rounded-full bg-secondary/30 blur-3xl"></div>
             <div className="absolute bottom-10 right-10 w-80 h-80 rounded-full bg-accent/20 blur-3xl"></div>
           </div>
 
-          <div className="relative z-10 px-6 py-10 sm:px-12 sm:py-14 text-white">
+          <div className="relative z-10 px-4 py-8 sm:px-12 sm:py-14 text-white">
             <div className="flex flex-col md:flex-row md:items-center md:justify-between">
               <div>
-                <h1 className="text-3xl md:text-4xl font-display font-bold text-white mb-2">Product Comparison</h1>
-                <p className="text-white/80 text-lg">
+                <h1 className="text-2xl sm:text-3xl md:text-4xl font-display font-bold text-white mb-2">Product Comparison</h1>
+                <p className="text-white/80 text-base sm:text-lg">
                   Compare features, specs, and reviews across multiple products
                 </p>
               </div>
@@ -428,10 +428,11 @@ const ComparisonPage: React.FC = () => {
         )}
 
         <div className="bg-white rounded-xl shadow-md border border-gray-100 overflow-hidden mb-10">
-          {/* Product Headers */}
-          <div className="grid grid-cols-1 md:grid-cols-[220px_repeat(auto-fill,minmax(220px,1fr))]">
-            <div className="bg-gray-50 p-6 font-medium text-gray-700 border-b border-gray-100">
-              <h3 className="text-lg font-display font-semibold">Product Details</h3>
+          {/* Product Headers — horizontally scrollable on mobile */}
+          <div className="overflow-x-auto">
+          <div className="grid min-w-[600px] grid-cols-[180px_repeat(auto-fill,minmax(200px,1fr))] md:min-w-0 md:grid-cols-[220px_repeat(auto-fill,minmax(220px,1fr))]">
+            <div className="bg-gray-50 p-4 sm:p-6 font-medium text-gray-700 border-b border-gray-100">
+              <h3 className="text-base sm:text-lg font-display font-semibold">Product Details</h3>
             </div>
             {products.map((product, index) => (
               <div key={product.id} className="p-6 border-l border-b border-gray-100 relative">
@@ -485,12 +486,13 @@ const ComparisonPage: React.FC = () => {
               </div>
             ))}
           </div>
+          </div>{/* close overflow-x-auto */}
 
           {/* Features Comparison */}
-          <div className="border-b border-gray-100">
-            <div className="grid grid-cols-1 md:grid-cols-[220px_repeat(auto-fill,minmax(220px,1fr))]">
-              <div className="p-6 font-medium text-gray-700 bg-gray-50">
-                <h3 className="text-lg font-display font-semibold">Key Features</h3>
+          <div className="border-b border-gray-100 overflow-x-auto">
+            <div className="min-w-[600px] md:min-w-0 grid grid-cols-[180px_repeat(auto-fill,minmax(200px,1fr))] md:grid-cols-[220px_repeat(auto-fill,minmax(220px,1fr))]">
+              <div className="p-4 sm:p-6 font-medium text-gray-700 bg-gray-50">
+                <h3 className="text-base sm:text-lg font-display font-semibold">Key Features</h3>
               </div>
               <div className="col-span-full md:col-auto"></div>
             </div>
@@ -498,7 +500,7 @@ const ComparisonPage: React.FC = () => {
             {features.map((feature, featureIndex) => (
               <div
                 key={feature}
-                className={`grid grid-cols-1 md:grid-cols-[220px_repeat(auto-fill,minmax(220px,1fr))] ${
+                className={`min-w-[600px] md:min-w-0 grid grid-cols-[180px_repeat(auto-fill,minmax(200px,1fr))] md:grid-cols-[220px_repeat(auto-fill,minmax(220px,1fr))] ${
                   featureIndex % 2 === 0 ? 'bg-white' : 'bg-gray-50/50'
                 }`}
               >

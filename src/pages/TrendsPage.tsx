@@ -120,14 +120,14 @@ const TrendsPage: React.FC = () => {
   if (!productId) {
     return (
       <div className="min-h-screen bg-gradient-to-b from-gray-50 to-white">
-        <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
+        <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-6 sm:py-12">
           {/* Hero header */}
-          <div className="relative mb-10 bg-gradient-primary rounded-2xl overflow-hidden shadow-lg">
+          <div className="relative mb-6 sm:mb-10 bg-gradient-primary rounded-2xl overflow-hidden shadow-lg">
             <div className="absolute inset-0 opacity-10">
               <div className="absolute top-10 left-10 w-64 h-64 rounded-full bg-secondary/30 blur-3xl"></div>
               <div className="absolute bottom-10 right-10 w-80 h-80 rounded-full bg-accent/20 blur-3xl"></div>
             </div>
-            <div className="relative z-10 px-6 py-10 sm:px-12 sm:py-14 text-white text-center">
+            <div className="relative z-10 px-4 py-8 sm:px-12 sm:py-14 text-white text-center">
               <h1 className="text-3xl md:text-4xl font-display font-bold text-white mb-2">Product Trends</h1>
               <p className="text-white/80 text-lg">Track how people feel about products over time</p>
             </div>
@@ -206,7 +206,7 @@ const TrendsPage: React.FC = () => {
   if (error || !product) {
     return (
       <div className="min-h-screen bg-gradient-to-b from-gray-50 to-white">
-        <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
+        <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-6 sm:py-12">
           <EmptyState
             icon={TrendingUp}
             title="Trend Data Unavailable"
@@ -233,9 +233,9 @@ const TrendsPage: React.FC = () => {
 
   return (
     <div className="min-h-screen bg-gradient-to-b from-gray-50 to-white">
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6 sm:py-12">
         {/* Hero Section */}
-        <div className="relative mb-10 bg-gradient-primary rounded-2xl overflow-hidden shadow-lg">
+        <div className="relative mb-6 sm:mb-10 bg-gradient-primary rounded-2xl overflow-hidden shadow-lg">
           <div className="absolute inset-0 opacity-10">
             <div className="absolute top-10 left-10 w-64 h-64 rounded-full bg-secondary/30 blur-3xl"></div>
             <div className="absolute bottom-10 right-10 w-80 h-80 rounded-full bg-accent/20 blur-3xl"></div>
