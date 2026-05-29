@@ -31,6 +31,7 @@ import {
   type PriceAlert,
 } from '../utils/priceAlerts';
 import useSEO from '../hooks/useSEO';
+import SafetyDisclaimer from '../components/common/SafetyDisclaimer';
 
 /* ─── Types ─────────────────────────────────────────────── */
 
@@ -808,6 +809,9 @@ const PriceComparePage: React.FC = () => {
                 <p className="text-xs text-amber-600 mt-1">Try a more specific search like "iPhone 15 Pro Max 256GB"</p>
               </div>
             )}
+
+            {/* ── Safety Disclaimer ── */}
+            <SafetyDisclaimer variant="compact" className="mb-8" />
 
             {/* ── YouTube Reviews ── */}
             {(ytVideos.length > 0 || ytLoading) && (

@@ -24,6 +24,7 @@ import LazyImage from '../components/common/LazyImage';
 import SentimentChart from '../components/product/SentimentChart';
 import ReviewCard from '../components/product/ReviewCard';
 import useSEO from '../hooks/useSEO';
+import SafetyDisclaimer from '../components/common/SafetyDisclaimer';
 
 import type { Product } from '../types/api';
 
@@ -294,6 +295,12 @@ const ProductPage: React.FC = () => {
                   </p>
                 </div>
               </div>
+
+              {/* ── Safety Tips ── */}
+              <SafetyDisclaimer
+                variant="compact"
+                platform={product.listings?.[0]?.platform}
+              />
 
               {/* ── Sentiment Summary Card ── */}
               <div className="bg-white rounded-xl p-5 border border-gray-100 shadow-sm">

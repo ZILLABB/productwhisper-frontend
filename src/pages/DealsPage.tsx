@@ -6,6 +6,7 @@ import EmptyState from '../components/common/EmptyState';
 import Pagination from '../components/common/Pagination';
 import { apiService } from '../services/api';
 import { formatPrice } from '../utils/formatPrice';
+import SafetyDisclaimer from '../components/common/SafetyDisclaimer';
 import useSEO from '../hooks/useSEO';
 
 interface Deal {
@@ -117,6 +118,9 @@ const DealsPage: React.FC = () => {
           Products with the biggest price drops across Jumia, Konga, and Jiji. Updated automatically.
         </p>
       </div>
+
+      {/* Safety Banner */}
+      <SafetyDisclaimer variant="banner" className="mb-6" />
 
       {/* Sort Controls */}
       <div className="flex items-center gap-3 mb-6">

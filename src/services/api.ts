@@ -341,16 +341,34 @@ class ApiService {
       features['Condition'] = { value: p.productCondition.replace(/_/g, ' ') };
     }
 
-    // Extract specs from listing title patterns (e.g., "6.5 inch", "5000mAh")
+    // Extract specs from listing title patterns
     const title = lowestListing?.title || p.name || '';
+
+    // Electronics specs
     const screenMatch = title.match(/(\d+\.?\d*)\s*(?:inch|")/i);
     if (screenMatch) features['Screen Size'] = { value: `${screenMatch[1]}"` };
-
     const batteryMatch = title.match(/(\d{3,5})\s*mAh/i);
     if (batteryMatch) features['Battery'] = { value: `${batteryMatch[1]}mAh` };
-
     const cameraMatch = title.match(/(\d{1,3})\s*MP/i);
     if (cameraMatch) features['Camera'] = { value: `${cameraMatch[1]}MP` };
+
+    // Appliance / power specs
+    const wattsMatch = title.match(/(\d{2,5})\s*(?:w(?:att)?s?)\b/i);
+    if (wattsMatch) features['Power'] = { value: `${wattsMatch[1]}W` };
+    const litresMatch = title.match(/(\d{1,4})\s*(?:l(?:itres?|iters?|tr?s?)?)\b/i);
+    if (litresMatch) features['Capacity'] = { value: `${litresMatch[1]}L` };
+    const kwhMatch = title.match(/(\d+\.?\d*)\s*kwh/i);
+    if (kwhMatch) features['Energy'] = { value: `${kwhMatch[1]}kWh` };
+    const ahMatch = title.match(/(\d{2,4})\s*ah\b/i);
+    if (ahMatch) features['Battery Capacity'] = { value: `${ahMatch[1]}Ah` };
+    const btuMatch = title.match(/(\d{4,6})\s*btu/i);
+    if (btuMatch) features['Cooling'] = { value: `${btuMatch[1]}BTU` };
+    const hpMatch = title.match(/(\d+\.?\d*)\s*hp\b/i);
+    if (hpMatch) features['Power'] = { value: `${hpMatch[1]}HP` };
+    const voltMatch = title.match(/(\d{1,3})\s*v(?:olt)?s?\b/i);
+    if (voltMatch && parseInt(voltMatch[1]) >= 12) features['Voltage'] = { value: `${voltMatch[1]}V` };
+    const weightMatch = title.match(/(\d{1,4}(?:\.\d)?)\s*kg\b/i);
+    if (weightMatch) features['Weight'] = { value: `${weightMatch[1]}kg` };
 
     // Number of platforms available
     const platforms = [...new Set((p.listings || []).map((l: any) => l.platform))];
