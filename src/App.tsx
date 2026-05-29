@@ -21,10 +21,7 @@ const PrivacyPage = lazy(() => import('./pages/PrivacyPage'));
 const TermsPage = lazy(() => import('./pages/TermsPage'));
 const PriceComparePage = lazy(() => import('./pages/PriceComparePage'));
 const DealsPage = lazy(() => import('./pages/DealsPage'));
-// Commented out pages that are not currently needed
-// const ProfilePage = lazy(() => import('./pages/ProfilePage'));
-// const NotificationsPage = lazy(() => import('./pages/NotificationsPage'));
-// const DashboardPage = lazy(() => import('./pages/DashboardPage'));
+const NotFoundPage = lazy(() => import('./pages/NotFoundPage'));
 
 /**
  * Loading fallback component shown while pages are loading
@@ -69,10 +66,8 @@ function App() {
             <Route path="privacy" element={withErrorBoundaryAndSuspense(PrivacyPage)} />
             <Route path="terms" element={withErrorBoundaryAndSuspense(TermsPage)} />
 
-            {/* Commented out pages that are not currently needed */}
-            {/* <Route path="profile" element={withErrorBoundaryAndSuspense(ProfilePage)} /> */}
-            {/* <Route path="notifications" element={withErrorBoundaryAndSuspense(NotificationsPage)} /> */}
-            {/* <Route path="dashboard" element={withErrorBoundaryAndSuspense(DashboardPage)} /> */}
+            {/* 404 catch-all */}
+            <Route path="*" element={withErrorBoundaryAndSuspense(NotFoundPage)} />
           </Route>
         </Routes>
       </Router>

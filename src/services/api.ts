@@ -6,7 +6,7 @@ import type {
   SearchFilters,
   SearchResult,
 } from '../types/api';
-import { getMockProduct, getMockSearchResults, getMockTrendingProducts, getMockTrendData } from '../utils/mockData';
+// Mock data removed — real errors are surfaced instead of silently masking failures.
 
 const API_URL = import.meta.env.VITE_API_URL || '/api/v1';
 const API_KEY = import.meta.env.VITE_API_KEY || 'pw-dev-key-change-me';
@@ -34,7 +34,7 @@ class ApiService {
 
   private async handleRequest<T>(
     requestFn: () => Promise<AxiosResponse<any>>,
-    mockData?: T,
+    _mockData?: T,
     errorMessage: string = 'Failed to fetch data'
   ): Promise<T> {
     try {
@@ -45,9 +45,9 @@ class ApiService {
       }
       return body;
     } catch (error) {
-      if (IS_DEV && mockData !== undefined) {
-        console.warn('Using mock data due to API error:', error);
-        return mockData;
+      // Never fall back to mock data — surface real errors so they get fixed.
+      if (IS_DEV) {
+        console.error(`[API] ${errorMessage}:`, error);
       }
       if (error instanceof AxiosError) {
         throw ApiError.fromAxiosError(error);
@@ -60,8 +60,6 @@ class ApiService {
   }
 
   async searchProducts(query: string, filters?: SearchFilters): Promise<SearchResult> {
-    const mockSearchResult = getMockSearchResults(query);
-
     return this.handleRequest<SearchResult>(
       async () => {
         const params: Record<string, any> = { q: query };
@@ -96,7 +94,7 @@ class ApiService {
           },
         } as any;
       },
-      mockSearchResult,
+      undefined,
       'Failed to search for products'
     );
   }
@@ -113,7 +111,7 @@ class ApiService {
         const trending = response.data.data || [];
         return { data: trending.map((t: any) => t.query || t) } as any;
       },
-      ['Samsung Galaxy', 'iPhone', 'Infinix Hot', 'Tecno Spark', 'Oraimo FreePods'],
+      undefined,
       'Failed to fetch popular searches'
     );
   }
@@ -141,37 +139,31 @@ class ApiService {
   }
 
   async getProductDetails(productId: number | string): Promise<Product> {
-    const mockProduct = getMockProduct(typeof productId === 'number' ? productId : 1);
-
     return this.handleRequest<Product>(
       async () => {
         const response = await this.api.get(`/products/${productId}`);
         const p = response.data.data;
         return { data: this.mapProduct(p) } as any;
       },
-      mockProduct,
+      undefined,
       'Failed to fetch product details'
     );
   }
 
   async getTrendingProducts(limit: number = 10): Promise<Product[]> {
-    const mockTrendingProducts = getMockTrendingProducts(limit);
-
     return this.handleRequest<Product[]>(
       async () => {
         const response = await this.api.get('/products/trending', { params: { limit } });
         const products = (response.data.data || []).map(this.mapProduct);
         return { data: products } as any;
       },
-      mockTrendingProducts,
+      undefined,
       'Failed to fetch trending products'
     );
   }
 
   async getTrendAnalysis(productId?: number | string, period: string = 'month'): Promise<any> {
-    const mockTrendData = getMockTrendData(typeof productId === 'number' ? productId : 1, period);
-
-    if (!productId) return mockTrendData;
+    if (!productId) return null;
 
     return this.handleRequest<any>(
       async () => {
@@ -201,7 +193,7 @@ class ApiService {
           },
         } as any;
       },
-      mockTrendData,
+      undefined,
       'Failed to fetch trend data'
     );
   }

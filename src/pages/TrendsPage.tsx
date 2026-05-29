@@ -1,6 +1,5 @@
 import React, { useState, useEffect } from 'react';
 import { useParams, useSearchParams, Link, useNavigate } from 'react-router-dom';
-import { motion } from 'framer-motion';
 import { FiTrendingUp, FiTrendingDown, FiAlertCircle, FiFilter, FiCalendar, FiSearch, FiBarChart2 } from 'react-icons/fi';
 import { TrendingUp, Search, BarChart3 } from 'lucide-react';
 import LoadingSpinner from '../components/common/LoadingSpinner';
@@ -231,12 +230,7 @@ const TrendsPage: React.FC = () => {
 
   return (
     <div className="min-h-screen bg-gradient-to-b from-gray-50 to-white">
-      <motion.div
-        initial={{ opacity: 0, y: 20 }}
-        animate={{ opacity: 1, y: 0 }}
-        transition={{ duration: 0.5 }}
-        className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12"
-      >
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
         {/* Hero Section */}
         <div className="relative mb-10 bg-gradient-primary rounded-2xl overflow-hidden shadow-lg">
           <div className="absolute inset-0 opacity-10">
@@ -512,7 +506,7 @@ const TrendsPage: React.FC = () => {
             </div>
           </div>
         )}
-      </motion.div>
+      </div>
     </div>
   );
 };

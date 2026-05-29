@@ -4,11 +4,13 @@ import { TrendingDown, AlertTriangle, RefreshCw, Tag, ArrowDown } from 'lucide-r
 import LoadingSpinner from '../components/common/LoadingSpinner';
 import EmptyState from '../components/common/EmptyState';
 import { apiService } from '../services/api';
+import { formatPrice } from '../utils/formatPrice';
 import useSEO from '../hooks/useSEO';
 
 interface Deal {
   id: string;
   name: string;
+  slug: string;
   imageUrl: string | null;
   platform: string;
   currentPrice: number;
@@ -60,8 +62,6 @@ const DealsPage: React.FC = () => {
       default: return 0;
     }
   });
-
-  const formatPrice = (price: number) => `₦${price.toLocaleString()}`;
 
   if (loading) {
     return (
@@ -141,12 +141,6 @@ const DealsPage: React.FC = () => {
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
             {sortedDeals.map((deal) => {
               const savings = deal.previousPrice - deal.currentPrice;
-              const slug = deal.name
-                .toLowerCase()
-                .replace(/[^a-z0-9\s-]/g, '')
-                .replace(/\s+/g, '-')
-                .replace(/-+/g, '-')
-                .trim();
 
               return (
                 <div
@@ -189,7 +183,7 @@ const DealsPage: React.FC = () => {
                   {/* Content */}
                   <div className="p-4">
                     <Link
-                      to={`/product/${slug}`}
+                      to={`/product/${deal.slug || deal.id}`}
                       className="text-sm font-medium text-gray-900 hover:text-blue-600 transition-colors line-clamp-2 mb-3"
                     >
                       {deal.name}
