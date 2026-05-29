@@ -47,6 +47,7 @@ const Header = () => {
     { name: 'Trends', path: '/trends', icon: <FiBarChart2 className="mr-2" /> },
     { name: 'Prices', path: '/prices', icon: <FiDollarSign className="mr-2" /> },
     { name: 'Compare', path: '/compare', icon: <FiRefreshCw className="mr-2" /> },
+    { name: 'Deals', path: '/deals', icon: <FiDollarSign className="mr-2" /> },
   ];
 
   // Secondary navigation items

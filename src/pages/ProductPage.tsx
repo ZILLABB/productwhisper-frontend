@@ -69,6 +69,7 @@ const TrustBadge: React.FC<{ level?: string; score?: number }> = ({ level, score
 const ProductPage: React.FC = () => {
   const { id } = useParams<{ id: string }>();
   const [activeTab, setActiveTab] = useState('overview');
+  const [relatedProducts, setRelatedProducts] = React.useState<Product[]>([]);
 
   const { data: product, loading, error, refetch } = useApi<ProductData>(
     () => apiService.getProductDetails(id || '1'),
@@ -78,6 +79,22 @@ const ProductPage: React.FC = () => {
       onError: (err) => console.error('Error fetching product:', err)
     }
   );
+
+  // Fetch related products when product loads
+  React.useEffect(() => {
+    if (!product?.brand) return;
+    const fetchRelated = async () => {
+      try {
+        const result = await apiService.searchProducts(product.brand);
+        const items = result?.products || (result as any)?.data?.products || [];
+        // Filter out current product and limit to 4
+        setRelatedProducts(items.filter((p: Product) => String(p.id) !== String(id)).slice(0, 4));
+      } catch {
+        // Non-critical
+      }
+    };
+    fetchRelated();
+  }, [product?.brand, id]);
 
   useSEO({
     title: product ? `${product.name} — Price Comparison & Reviews` : 'Product Details',
@@ -592,6 +609,43 @@ const ProductPage: React.FC = () => {
                 </div>
               </div>
             </div>
+
+            {/* ── Related Products ── */}
+            {relatedProducts.length > 0 && (
+              <div className="mt-8">
+                <h3 className="text-lg font-bold text-gray-900 mb-4">Similar Products</h3>
+                <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
+                  {relatedProducts.map((rp) => (
+                    <Link
+                      key={rp.id}
+                      to={`/product/${rp.id}`}
+                      className="group bg-white border border-gray-200 rounded-lg overflow-hidden hover:shadow-md transition-shadow"
+                    >
+                      <div className="h-28 bg-gray-50 flex items-center justify-center p-2">
+                        <img
+                          src={rp.imageUrl || `https://placehold.co/200x200/1e3a5f/ffffff?text=${encodeURIComponent(rp.name.split(' ').slice(0, 2).join(' '))}`}
+                          alt={rp.name}
+                          className="max-h-full max-w-full object-contain"
+                          onError={(e) => {
+                            (e.target as HTMLImageElement).src = `https://placehold.co/200x200/1e3a5f/ffffff?text=${encodeURIComponent(rp.name.split(' ').slice(0, 2).join(' '))}`;
+                          }}
+                        />
+                      </div>
+                      <div className="p-2.5">
+                        <h4 className="text-xs font-medium text-gray-800 line-clamp-2 group-hover:text-blue-600 transition-colors">
+                          {rp.name}
+                        </h4>
+                        {rp.price > 0 && (
+                          <div className="text-sm font-bold text-green-700 mt-1">
+                            {fmtNGN(rp.price)}
+                          </div>
+                        )}
+                      </div>
+                    </Link>
+                  ))}
+                </div>
+              </div>
+            )}
           </div>
         </div>
       </div>

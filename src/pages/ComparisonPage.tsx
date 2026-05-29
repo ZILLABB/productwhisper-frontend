@@ -6,6 +6,7 @@ import LoadingSpinner from '../components/common/LoadingSpinner';
 import EmptyState from '../components/common/EmptyState';
 import { apiService } from '../services/api';
 import { useToast } from '../components/common/Toast';
+import useSEO from '../hooks/useSEO';
 
 interface Product {
   id: number | string;
@@ -39,6 +40,7 @@ function slugify(name: string): string {
 }
 
 const ComparisonPage: React.FC = () => {
+  useSEO({ title: 'Compare Products', description: 'Compare products side by side — features, prices, and sentiment across Nigerian marketplaces.' });
   const [searchParams, setSearchParams] = useSearchParams();
   const { showToast } = useToast();
 

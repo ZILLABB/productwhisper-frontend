@@ -66,7 +66,7 @@ class ApiService {
       async () => {
         const params: Record<string, any> = { q: query };
         if (filters?.category) params.category = filters.category;
-        if (filters?.brand && filters.brand.length > 0) params.brand = filters.brand[0];
+        if (filters?.brand && filters.brand.length > 0) params.brand = filters.brand.join(',');
         if (filters?.priceRange) {
           params.minPrice = filters.priceRange[0];
           params.maxPrice = filters.priceRange[1];
@@ -271,8 +271,10 @@ class ApiService {
 
   private mapProduct(p: any): Product {
     if (!p) return {} as Product;
-    const lowestListing = p.listings?.sort((a: any, b: any) => Number(a.price) - Number(b.price))[0];
-    const imageUrl = lowestListing?.imageUrl || p.imageUrl || '';
+    const sortedListings = (p.listings || []).slice().sort((a: any, b: any) => Number(a.price) - Number(b.price));
+    const lowestListing = sortedListings[0];
+    // Cascade through ALL listings to find the first available image
+    const imageUrl = sortedListings.find((l: any) => l.imageUrl)?.imageUrl || p.imageUrl || '';
     const placeholderImage = `https://placehold.co/400x400/1e3a5f/ffffff?text=${encodeURIComponent(p.name || 'Product')}`;
 
     // Extract sentiment data from analyses if available
@@ -322,13 +324,47 @@ class ApiService {
       reviewCount,
       sentimentScore,
       imageUrl: imageUrl || placeholderImage,
-      features: {},
+      features: this.buildFeatures(p, lowestListing),
       pros: keyPraises,
       cons: keyComplaints,
       positiveAttributes,
       negativeAttributes,
       listings,
     };
+  }
+  /**
+   * Build a features object from product attributes and listing metadata.
+   * This populates the comparison table in ComparisonPage.
+   */
+  private buildFeatures(p: any, lowestListing: any): Record<string, { value: string; score?: number }> {
+    const features: Record<string, { value: string; score?: number }> = {};
+
+    if (p.brand) features['Brand'] = { value: p.brand };
+    if (p.model_name) features['Model'] = { value: p.model_name };
+    if (p.storage) features['Storage'] = { value: p.storage };
+    if (p.ram) features['RAM'] = { value: p.ram };
+    if (p.color) features['Color'] = { value: p.color };
+    if (p.category) features['Category'] = { value: p.category };
+    if (p.productCondition && p.productCondition !== 'UNKNOWN') {
+      features['Condition'] = { value: p.productCondition.replace(/_/g, ' ') };
+    }
+
+    // Extract specs from listing title patterns (e.g., "6.5 inch", "5000mAh")
+    const title = lowestListing?.title || p.name || '';
+    const screenMatch = title.match(/(\d+\.?\d*)\s*(?:inch|")/i);
+    if (screenMatch) features['Screen Size'] = { value: `${screenMatch[1]}"` };
+
+    const batteryMatch = title.match(/(\d{3,5})\s*mAh/i);
+    if (batteryMatch) features['Battery'] = { value: `${batteryMatch[1]}mAh` };
+
+    const cameraMatch = title.match(/(\d{1,3})\s*MP/i);
+    if (cameraMatch) features['Camera'] = { value: `${cameraMatch[1]}MP` };
+
+    // Number of platforms available
+    const platforms = [...new Set((p.listings || []).map((l: any) => l.platform))];
+    if (platforms.length > 0) features['Available On'] = { value: platforms.join(', ') };
+
+    return features;
   }
 }
 

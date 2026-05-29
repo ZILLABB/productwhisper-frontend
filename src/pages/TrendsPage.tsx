@@ -7,6 +7,7 @@ import LoadingSpinner from '../components/common/LoadingSpinner';
 import EmptyState from '../components/common/EmptyState';
 import { apiService } from '../services/api';
 import { useToast } from '../components/common/Toast';
+import useSEO from '../hooks/useSEO';
 
 interface TrendDataPoint {
   date: string;
@@ -40,6 +41,7 @@ interface ProductInfo {
 }
 
 const TrendsPage: React.FC = () => {
+  useSEO({ title: 'Sentiment Trends', description: 'Track product sentiment and price trends across Nigerian marketplaces.' });
   const { productId } = useParams<{ productId?: string }>();
   const [searchParams, setSearchParams] = useSearchParams();
   const { showToast } = useToast();
@@ -312,6 +314,20 @@ const TrendsPage: React.FC = () => {
             </div>
           )}
         </div>
+
+        {/* Notice when no real sentiment data exists */}
+        {totalMentions === 0 && aspectAnalysis.length === 0 && (
+          <div className="bg-amber-50 border border-amber-200 rounded-xl p-4 mb-6 flex items-start gap-3">
+            <FiAlertCircle className="text-amber-500 mt-0.5 flex-shrink-0" size={18} />
+            <div>
+              <p className="text-sm font-medium text-amber-800">Limited sentiment data</p>
+              <p className="text-xs text-amber-700 mt-1">
+                This product doesn't have enough reviews yet for detailed sentiment analysis.
+                Data improves as more reviews are collected from marketplaces.
+              </p>
+            </div>
+          </div>
+        )}
 
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 mb-10">
           {/* Sentiment Score Card */}

@@ -43,6 +43,7 @@ import {
 import ProductCard from "../components/product/ProductCard";
 import { apiService } from "../services/api";
 import type { Product, SearchFilters } from "../types/api";
+import useSEO from "../hooks/useSEO";
 
 const sortOptions = [
   { value: "relevance", label: "Relevance" },
@@ -70,6 +71,7 @@ const formatPrice = (price: number) => {
 };
 
 export default function SearchPage() {
+  useSEO({ title: 'Search Products', description: 'Search and compare products across Nigerian e-commerce platforms.' });
   const [searchParams, setSearchParams] = useSearchParams();
   const navigateTo = useNavigate();
   const initialQuery = searchParams.get('q') || '';
