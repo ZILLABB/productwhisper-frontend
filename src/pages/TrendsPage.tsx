@@ -4,6 +4,7 @@ import { FiTrendingUp, FiTrendingDown, FiAlertCircle, FiFilter, FiCalendar, FiSe
 import { TrendingUp, Search, BarChart3 } from 'lucide-react';
 import LoadingSpinner from '../components/common/LoadingSpinner';
 import EmptyState from '../components/common/EmptyState';
+import SearchAutocomplete from '../components/common/SearchAutocomplete';
 import { apiService } from '../services/api';
 import { useToast } from '../components/common/Toast';
 import useSEO from '../hooks/useSEO';
@@ -136,13 +137,15 @@ const TrendsPage: React.FC = () => {
           <div className="bg-white rounded-xl shadow-md border border-gray-100 p-6 mb-8">
             <h2 className="text-lg font-display font-semibold text-gray-900 mb-4">Select a Product</h2>
             <div className="relative">
-              <FiSearch className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400" />
-              <input
-                type="text"
-                placeholder="Search for a product to view its trends..."
+              <FiSearch className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 z-10 pointer-events-none" />
+              <SearchAutocomplete
+                variant="inline"
                 value={searchQuery}
-                onChange={(e) => handleProductSearch(e.target.value)}
-                className="w-full pl-10 pr-4 py-3 rounded-lg border border-gray-200 focus:outline-none focus:ring-2 focus:ring-primary/30 focus:border-primary/30"
+                onChange={(val) => handleProductSearch(val)}
+                onSearch={(q) => handleProductSearch(q)}
+                placeholder="Search for a product to view its trends..."
+                inputClassName="w-full pl-10 pr-4 py-3 rounded-lg border border-gray-200 focus:outline-none focus:ring-2 focus:ring-primary/30 focus:border-primary/30"
+                hintText="Pick a product to see its sentiment trends"
               />
             </div>
 
@@ -296,13 +299,15 @@ const TrendsPage: React.FC = () => {
           {showSearch && (
             <div className="mt-4 pt-4 border-t border-gray-100">
               <div className="relative">
-                <FiSearch className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400" />
-                <input
-                  type="text"
-                  placeholder="Search for a product..."
+                <FiSearch className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 z-10 pointer-events-none" />
+                <SearchAutocomplete
+                  variant="inline"
                   value={searchQuery}
-                  onChange={(e) => setSearchQuery(e.target.value)}
-                  className="w-full pl-10 pr-4 py-2 rounded-lg border border-gray-200 focus:outline-none focus:ring-2 focus:ring-primary/30"
+                  onChange={setSearchQuery}
+                  onSearch={(q) => handleProductSearch(q)}
+                  placeholder="Search for a product..."
+                  inputClassName="w-full pl-10 pr-4 py-2 rounded-lg border border-gray-200 focus:outline-none focus:ring-2 focus:ring-primary/30"
+                  hintText="Pick a product to see its trends"
                 />
               </div>
             </div>

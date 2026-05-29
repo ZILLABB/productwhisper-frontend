@@ -4,6 +4,7 @@ import { apiService } from '../services/api';
 import { formatPrice } from '../utils/formatPrice';
 import useSEO from '../hooks/useSEO';
 import LoadingSpinner from '../components/common/LoadingSpinner';
+import SearchAutocomplete from '../components/common/SearchAutocomplete';
 import useApi from '../hooks/useApi';
 import {
   Search,
@@ -143,21 +144,14 @@ const HomePage: React.FC = () => {
 
             {/* Search */}
             <form onSubmit={handleSearch} className="mt-10 max-w-xl mx-auto">
-              <div className="flex shadow-2xl rounded-xl overflow-hidden">
-                <div className="relative flex-grow">
-                  <Search className="absolute left-4 top-1/2 -translate-y-1/2 h-5 w-5 text-gray-400 pointer-events-none" />
-                  <input
-                    type="text"
-                    className="block w-full border-0 py-4 pl-12 pr-4 text-gray-900 placeholder:text-gray-400 focus:ring-2 focus:ring-inset focus:ring-blue-600 text-base"
-                    placeholder="Search any product — phones, laptops, TVs..."
-                    value={searchQuery}
-                    onChange={(e) => setSearchQuery(e.target.value)}
-                  />
-                </div>
-                <Button type="submit" className="rounded-l-none px-6 text-base font-semibold">
-                  Compare
-                </Button>
-              </div>
+              <SearchAutocomplete
+                value={searchQuery}
+                onChange={setSearchQuery}
+                onSearch={(q) => navigate(`/prices?q=${encodeURIComponent(q)}`)}
+                placeholder="Search any product — phones, laptops, TVs..."
+                buttonLabel="Compare"
+                hintText="Pick a specific product for better price comparison"
+              />
             </form>
 
             {/* Popular tags */}

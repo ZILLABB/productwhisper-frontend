@@ -4,6 +4,7 @@ import { FiBarChart2, FiCheck, FiX, FiPlus, FiSearch } from 'react-icons/fi';
 import { GitCompareArrows, Search } from 'lucide-react';
 import LoadingSpinner from '../components/common/LoadingSpinner';
 import EmptyState from '../components/common/EmptyState';
+import SearchAutocomplete from '../components/common/SearchAutocomplete';
 import { apiService } from '../services/api';
 import { useToast } from '../components/common/Toast';
 import useSEO from '../hooks/useSEO';
@@ -65,14 +66,13 @@ const ComparisonPage: React.FC = () => {
     setFeatures(Array.from(allFeatures));
   }, []);
 
-  // Search for products to add to comparison
-  const handleSearch = async (e: React.FormEvent) => {
-    e.preventDefault();
-    if (!searchQuery.trim()) return;
-
+  // Core search logic (usable from form submit or autocomplete select)
+  const doProductSearch = async (query: string) => {
+    if (!query.trim()) return;
     setIsSearching(true);
     try {
-      const response: any = await apiService.searchProducts(searchQuery);
+      const response: any = await apiService.searchProducts(query);
+
       const raw = response?.data?.products || response?.products || [];
       // Normalize API products into our Product interface
       const results: Product[] = raw.map((p: any) => ({
@@ -98,6 +98,11 @@ const ComparisonPage: React.FC = () => {
     } finally {
       setIsSearching(false);
     }
+  };
+
+  const handleSearch = (e: React.FormEvent) => {
+    e.preventDefault();
+    doProductSearch(searchQuery);
   };
 
   // Add product to comparison
@@ -184,17 +189,19 @@ const ComparisonPage: React.FC = () => {
 
             <form onSubmit={handleSearch}>
               <div className="relative">
-                <FiSearch className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400" />
-                <input
-                  type="text"
-                  placeholder="Search for a product to add..."
+                <FiSearch className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 z-10 pointer-events-none" />
+                <SearchAutocomplete
+                  variant="inline"
                   value={searchQuery}
-                  onChange={(e) => setSearchQuery(e.target.value)}
-                  className="w-full pl-10 pr-24 py-3 rounded-lg border border-gray-200 focus:outline-none focus:ring-2 focus:ring-primary/30 focus:border-primary/30"
+                  onChange={setSearchQuery}
+                  onSearch={(q) => { setSearchQuery(q); doProductSearch(q); }}
+                  placeholder="Search for a product to add..."
+                  inputClassName="w-full pl-10 pr-24 py-3 rounded-lg border border-gray-200 focus:outline-none focus:ring-2 focus:ring-primary/30 focus:border-primary/30"
+                  hintText="Pick a product to compare"
                 />
                 <button
                   type="submit"
-                  className="absolute right-2 top-1/2 transform -translate-y-1/2 px-4 py-1.5 bg-primary text-white rounded-md hover:bg-primary-dark transition-colors text-sm"
+                  className="absolute right-2 top-1/2 transform -translate-y-1/2 px-4 py-1.5 bg-primary text-white rounded-md hover:bg-primary-dark transition-colors text-sm z-10"
                 >
                   Search
                 </button>
@@ -348,17 +355,19 @@ const ComparisonPage: React.FC = () => {
               <div className="p-6">
                 <form onSubmit={handleSearch} className="mb-6">
                   <div className="relative">
-                    <input
-                      type="text"
-                      placeholder="Search for a product..."
-                      className="w-full pl-10 pr-4 py-3 bg-gray-50 border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary/30 focus:border-primary/30"
+                    <FiSearch className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 z-10 pointer-events-none" size={18} />
+                    <SearchAutocomplete
+                      variant="inline"
                       value={searchQuery}
-                      onChange={(e) => setSearchQuery(e.target.value)}
+                      onChange={setSearchQuery}
+                      onSearch={(q) => { setSearchQuery(q); doProductSearch(q); }}
+                      placeholder="Search for a product..."
+                      inputClassName="w-full pl-10 pr-20 py-3 bg-gray-50 border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary/30 focus:border-primary/30"
+                      hintText="Pick a product to compare"
                     />
-                    <FiSearch className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400" size={18} />
                     <button
                       type="submit"
-                      className="absolute right-3 top-1/2 transform -translate-y-1/2 px-3 py-1 bg-primary text-white rounded-md hover:bg-primary-dark transition-colors"
+                      className="absolute right-3 top-1/2 transform -translate-y-1/2 px-3 py-1 bg-primary text-white rounded-md hover:bg-primary-dark transition-colors z-10"
                     >
                       Search
                     </button>

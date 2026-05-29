@@ -10,6 +10,17 @@ interface SearchAutocompleteProps {
   recentSearches?: string[];
   loading?: boolean;
   className?: string;
+  /**
+   * 'hero' — big rounded box with built-in Compare button (PriceComparePage hero)
+   * 'inline' — plain input that fits inside an existing form/container (no button, no outer shell)
+   */
+  variant?: 'hero' | 'inline';
+  /** CSS classes applied to the <input> element (inline variant only) */
+  inputClassName?: string;
+  /** Hint text shown at the bottom of the dropdown */
+  hintText?: string;
+  /** Label for the submit button (hero variant only) */
+  buttonLabel?: string;
 }
 
 const SearchAutocomplete: React.FC<SearchAutocompleteProps> = ({
@@ -20,6 +31,10 @@ const SearchAutocomplete: React.FC<SearchAutocompleteProps> = ({
   recentSearches = [],
   loading = false,
   className = '',
+  variant = 'hero',
+  inputClassName = '',
+  hintText = 'Pick a specific product for better results',
+  buttonLabel = 'Compare',
 }) => {
   const [suggestions, setSuggestions] = useState<string[]>([]);
   const [showDropdown, setShowDropdown] = useState(false);
@@ -142,28 +157,97 @@ const SearchAutocomplete: React.FC<SearchAutocompleteProps> = ({
     );
   };
 
+  // ── Shared dropdown JSX ──
+  const dropdown = shouldShow ? (
+    <div
+      className="absolute top-full left-0 right-0 mt-1 bg-white rounded-xl shadow-xl border border-gray-200 overflow-hidden z-50"
+      role="listbox"
+    >
+      {fetchingHint && suggestions.length === 0 && value.trim().length >= 2 && (
+        <div className="px-4 py-3 text-sm text-gray-400 flex items-center gap-2">
+          <svg className="animate-spin h-4 w-4" viewBox="0 0 24 24">
+            <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" fill="none" />
+            <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z" />
+          </svg>
+          Finding products...
+        </div>
+      )}
+
+      {dropdownItems.map((item, idx) => (
+        <button
+          key={`${item.type}-${item.text}`}
+          id={`suggestion-${idx}`}
+          role="option"
+          aria-selected={idx === activeIndex}
+          className={`w-full flex items-center gap-3 px-4 py-2.5 text-left text-sm transition-colors ${
+            idx === activeIndex ? 'bg-primary/5 text-primary' : 'text-gray-700 hover:bg-gray-50'
+          }`}
+          onClick={() => handleSelect(item.text)}
+          onMouseEnter={() => setActiveIndex(idx)}
+        >
+          {item.type === 'suggestion' ? (
+            <FiSearch className="flex-shrink-0 text-gray-400" size={14} />
+          ) : (
+            <FiClock className="flex-shrink-0 text-gray-400" size={14} />
+          )}
+          <span className="flex-1 truncate text-gray-600">
+            {highlightMatch(item.text, value)}
+          </span>
+          <FiArrowRight className="flex-shrink-0 text-gray-300" size={12} />
+        </button>
+      ))}
+
+      {/* Hint at bottom when suggestions exist */}
+      {suggestions.length > 0 && value.trim().length >= 2 && (
+        <div className="px-4 py-2 bg-gray-50 border-t border-gray-100 text-[11px] text-gray-400 flex items-center gap-1">
+          <FiTrendingUp size={10} />
+          {hintText}
+        </div>
+      )}
+    </div>
+  ) : null;
+
+  // ── Shared input props ──
+  const inputProps = {
+    ref: inputRef,
+    type: 'text' as const,
+    value,
+    onChange: (e: React.ChangeEvent<HTMLInputElement>) => {
+      onChange(e.target.value);
+      setShowDropdown(true);
+      setActiveIndex(-1);
+    },
+    onFocus: () => setShowDropdown(true),
+    onKeyDown: handleKeyDown,
+    placeholder,
+    autoComplete: 'off',
+    role: 'combobox' as const,
+    'aria-expanded': shouldShow,
+    'aria-autocomplete': 'list' as const,
+    'aria-activedescendant': activeIndex >= 0 ? `suggestion-${activeIndex}` : undefined,
+  };
+
+  // ── INLINE variant: bare input + dropdown, no shell ──
+  if (variant === 'inline') {
+    return (
+      <div ref={wrapperRef} className={`relative ${className}`}>
+        <input
+          {...inputProps}
+          className={inputClassName || 'w-full pl-10 pr-4 py-3 rounded-lg border border-gray-200 focus:outline-none focus:ring-2 focus:ring-primary/30 focus:border-primary/30'}
+        />
+        {dropdown}
+      </div>
+    );
+  }
+
+  // ── HERO variant: full search bar with button ──
   return (
     <div ref={wrapperRef} className={`relative ${className}`}>
       <div className="relative flex bg-white rounded-2xl shadow-xl overflow-hidden">
         <FiSearch className="absolute left-4 top-1/2 -translate-y-1/2 text-gray-400" size={20} />
         <input
-          ref={inputRef}
-          type="text"
-          value={value}
-          onChange={(e) => {
-            onChange(e.target.value);
-            setShowDropdown(true);
-            setActiveIndex(-1);
-          }}
-          onFocus={() => setShowDropdown(true)}
-          onKeyDown={handleKeyDown}
-          placeholder={placeholder}
+          {...inputProps}
           className="flex-1 pl-12 pr-4 py-3.5 sm:py-4 text-sm sm:text-base text-gray-900 placeholder:text-gray-400 outline-none"
-          autoComplete="off"
-          role="combobox"
-          aria-expanded={shouldShow}
-          aria-autocomplete="list"
-          aria-activedescendant={activeIndex >= 0 ? `suggestion-${activeIndex}` : undefined}
         />
         <button
           type="submit"
@@ -176,60 +260,12 @@ const SearchAutocomplete: React.FC<SearchAutocompleteProps> = ({
               <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z" />
             </svg>
           ) : (
-            'Compare'
+            buttonLabel
           )}
         </button>
       </div>
 
-      {/* Dropdown */}
-      {shouldShow && (
-        <div
-          className="absolute top-full left-0 right-0 mt-1 bg-white rounded-xl shadow-xl border border-gray-200 overflow-hidden z-50"
-          role="listbox"
-        >
-          {fetchingHint && suggestions.length === 0 && value.trim().length >= 2 && (
-            <div className="px-4 py-3 text-sm text-gray-400 flex items-center gap-2">
-              <svg className="animate-spin h-4 w-4" viewBox="0 0 24 24">
-                <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" fill="none" />
-                <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z" />
-              </svg>
-              Finding products...
-            </div>
-          )}
-
-          {dropdownItems.map((item, idx) => (
-            <button
-              key={`${item.type}-${item.text}`}
-              id={`suggestion-${idx}`}
-              role="option"
-              aria-selected={idx === activeIndex}
-              className={`w-full flex items-center gap-3 px-4 py-2.5 text-left text-sm transition-colors ${
-                idx === activeIndex ? 'bg-primary/5 text-primary' : 'text-gray-700 hover:bg-gray-50'
-              }`}
-              onClick={() => handleSelect(item.text)}
-              onMouseEnter={() => setActiveIndex(idx)}
-            >
-              {item.type === 'suggestion' ? (
-                <FiSearch className="flex-shrink-0 text-gray-400" size={14} />
-              ) : (
-                <FiClock className="flex-shrink-0 text-gray-400" size={14} />
-              )}
-              <span className="flex-1 truncate text-gray-600">
-                {highlightMatch(item.text, value)}
-              </span>
-              <FiArrowRight className="flex-shrink-0 text-gray-300" size={12} />
-            </button>
-          ))}
-
-          {/* Hint at bottom when suggestions exist */}
-          {suggestions.length > 0 && value.trim().length >= 2 && (
-            <div className="px-4 py-2 bg-gray-50 border-t border-gray-100 text-[11px] text-gray-400 flex items-center gap-1">
-              <FiTrendingUp size={10} />
-              Pick a specific product for better price comparison
-            </div>
-          )}
-        </div>
-      )}
+      {dropdown}
     </div>
   );
 };
