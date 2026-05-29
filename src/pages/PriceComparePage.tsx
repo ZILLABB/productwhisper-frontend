@@ -570,13 +570,19 @@ const CATEGORY_LABELS: Record<string, { label: string; icon: string }> = {
   APPLIANCE: { label: 'Home & Appliances', icon: '🏠' },
   LAPTOP: { label: 'Laptops', icon: '💻' },
   LAPTOP_ACCESSORY: { label: 'Laptop Accessories', icon: '💻' },
+  DESKTOP: { label: 'Desktops & PCs', icon: '🖥️' },
   WEARABLE: { label: 'Smartwatches & Wearables', icon: '⌚' },
   TV: { label: 'TVs & Displays', icon: '📺' },
+  CAMERA: { label: 'Cameras & Drones', icon: '📷' },
   GAMING_CONSOLE: { label: 'Gaming', icon: '🎮' },
   GAMING_ACCESSORY: { label: 'Gaming Accessories', icon: '🎮' },
   STORAGE_DEVICE: { label: 'Storage Devices', icon: '💾' },
   NETWORKING: { label: 'Networking', icon: '📡' },
+  PRINTER: { label: 'Printers', icon: '🖨️' },
   SOLAR_POWER: { label: 'Solar & Power', icon: '☀️' },
+  GENERATOR: { label: 'Generators', icon: '⚡' },
+  AIR_CONDITIONER: { label: 'Air Conditioners', icon: '❄️' },
+  FASHION: { label: 'Fashion & Footwear', icon: '👟' },
   GENERAL_ACCESSORY: { label: 'Accessories', icon: '🔌' },
   OTHER: { label: 'Other Products', icon: '📦' },
 };
@@ -584,18 +590,23 @@ const CATEGORY_LABELS: Record<string, { label: string; icon: string }> = {
 /** Guess product category from title using simple keywords */
 function guessCategory(title: string): string {
   const t = title.toLowerCase();
-  if (/\b(earbuds?|earpods?|headphones?|speakers?|soundbar|earphones?|freepods|spacebuds|necklace)\b/.test(t)) return 'AUDIO';
-  if (/\b(power\s*bank|charger|cable|adapter|case|screen\s*protector|tempered\s*glass|phone\s*holder)\b/.test(t)) return 'PHONE_ACCESSORY';
-  if (/\b(iphone|galaxy\s*[asz]|redmi|tecno|infinix|itel|smartphone|android\s*phone)\b/.test(t)) return 'PHONE';
-  if (/\b(laptop|macbook|thinkpad|chromebook|notebook)\b/.test(t)) return 'LAPTOP';
-  if (/\b(smart\s*watch|smartwatch|watch|band|fitbit)\b/.test(t)) return 'WEARABLE';
-  if (/\b(extension|stabilizer|surge|blender|iron|fan|kettle|microwave|fridge|cooker)\b/.test(t)) return 'APPLIANCE';
-  if (/\b(tv|television|oled|qled)\b/.test(t)) return 'TV';
-  if (/\b(playstation|ps[45]|xbox|nintendo|controller|gamepad)\b/.test(t)) return 'GAMING_CONSOLE';
-  if (/\b(ssd|hdd|hard\s*drive|flash\s*drive|memory\s*card|sd\s*card)\b/.test(t)) return 'STORAGE_DEVICE';
-  if (/\b(router|wifi|modem|mesh)\b/.test(t)) return 'NETWORKING';
-  if (/\b(solar|inverter|generator)\b/.test(t)) return 'SOLAR_POWER';
-  if (/\b(clipper|trimmer|hair)\b/.test(t)) return 'OTHER';
+  if (/\b(earbuds?|earpods?|headphones?|speakers?|soundbar|earphones?|freepods|spacebuds|necklace|headset|tws|subwoofer|amplifier|microphone|karaoke|home\s*theat[er|re])\b/.test(t)) return 'AUDIO';
+  if (/\b(power\s*bank|charger|cable|adapter|case|screen\s*protector|tempered\s*glass|phone\s*holder|pouch|cover\s*for)\b/.test(t)) return 'PHONE_ACCESSORY';
+  if (/\b(iphone|galaxy\s*[aszm]|redmi|tecno|infinix|itel|smartphone|android\s*phone|poco|oneplus|realme|oppo|vivo|nokia|huawei|honor|motorola|moto\s*g|nothing\s*phone|umidigi|doogee|blackview|ulefone|oukitel)\b/.test(t)) return 'PHONE';
+  if (/\b(laptop|macbook|thinkpad|chromebook|notebook|elitebook|probook|pavilion|ideapad|vivobook|zenbook|latitude|inspiron|xps|legion|predator|nitro|rog\s*strix|alienware|omen|victus)\b/.test(t)) return 'LAPTOP';
+  if (/\b(desktop|imac|mac\s*mini|all[\s-]?in[\s-]?one\s*pc|mini\s*pc|thinkcentre)\b/.test(t)) return 'DESKTOP';
+  if (/\b(smart\s*watch|smartwatch|watch|band|fitbit|garmin|amazfit)\b/.test(t)) return 'WEARABLE';
+  if (/\b(camera|dslr|mirrorless|gopro|webcam|drone|dji|cctv|surveillance|dash\s*cam)\b/.test(t)) return 'CAMERA';
+  if (/\b(extension|stabilizer|surge|blender|iron|fan|kettle|microwave|fridge|cooker|freezer|washing\s*machine|vacuum|air\s*fryer|oven|toaster|juicer|food\s*processor|water\s*dispenser|hair\s*dryer|clipper|trimmer|shaver|sewing\s*machine)\b/.test(t)) return 'APPLIANCE';
+  if (/\b(tv|television|oled|qled|projector|android\s*box|fire\s*tv|chromecast)\b/.test(t)) return 'TV';
+  if (/\b(playstation|ps[345]|xbox|nintendo|controller|gamepad|steam\s*deck)\b/.test(t)) return 'GAMING_CONSOLE';
+  if (/\b(ssd|hdd|hard\s*drive|flash\s*drive|memory\s*card|sd\s*card|nvme|pen\s*drive|external\s*drive)\b/.test(t)) return 'STORAGE_DEVICE';
+  if (/\b(router|wifi|modem|mesh|mifi|access\s*point|range\s*extender)\b/.test(t)) return 'NETWORKING';
+  if (/\b(printer|inkjet|laserjet|scanner|photocopier)\b/.test(t)) return 'PRINTER';
+  if (/\b(generator|genset)\b/.test(t)) return 'GENERATOR';
+  if (/\b(solar|inverter|ups\s*battery|power\s*station|lifepo4)\b/.test(t)) return 'SOLAR_POWER';
+  if (/\b(air\s*condition|split\s*unit|btu)\b/.test(t)) return 'AIR_CONDITIONER';
+  if (/\b(shoe|sneaker|sandal|dress|shirt|trouser|jean|jacket|hoodie|handbag|backpack|perfume|fragrance|nike|adidas|puma|jordan|timberland|crocs)\b/.test(t)) return 'FASHION';
   return 'OTHER';
 }
 
