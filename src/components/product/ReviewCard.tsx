@@ -22,7 +22,7 @@ interface ReviewCardProps {
 }
 
 const ReviewCard: React.FC<ReviewCardProps> = ({
-  id,
+  _id,
   author,
   date,
   rating,

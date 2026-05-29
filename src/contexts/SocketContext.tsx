@@ -71,7 +71,6 @@ export const SocketProvider: React.FC<{ children: React.ReactNode }> = ({ childr
     });
 
     socketInstance.on(SocketEvent.CONNECT, () => {
-      console.log('Socket connected');
       setIsConnected(true);
 
       // Authenticate if user is logged in
@@ -81,7 +80,6 @@ export const SocketProvider: React.FC<{ children: React.ReactNode }> = ({ childr
     });
 
     socketInstance.on(SocketEvent.DISCONNECT, () => {
-      console.log('Socket disconnected');
       setIsConnected(false);
     });
 
@@ -89,8 +87,8 @@ export const SocketProvider: React.FC<{ children: React.ReactNode }> = ({ childr
       console.error('Socket error:', error);
     });
 
-    socketInstance.on(SocketEvent.AUTHENTICATED, (data) => {
-      console.log('Socket authenticated:', data);
+    socketInstance.on(SocketEvent.AUTHENTICATED, () => {
+      // Socket authenticated successfully
     });
 
     socketInstance.on(SocketEvent.UNAUTHORIZED, (error) => {

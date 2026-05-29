@@ -42,7 +42,7 @@ function slugify(name: string): string {
 
 const ComparisonPage: React.FC = () => {
   useSEO({ title: 'Compare Products', description: 'Compare products side by side — features, prices, and sentiment across Nigerian marketplaces.' });
-  const [searchParams, setSearchParams] = useSearchParams();
+  const [, setSearchParams] = useSearchParams();
   const { showToast } = useToast();
 
   // Products are managed purely in local state — no API re-fetch on URL change.
@@ -93,7 +93,7 @@ const ComparisonPage: React.FC = () => {
       setSearchResults(results);
     } catch (error) {
       console.error('Error searching products:', error);
-      showToast('error', 'Failed to search products');
+      showToast({ type: 'error', title: 'Search Error', message: 'Failed to search products' });
       setSearchResults([]);
     } finally {
       setIsSearching(false);
@@ -108,12 +108,12 @@ const ComparisonPage: React.FC = () => {
   // Add product to comparison
   const addProduct = (product: Product) => {
     if (products.length >= 4) {
-      showToast('warning', 'You can compare up to 4 products at a time');
+      showToast({ type: 'warning', title: 'Limit Reached', message: 'You can compare up to 4 products at a time' });
       return;
     }
 
     if (products.some(p => String(p.id) === String(product.id))) {
-      showToast('info', 'This product is already in your comparison');
+      showToast({ type: 'info', title: 'Already Added', message: 'This product is already in your comparison' });
       return;
     }
 
@@ -130,7 +130,7 @@ const ComparisonPage: React.FC = () => {
       setSearchQuery('');
       setSearchResults([]);
     } else {
-      showToast('info', `Added! Pick ${2 - newProducts.length} more product(s) to compare.`);
+      showToast({ type: 'info', title: 'Product Added', message: `Added! Pick ${2 - newProducts.length} more product(s) to compare.` });
     }
   };
 

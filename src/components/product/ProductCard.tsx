@@ -1,7 +1,7 @@
 import React from 'react';
 import { Link } from 'react-router-dom';
 import { motion } from 'framer-motion';
-import { Star, ShoppingCart, Heart, BarChart2 } from 'lucide-react';
+import { Star, Heart, BarChart2 } from 'lucide-react';
 import { Badge } from '../ui/badge';
 import Button from '../../common/components/Button';
 
@@ -31,7 +31,7 @@ const ProductCard: React.FC<ProductCardProps> = ({
   brand,
   category,
   price,
-  originalPrice,
+  _originalPrice,
   rating,
   reviewCount,
   sentimentScore = 0,
@@ -39,7 +39,7 @@ const ProductCard: React.FC<ProductCardProps> = ({
   description,
   inStock,
   discount = 0,
-  tags = [],
+  _tags = [],
   onAddToCompare,
   onAddToFavorite,
   viewMode = 'grid',

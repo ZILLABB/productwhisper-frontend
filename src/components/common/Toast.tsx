@@ -150,12 +150,5 @@ export const ToastContainer: React.FC = () => {
   );
 };
 
-// Toast function for direct use
-export const toast = (options: ToastOptions) => {
-  const context = useContext(ToastContext);
-  if (context) {
-    context.addToast(options);
-  } else {
-    console.error('Toast context not found. Make sure ToastProvider is in the component tree.');
-  }
-};
+// Note: To show toasts from within React components, use the useToast() hook.
+// Direct toast() calls outside components are not supported — useContext requires a component scope.

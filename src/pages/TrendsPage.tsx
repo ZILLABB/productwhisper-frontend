@@ -9,12 +9,6 @@ import { apiService } from '../services/api';
 import { useToast } from '../components/common/Toast';
 import useSEO from '../hooks/useSEO';
 
-interface TrendDataPoint {
-  date: string;
-  value: number;
-  confidence?: number;
-}
-
 interface AspectData {
   aspect: string;
   sentiment: number;
@@ -100,7 +94,7 @@ const TrendsPage: React.FC = () => {
       } catch (err) {
         setError('Failed to load trend data');
         console.error('Error fetching trend data:', err);
-        showToast('error', 'Failed to load trend data');
+        showToast({ type: 'error', title: 'Error', message: 'Failed to load trend data' });
       } finally {
         setLoading(false);
       }

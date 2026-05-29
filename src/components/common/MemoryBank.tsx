@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { FiBookOpen, FiX, FiPlus, FiEdit2, FiTrash2, FiSave, FiCheck } from 'react-icons/fi';
+import { FiBookOpen, FiX, FiPlus, FiEdit2, FiTrash2, FiSave } from 'react-icons/fi';
 
 // Define CSS classes for consistent styling
 const STYLE = {

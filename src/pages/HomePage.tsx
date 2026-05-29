@@ -54,12 +54,6 @@ const PLATFORM_COLORS: Record<string, string> = {
   JIJI: 'bg-green-100 text-green-800 border-green-200',
 };
 
-const PLATFORM_ACCENT: Record<string, string> = {
-  JUMIA: 'text-orange-600',
-  KONGA: 'text-blue-600',
-  JIJI: 'text-green-600',
-};
-
 const HomePage: React.FC = () => {
   const [searchQuery, setSearchQuery] = useState('');
   const [deals, setDeals] = useState<Deal[]>([]);
@@ -214,11 +208,11 @@ const HomePage: React.FC = () => {
             </div>
           ) : deals.length > 0 ? (
             <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
-              {deals.map((deal) => {
+              {deals.map((deal, index) => {
                 const savings = deal.previousPrice - deal.currentPrice;
                 return (
                   <Link
-                    key={deal.id}
+                    key={`deal-${deal.id}-${index}`}
                     to={`/product/${deal.slug || deal.id}`}
                     className="group bg-white border border-gray-200 rounded-xl overflow-hidden hover:shadow-lg transition-all duration-200 hover:-translate-y-0.5"
                   >
@@ -315,14 +309,14 @@ const HomePage: React.FC = () => {
             </div>
           ) : trending.length > 0 ? (
             <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
-              {trending.slice(0, 8).map((product) => {
+              {trending.slice(0, 8).map((product, index) => {
                 const platformCount = product.listings
                   ? new Set(product.listings.map((l) => l.platform)).size
                   : 0;
 
                 return (
                   <Link
-                    key={product.id}
+                    key={`trending-${product.id}-${index}`}
                     to={`/product/${product.id}`}
                     className="group bg-white border border-gray-200 rounded-xl overflow-hidden hover:shadow-lg transition-all duration-200 hover:-translate-y-0.5"
                   >

@@ -4,7 +4,6 @@ import {
   FiMenu,
   FiX,
   FiSearch,
-  FiBarChart2,
   FiRefreshCw,
   FiDollarSign,
   FiChevronDown,

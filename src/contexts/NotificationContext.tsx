@@ -2,7 +2,7 @@ import React, { createContext, useContext, useEffect, useState } from 'react';
 import { useSocket, SocketEvent } from './SocketContext';
 import { useAuth } from './AuthContext';
 import { notificationService } from '../services/notificationService';
-import { toast } from '../components/common/Toast';
+import { useToast } from '../components/common/Toast';
 import { Notification, NotificationType, NotificationPriority } from '../types/notification';
 
 interface NotificationContextType {
@@ -36,6 +36,7 @@ export const NotificationProvider: React.FC<{ children: React.ReactNode }> = ({ 
   const [error, setError] = useState<string | null>(null);
   const { socket, isConnected } = useSocket();
   const { isAuthenticated } = useAuth();
+  const { showToast } = useToast();
 
   // Fetch notifications when authenticated
   useEffect(() => {
@@ -57,7 +58,7 @@ export const NotificationProvider: React.FC<{ children: React.ReactNode }> = ({ 
         setUnreadCount(prev => prev + 1);
 
         // Show toast notification
-        toast({
+        showToast({
           title: notification.title,
           message: notification.message,
           type: getToastTypeFromPriority(notification.priority),

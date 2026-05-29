@@ -1,21 +1,32 @@
+import { useState } from 'react';
 import { Link } from 'react-router-dom';
 import { motion } from 'framer-motion';
 import {
   FiMail,
   FiPhone,
-  
   FiHeart,
   FiTwitter,
   FiInstagram,
   FiFacebook,
   FiLinkedin,
-  
   FiSend,
-  FiChevronRight
+  FiChevronRight,
+  FiCheck
 } from 'react-icons/fi';
 
 const Footer = () => {
   const currentYear = new Date().getFullYear();
+  const [email, setEmail] = useState('');
+  const [subscribed, setSubscribed] = useState(false);
+
+  const handleNewsletter = (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!email.trim()) return;
+    // In a real app this would call an API endpoint
+    setSubscribed(true);
+    setEmail('');
+    setTimeout(() => setSubscribed(false), 3000);
+  };
 
   const footerVariants = {
     hidden: { opacity: 0 },
@@ -65,10 +76,18 @@ const Footer = () => {
               Compare prices across Jumia, Konga & Jiji. Find the best deals and avoid scam sellers.
             </p>
             <div className="flex space-x-3">
-              {[FiTwitter, FiFacebook, FiInstagram, FiLinkedin].map((Icon, index) => (
+              {[
+                { Icon: FiTwitter, url: 'https://twitter.com/productwhisper', label: 'Twitter' },
+                { Icon: FiFacebook, url: 'https://facebook.com/productwhisper', label: 'Facebook' },
+                { Icon: FiInstagram, url: 'https://instagram.com/productwhisper', label: 'Instagram' },
+                { Icon: FiLinkedin, url: 'https://linkedin.com/company/productwhisper', label: 'LinkedIn' },
+              ].map(({ Icon, url, label }) => (
                 <motion.a
-                  key={index}
-                  href="#"
+                  key={label}
+                  href={url}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  aria-label={label}
                   className="flex items-center justify-center w-8 h-8 rounded-full bg-white/10 text-white hover:bg-secondary hover:text-white transition-all duration-300"
                   whileHover={{ y: -2, scale: 1.05 }}
                 >
@@ -137,11 +156,14 @@ const Footer = () => {
                 </div>
 
                 {/* Compact Newsletter */}
-                <form className="relative mt-4">
+                <form className="relative mt-4" onSubmit={handleNewsletter}>
                   <div className="flex">
                     <input
                       type="email"
                       placeholder="Your email"
+                      value={email}
+                      onChange={(e) => setEmail(e.target.value)}
+                      required
                       className="w-full bg-white/10 text-white px-3 py-2 rounded-l-md focus:outline-none focus:ring-1 focus:ring-secondary border border-white/10 placeholder:text-white/50 text-sm"
                     />
                     <button
@@ -149,9 +171,12 @@ const Footer = () => {
                       className="bg-secondary hover:bg-secondary-light text-white px-3 py-2 rounded-r-md transition-colors"
                       aria-label="Subscribe"
                     >
-                      <FiSend size={16} />
+                      {subscribed ? <FiCheck size={16} /> : <FiSend size={16} />}
                     </button>
                   </div>
+                  {subscribed && (
+                    <p className="text-secondary text-xs mt-1">Thanks for subscribing!</p>
+                  )}
                 </form>
               </div>
             </div>
