@@ -1,35 +1,68 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { apiService } from '../services/api';
+import { formatPrice } from '../utils/formatPrice';
 import useSEO from '../hooks/useSEO';
 import LoadingSpinner from '../components/common/LoadingSpinner';
 import useApi from '../hooks/useApi';
-import ApiErrorFallback from '../components/common/ApiErrorFallback';
 import {
-  Search as MagnifyingGlassIcon,
-  BarChart as ChartBarIcon,
-  ArrowLeftRight as ArrowsRightLeftIcon,
-  ShieldCheck as ShieldCheckIcon,
+  Search,
   TrendingDown,
-  Youtube,
-  Star as StarIcon
+  TrendingUp,
+  ShieldCheck,
+  ArrowRight,
+  ArrowDown,
+  Star,
+  Tag,
+  BarChart3,
+  Zap,
+  ExternalLink,
 } from 'lucide-react';
 import { Button } from '../common/components';
 
 interface TrendingProduct {
   id: number | string;
   name: string;
-  description: string;
   brand: string;
   category: string;
-  score: number;
-  mention_count: number;
+  sentimentScore: number;
+  reviewCount: number;
   imageUrl?: string;
   price?: number;
+  listings?: Array<{
+    platform: string;
+    price: number;
+    url: string;
+  }>;
 }
+
+interface Deal {
+  id: string;
+  name: string;
+  slug: string;
+  imageUrl: string | null;
+  platform: string;
+  currentPrice: number;
+  previousPrice: number;
+  dropPercent: number;
+}
+
+const PLATFORM_COLORS: Record<string, string> = {
+  JUMIA: 'bg-orange-100 text-orange-800 border-orange-200',
+  KONGA: 'bg-blue-100 text-blue-800 border-blue-200',
+  JIJI: 'bg-green-100 text-green-800 border-green-200',
+};
+
+const PLATFORM_ACCENT: Record<string, string> = {
+  JUMIA: 'text-orange-600',
+  KONGA: 'text-blue-600',
+  JIJI: 'text-green-600',
+};
 
 const HomePage: React.FC = () => {
   const [searchQuery, setSearchQuery] = useState('');
+  const [deals, setDeals] = useState<Deal[]>([]);
+  const [dealsLoading, setDealsLoading] = useState(true);
   const navigate = useNavigate();
 
   useSEO({
@@ -38,25 +71,41 @@ const HomePage: React.FC = () => {
     keywords: 'price comparison Nigeria, Jumia, Konga, Jiji, best prices, online shopping Nigeria',
   });
 
-  const { data, loading, error, refetch } = useApi(
-    () => apiService.getTrendingProducts(6),
-    {
-      cacheKey: 'trending-products',
-      cacheDuration: 5 * 60 * 1000,
-    }
+  // Fetch trending products
+  const { data: trendingData, loading: trendingLoading } = useApi(
+    () => apiService.getTrendingProducts(8),
+    { cacheKey: 'home-trending', cacheDuration: 5 * 60 * 1000 }
   );
 
-  const trendingProducts: TrendingProduct[] = data ? data.map(product => ({
-    id: product.id,
-    name: product.name,
-    description: product.description || '',
-    brand: product.brand || '',
-    category: product.category || '',
-    score: Math.max(0, product.sentimentScore || 0),
-    mention_count: product.reviewCount || 0,
-    imageUrl: product.imageUrl,
-    price: product.price,
-  })) : [];
+  const trending: TrendingProduct[] = trendingData
+    ? trendingData.map((p) => ({
+        id: p.id,
+        name: p.name,
+        brand: p.brand || '',
+        category: p.category || '',
+        sentimentScore: p.sentimentScore || 0,
+        reviewCount: p.reviewCount || 0,
+        imageUrl: p.imageUrl,
+        price: p.price,
+        listings: p.listings,
+      }))
+    : [];
+
+  // Fetch deals
+  useEffect(() => {
+    const fetchDeals = async () => {
+      try {
+        const response = await apiService.get('/prices/deals?limit=6');
+        const data = response.data?.data || response.data || [];
+        setDeals(Array.isArray(data) ? data.slice(0, 6) : []);
+      } catch {
+        setDeals([]);
+      } finally {
+        setDealsLoading(false);
+      }
+    };
+    fetchDeals();
+  }, []);
 
   const handleSearch = (e: React.FormEvent) => {
     e.preventDefault();
@@ -65,273 +114,430 @@ const HomePage: React.FC = () => {
     }
   };
 
-  const popular = ['iPhone 15', 'Samsung Galaxy A15', 'Tecno Spark 20', 'PlayStation 5', 'MacBook Air', 'Infinix Hot 40'];
+  const popular = [
+    'iPhone 15',
+    'Samsung Galaxy A15',
+    'Tecno Spark 20',
+    'PlayStation 5',
+    'MacBook Air',
+    'Infinix Hot 40',
+  ];
 
   return (
-    <div>
+    <div className="min-h-screen">
       {/* ─── Hero ─── */}
-      <div
-        className="relative bg-gradient-primary rounded-premium shadow-premium overflow-hidden mb-12"
-      >
-        <div className="max-w-7xl mx-auto px-4 py-16 sm:px-6 lg:px-8 lg:py-28 relative z-10">
+      <section className="relative bg-gradient-primary overflow-hidden">
+        <div className="absolute inset-0 opacity-10">
+          <div className="absolute top-20 left-[10%] w-72 h-72 rounded-full bg-white/20 blur-3xl" />
+          <div className="absolute bottom-10 right-[15%] w-96 h-96 rounded-full bg-yellow-300/20 blur-3xl" />
+        </div>
+
+        <div className="max-w-7xl mx-auto px-4 py-16 sm:px-6 lg:px-8 lg:py-24 relative z-10">
           <div className="max-w-3xl mx-auto text-center">
-            <h1 className="font-display text-4xl font-bold text-white sm:text-5xl lg:text-6xl sm:tracking-tight">
+            <h1 className="font-display text-4xl font-bold text-white sm:text-5xl lg:text-6xl tracking-tight">
               Find the <span className="text-yellow-300">Best Prices</span> Across Nigeria
             </h1>
-            <p className="mt-8 text-xl font-light text-white leading-relaxed">
-              Compare prices on Jumia, Konga & Jiji in real-time. Save money, avoid scams, and shop with confidence.
+            <p className="mt-6 text-lg text-white/80 leading-relaxed max-w-2xl mx-auto">
+              Compare prices on Jumia, Konga & Jiji in real-time. Save money, avoid scam sellers, and shop with confidence.
             </p>
 
-            {/* Platform logos */}
-            <div className="flex items-center justify-center gap-4 mt-8 mb-4">
-              {[
-                { logo: '/logos/jumia.svg', label: 'Jumia' },
-                { logo: '/logos/konga.svg', label: 'Konga' },
-                { logo: '/logos/jiji.svg', label: 'Jiji' },
-              ].map((p) => (
-                <div key={p.label} className="bg-white/10 rounded-xl px-4 py-2">
-                  <img src={p.logo} alt={p.label} className="h-7 rounded" />
+            {/* Search */}
+            <form onSubmit={handleSearch} className="mt-10 max-w-xl mx-auto">
+              <div className="flex shadow-2xl rounded-xl overflow-hidden">
+                <div className="relative flex-grow">
+                  <Search className="absolute left-4 top-1/2 -translate-y-1/2 h-5 w-5 text-gray-400 pointer-events-none" />
+                  <input
+                    type="text"
+                    className="block w-full border-0 py-4 pl-12 pr-4 text-gray-900 placeholder:text-gray-400 focus:ring-2 focus:ring-inset focus:ring-blue-600 text-base"
+                    placeholder="Search any product — phones, laptops, TVs..."
+                    value={searchQuery}
+                    onChange={(e) => setSearchQuery(e.target.value)}
+                  />
                 </div>
+                <Button type="submit" className="rounded-l-none px-6 text-base font-semibold">
+                  Compare
+                </Button>
+              </div>
+            </form>
+
+            {/* Popular tags */}
+            <div className="mt-5 flex flex-wrap justify-center gap-2">
+              <span className="text-white/50 text-sm py-1">Popular:</span>
+              {popular.map((s) => (
+                <button
+                  key={s}
+                  onClick={() => {
+                    setSearchQuery(s);
+                    navigate(`/prices?q=${encodeURIComponent(s)}`);
+                  }}
+                  className="px-3 py-1 text-sm bg-white/10 text-white/80 rounded-full hover:bg-white/20 transition-colors border border-white/10"
+                >
+                  {s}
+                </button>
               ))}
             </div>
 
-            <div className="mt-8">
-              <form onSubmit={handleSearch} className="max-w-xl mx-auto">
-                <div className="flex shadow-premium rounded-premium overflow-hidden">
-                  <div className="relative flex-grow focus-within:z-10">
-                    <input
-                      type="text"
-                      className="block w-full border-0 py-4 px-6 text-gray-900 placeholder:text-gray-400 focus:ring-2 focus:ring-inset focus:ring-blue-600 text-lg font-medium"
-                      placeholder="Search for a product..."
-                      value={searchQuery}
-                      onChange={(e) => setSearchQuery(e.target.value)}
-                    />
-                  </div>
-                  <Button
-                    type="submit"
-                    className="rounded-l-none px-8 text-base font-semibold"
-                    leftIcon={<MagnifyingGlassIcon className="h-5 w-5" aria-hidden="true" />}
-                  >
-                    Compare
-                  </Button>
+            {/* Platform pills */}
+            <div className="flex items-center justify-center gap-3 mt-8">
+              {[
+                { name: 'Jumia', logo: '/logos/jumia.svg' },
+                { name: 'Konga', logo: '/logos/konga.svg' },
+                { name: 'Jiji', logo: '/logos/jiji.svg' },
+              ].map((p) => (
+                <div key={p.name} className="bg-white/10 backdrop-blur-sm rounded-lg px-4 py-2 border border-white/10">
+                  <img src={p.logo} alt={p.name} className="h-6 rounded" />
                 </div>
-              </form>
-
-              {/* Popular searches */}
-              <div className="mt-5 flex flex-wrap justify-center gap-2">
-                {popular.map((s) => (
-                  <button
-                    key={s}
-                    onClick={() => { setSearchQuery(s); navigate(`/prices?q=${encodeURIComponent(s)}`); }}
-                    className="px-3 py-1 text-sm bg-white/15 text-white/80 rounded-full hover:bg-white/25 transition-colors"
-                  >
-                    {s}
-                  </button>
-                ))}
-              </div>
+              ))}
             </div>
           </div>
         </div>
-      </div>
+      </section>
 
-      {/* ─── Features ─── */}
-      <div
-        className="py-16 bg-gray-50 relative overflow-hidden"
-      >
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 relative z-10">
-          <div className="lg:text-center">
-            <h2 className="text-base text-blue-600 font-semibold tracking-wide uppercase font-sans">Why ProductWhisper</h2>
-            <p className="mt-2 text-4xl font-bold tracking-tight text-gray-900 font-display">
-              Shop Smarter Across Nigeria
-            </p>
-            <p className="mt-6 max-w-2xl text-xl text-gray-600 lg:mx-auto font-sans leading-relaxed">
-              We search every major Nigerian e-commerce platform so you don't have to. Find the best price, the safest seller, and make informed decisions.
-            </p>
-          </div>
-
-          <div className="mt-16 grid grid-cols-1 gap-8 md:grid-cols-3">
-            {[
-              {
-                icon: TrendingDown,
-                title: 'Real-Time Price Comparison',
-                color: 'blue',
-                desc: 'Search once, see prices from Jumia, Konga, and Jiji side by side. We match the same product across platforms so you instantly see who has the cheapest deal.'
-              },
-              {
-                icon: ShieldCheckIcon,
-                title: 'Seller Trust Scores',
-                color: 'green',
-                desc: 'Every listing shows a trust badge for the seller. We analyze ratings, verification status, and sales history to flag trustworthy merchants and warn about risky ones.'
-              },
-              {
-                icon: ArrowsRightLeftIcon,
-                title: 'Product Comparison',
-                color: 'purple',
-                desc: 'Compare products side-by-side based on price, condition, and seller reputation. Perfect for deciding between similar models or different brands.'
-              },
-            ].map((feature, index) => (
-              <div key={index} className="relative p-6 bg-white rounded-premium shadow-premium hover:shadow-premium-hover transition-shadow duration-300">
-                <div className={`flex items-center justify-center h-16 w-16 rounded-full bg-${feature.color}-100 text-${feature.color}-600 mb-6`}>
-                  <feature.icon className="h-8 w-8" aria-hidden="true" />
-                </div>
-                <h3 className="text-xl font-bold text-gray-900 font-display mb-3">{feature.title}</h3>
-                <p className="text-base text-gray-600 leading-relaxed">{feature.desc}</p>
+      {/* ─── Today's Best Deals ─── */}
+      <section className="py-14 bg-gray-50">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+          <div className="flex items-center justify-between mb-8">
+            <div className="flex items-center gap-3">
+              <div className="p-2 bg-red-100 rounded-lg">
+                <TrendingDown className="h-5 w-5 text-red-600" />
               </div>
-            ))}
-          </div>
-
-          <div className="mt-8 grid grid-cols-1 gap-8 md:grid-cols-3">
-            {[
-              {
-                icon: ChartBarIcon,
-                title: 'Price Trend Tracking',
-                color: 'indigo',
-                desc: 'See how prices change over time. Know if you\'re getting a deal or if the price was raised before a "sale". Coming soon: price drop alerts.'
-              },
-              {
-                icon: Youtube,
-                title: 'Video Reviews',
-                color: 'red',
-                desc: 'See what real Nigerians are saying in YouTube reviews before you buy. We find the most relevant video reviews for every product you search.'
-              },
-              {
-                icon: MagnifyingGlassIcon,
-                title: 'Smart Search',
-                color: 'yellow',
-                desc: 'Search "iPhone 15" and we filter out cases, chargers, and screen protectors. You see actual phones, not accessories cluttering your results.'
-              },
-            ].map((feature, index) => (
-              <div key={index} className="relative p-6 bg-white rounded-premium shadow-premium hover:shadow-premium-hover transition-shadow duration-300">
-                <div className={`flex items-center justify-center h-16 w-16 rounded-full bg-${feature.color}-100 text-${feature.color}-600 mb-6`}>
-                  <feature.icon className="h-8 w-8" aria-hidden="true" />
-                </div>
-                <h3 className="text-xl font-bold text-gray-900 font-display mb-3">{feature.title}</h3>
-                <p className="text-base text-gray-600 leading-relaxed">{feature.desc}</p>
+              <div>
+                <h2 className="text-2xl font-bold text-gray-900 font-display">Today's Best Deals</h2>
+                <p className="text-sm text-gray-500">Products with the biggest recent price drops</p>
               </div>
-            ))}
-          </div>
-        </div>
-      </div>
-
-      {/* ─── Trending ─── */}
-      <div
-        className="py-16 relative overflow-hidden"
-      >
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 relative z-10">
-          <div className="lg:text-center mb-12">
-            <h2 className="text-base text-blue-600 font-semibold tracking-wide uppercase font-sans">Trending Now</h2>
-            <p className="mt-2 text-4xl font-bold tracking-tight text-gray-900 font-display">
-              Popular Products Nigerians Are Comparing
-            </p>
-            <p className="mt-6 max-w-2xl text-xl text-gray-600 lg:mx-auto font-sans leading-relaxed">
-              See what products are being searched and compared right now.
-            </p>
+            </div>
+            <Link
+              to="/deals"
+              className="hidden sm:inline-flex items-center gap-1 text-sm font-medium text-primary hover:text-primary-dark transition-colors"
+            >
+              View all deals <ArrowRight className="h-4 w-4" />
+            </Link>
           </div>
 
-          {loading ? (
+          {dealsLoading ? (
             <div className="flex justify-center py-12">
-              <LoadingSpinner size="large" text="Loading trending products..." />
+              <LoadingSpinner size="medium" text="Finding deals..." />
             </div>
-          ) : error ? (
-            <div className="max-w-lg mx-auto py-8">
-              <ApiErrorFallback
-                error={error instanceof Error ? error : new Error(String(error))}
-                message="We couldn't load trending products at this time."
-                retry={refetch}
-              />
-            </div>
-          ) : (
-            <div className="grid grid-cols-1 gap-8 sm:grid-cols-2 lg:grid-cols-3">
-              {trendingProducts.length > 0 ? (
-                trendingProducts.map((product) => (
+          ) : deals.length > 0 ? (
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
+              {deals.map((deal) => {
+                const savings = deal.previousPrice - deal.currentPrice;
+                return (
                   <Link
-                    key={product.id}
-                    to={`/product/${product.id}`}
-                    className="group block h-full bg-white rounded-premium shadow-premium overflow-hidden hover:shadow-premium-hover transition-all duration-300 hover:-translate-y-1"
+                    key={deal.id}
+                    to={`/product/${deal.slug || deal.id}`}
+                    className="group bg-white border border-gray-200 rounded-xl overflow-hidden hover:shadow-lg transition-all duration-200 hover:-translate-y-0.5"
                   >
-                    {product.imageUrl && (
-                      <div className="h-48 bg-gray-50 flex items-center justify-center overflow-hidden">
-                        <img
-                          src={product.imageUrl}
-                          alt={product.name}
-                          className="h-full w-full object-contain p-4 group-hover:scale-105 transition-transform duration-300"
-                          onError={(e) => { (e.target as HTMLImageElement).style.display = 'none'; }}
-                        />
+                    <div className="relative">
+                      {/* Badges */}
+                      <div className="absolute top-3 left-3 z-10">
+                        <span className="inline-flex items-center gap-1 px-2 py-1 bg-red-600 text-white text-xs font-bold rounded-full shadow">
+                          <ArrowDown className="w-3 h-3" />
+                          {deal.dropPercent.toFixed(0)}% OFF
+                        </span>
                       </div>
-                    )}
-                    <div className="p-6">
-                      <div className="flex justify-between items-start">
-                        <h3 className="text-lg font-bold text-gray-900 group-hover:text-blue-600 transition-colors font-display line-clamp-2 flex-1 mr-2">
-                          {product.name}
-                        </h3>
-                        <div className="flex items-center space-x-1 bg-blue-100 text-blue-800 px-3 py-1 rounded-full shrink-0">
-                          <StarIcon className="h-4 w-4" />
-                          <span className="text-sm font-semibold">{(product.score * 5).toFixed(1)}</span>
-                        </div>
+                      <div className="absolute top-3 right-3 z-10">
+                        <span className={`px-2 py-0.5 text-xs font-medium rounded-full border ${PLATFORM_COLORS[deal.platform] || 'bg-gray-100 text-gray-600'}`}>
+                          {deal.platform}
+                        </span>
                       </div>
-                      {product.price && product.price > 0 && (
-                        <p className="mt-2 text-xl font-bold text-gray-900">
-                          {'₦'}{product.price.toLocaleString()}
-                        </p>
-                      )}
-                      <p className="mt-2 text-sm text-gray-600 line-clamp-2 font-sans leading-relaxed">
-                        {product.description}
-                      </p>
-                      <div className="mt-4 flex justify-between items-center pt-3 border-t border-gray-100">
-                        <span className="text-sm font-semibold text-gray-700">{product.brand || product.category}</span>
-                        {product.mention_count > 0 && (
-                          <span className="text-sm font-medium text-blue-600">{product.mention_count.toLocaleString()} reviews</span>
+
+                      {/* Image */}
+                      <div className="h-36 bg-gray-50 flex items-center justify-center p-3">
+                        {deal.imageUrl ? (
+                          <img
+                            src={deal.imageUrl}
+                            alt={deal.name}
+                            className="max-h-full max-w-full object-contain group-hover:scale-105 transition-transform duration-300"
+                            onError={(e) => {
+                              (e.target as HTMLImageElement).src = `https://placehold.co/300x300/1e3a5f/ffffff?text=${encodeURIComponent(deal.name.split(' ').slice(0, 2).join(' '))}`;
+                            }}
+                          />
+                        ) : (
+                          <Tag className="w-8 h-8 text-gray-300" />
                         )}
                       </div>
                     </div>
+
+                    <div className="p-4">
+                      <h3 className="text-sm font-medium text-gray-900 group-hover:text-primary transition-colors line-clamp-2 mb-2">
+                        {deal.name}
+                      </h3>
+                      <div className="flex items-end justify-between">
+                        <div>
+                          <div className="text-lg font-bold text-green-700">{formatPrice(deal.currentPrice)}</div>
+                          <div className="text-xs text-gray-400 line-through">{formatPrice(deal.previousPrice)}</div>
+                        </div>
+                        <span className="text-xs font-semibold text-red-600 bg-red-50 px-2 py-1 rounded">
+                          Save {formatPrice(savings, true)}
+                        </span>
+                      </div>
+                    </div>
                   </Link>
-                ))
-              ) : (
-                <div className="col-span-full text-center py-8 text-gray-500">
-                  No trending products found. Try searching for a product above!
-                </div>
-              )}
+                );
+              })}
+            </div>
+          ) : (
+            <div className="text-center py-10 bg-white rounded-xl border border-gray-100">
+              <Tag className="h-8 w-8 text-gray-300 mx-auto mb-3" />
+              <p className="text-gray-500 text-sm">No price drops detected yet. Deals appear as we track prices over time.</p>
             </div>
           )}
 
-          <div className="mt-12 text-center">
-            <Button
+          {deals.length > 0 && (
+            <div className="mt-6 text-center sm:hidden">
+              <Link to="/deals" className="text-sm font-medium text-primary hover:text-primary-dark transition-colors">
+                View all deals &rarr;
+              </Link>
+            </div>
+          )}
+        </div>
+      </section>
+
+      {/* ─── Trending Products ─── */}
+      <section className="py-14">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+          <div className="flex items-center justify-between mb-8">
+            <div className="flex items-center gap-3">
+              <div className="p-2 bg-blue-100 rounded-lg">
+                <TrendingUp className="h-5 w-5 text-blue-600" />
+              </div>
+              <div>
+                <h2 className="text-2xl font-bold text-gray-900 font-display">Trending Products</h2>
+                <p className="text-sm text-gray-500">Most searched and compared products right now</p>
+              </div>
+            </div>
+            <Link
               to="/prices"
-              size="lg"
-              className="px-8 py-3 text-base font-semibold"
-              rightIcon={<MagnifyingGlassIcon className="h-5 w-5 ml-2" />}
+              className="hidden sm:inline-flex items-center gap-1 text-sm font-medium text-primary hover:text-primary-dark transition-colors"
             >
+              Browse all <ArrowRight className="h-4 w-4" />
+            </Link>
+          </div>
+
+          {trendingLoading ? (
+            <div className="flex justify-center py-12">
+              <LoadingSpinner size="medium" text="Loading trending..." />
+            </div>
+          ) : trending.length > 0 ? (
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+              {trending.slice(0, 8).map((product) => {
+                const platformCount = product.listings
+                  ? new Set(product.listings.map((l) => l.platform)).size
+                  : 0;
+
+                return (
+                  <Link
+                    key={product.id}
+                    to={`/product/${product.id}`}
+                    className="group bg-white border border-gray-200 rounded-xl overflow-hidden hover:shadow-lg transition-all duration-200 hover:-translate-y-0.5"
+                  >
+                    {/* Image */}
+                    <div className="h-40 bg-gray-50 flex items-center justify-center overflow-hidden p-3">
+                      {product.imageUrl ? (
+                        <img
+                          src={product.imageUrl}
+                          alt={product.name}
+                          className="max-h-full max-w-full object-contain group-hover:scale-105 transition-transform duration-300"
+                          onError={(e) => {
+                            (e.target as HTMLImageElement).style.display = 'none';
+                          }}
+                        />
+                      ) : (
+                        <div className="text-gray-300">
+                          <Tag className="w-8 h-8" />
+                        </div>
+                      )}
+                    </div>
+
+                    <div className="p-4">
+                      <h3 className="text-sm font-medium text-gray-900 group-hover:text-primary transition-colors line-clamp-2 mb-2 min-h-[2.5rem]">
+                        {product.name}
+                      </h3>
+
+                      {/* Price */}
+                      {product.price != null && product.price > 0 && (
+                        <div className="text-lg font-bold text-gray-900 mb-2">
+                          {formatPrice(product.price)}
+                        </div>
+                      )}
+
+                      {/* Meta row */}
+                      <div className="flex items-center justify-between text-xs text-gray-500 pt-2 border-t border-gray-100">
+                        <span className="font-medium text-gray-700">{product.brand || product.category}</span>
+                        <div className="flex items-center gap-2">
+                          {product.sentimentScore > 0 && (
+                            <span className="flex items-center gap-0.5">
+                              <Star className="h-3 w-3 text-yellow-500 fill-yellow-500" />
+                              {(product.sentimentScore * 5).toFixed(1)}
+                            </span>
+                          )}
+                          {platformCount > 1 && (
+                            <span className="bg-gray-100 px-1.5 py-0.5 rounded text-[10px] font-medium">
+                              {platformCount} platforms
+                            </span>
+                          )}
+                        </div>
+                      </div>
+                    </div>
+                  </Link>
+                );
+              })}
+            </div>
+          ) : (
+            <div className="text-center py-10 bg-white rounded-xl border border-gray-100">
+              <TrendingUp className="h-8 w-8 text-gray-300 mx-auto mb-3" />
+              <p className="text-gray-500 text-sm">No trending products yet. Search for a product to get started!</p>
+            </div>
+          )}
+        </div>
+      </section>
+
+      {/* ─── How It Works ─── */}
+      <section className="py-14 bg-gray-50">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+          <div className="text-center mb-12">
+            <h2 className="text-2xl font-bold text-gray-900 font-display">How ProductWhisper Works</h2>
+            <p className="mt-2 text-gray-500">Three steps to smarter shopping in Nigeria</p>
+          </div>
+
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+            {[
+              {
+                icon: Search,
+                step: '1',
+                title: 'Search Any Product',
+                desc: 'Type what you want — phones, laptops, TVs, appliances. We search Jumia, Konga, and Jiji simultaneously.',
+                color: 'blue',
+              },
+              {
+                icon: BarChart3,
+                step: '2',
+                title: 'Compare Prices & Sellers',
+                desc: 'See prices side by side, check seller trust scores, and read sentiment analysis powered by Nigerian Pidgin NLP.',
+                color: 'green',
+              },
+              {
+                icon: ExternalLink,
+                step: '3',
+                title: 'Buy at the Best Price',
+                desc: 'Click through to the platform with the best deal. We link you directly to the listing — no middleman.',
+                color: 'purple',
+              },
+            ].map((item) => (
+              <div
+                key={item.step}
+                className="relative bg-white p-6 rounded-xl border border-gray-100 shadow-sm hover:shadow-md transition-shadow"
+              >
+                <div className="flex items-center gap-4 mb-4">
+                  <div className={`flex-shrink-0 w-12 h-12 rounded-xl bg-${item.color}-100 flex items-center justify-center`}>
+                    <item.icon className={`h-6 w-6 text-${item.color}-600`} />
+                  </div>
+                  <div className="text-3xl font-bold text-gray-200 font-display">{item.step}</div>
+                </div>
+                <h3 className="text-lg font-semibold text-gray-900 font-display mb-2">{item.title}</h3>
+                <p className="text-sm text-gray-600 leading-relaxed">{item.desc}</p>
+              </div>
+            ))}
+          </div>
+        </div>
+      </section>
+
+      {/* ─── Platform Comparison Callout ─── */}
+      <section className="py-14">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+          <div className="bg-gradient-to-br from-[#1c3454] to-[#2a4a6e] rounded-2xl overflow-hidden shadow-xl">
+            <div className="p-8 sm:p-12">
+              <div className="grid grid-cols-1 lg:grid-cols-2 gap-10 items-center">
+                {/* Left text */}
+                <div>
+                  <h2 className="text-3xl font-bold text-white font-display mb-4">
+                    One Search. Three Platforms. Best Price.
+                  </h2>
+                  <p className="text-white/70 text-lg leading-relaxed mb-8">
+                    Stop opening Jumia, Konga, and Jiji in separate tabs. We compare prices, check seller ratings, and flag scams — all in one place.
+                  </p>
+
+                  <div className="space-y-4">
+                    {[
+                      { icon: Zap, text: 'Real-time scraping from all platforms', color: 'text-yellow-300' },
+                      { icon: ShieldCheck, text: 'Trust scores for every seller', color: 'text-green-400' },
+                      { icon: TrendingDown, text: 'Price history & drop alerts', color: 'text-red-400' },
+                    ].map((item, i) => (
+                      <div key={i} className="flex items-center gap-3">
+                        <item.icon className={`h-5 w-5 ${item.color} flex-shrink-0`} />
+                        <span className="text-white/90">{item.text}</span>
+                      </div>
+                    ))}
+                  </div>
+
+                  <div className="mt-8">
+                    <Button to="/prices" size="lg" className="bg-white text-[#1c3454] hover:bg-gray-100 font-semibold px-8">
+                      Start Comparing Prices
+                    </Button>
+                  </div>
+                </div>
+
+                {/* Right — platform cards */}
+                <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+                  {[
+                    {
+                      name: 'Jumia',
+                      logo: '/logos/jumia.svg',
+                      tagline: 'Largest marketplace',
+                      accent: 'border-orange-400',
+                      bg: 'bg-orange-50',
+                    },
+                    {
+                      name: 'Konga',
+                      logo: '/logos/konga.svg',
+                      tagline: 'Electronics focus',
+                      accent: 'border-blue-400',
+                      bg: 'bg-blue-50',
+                    },
+                    {
+                      name: 'Jiji',
+                      logo: '/logos/jiji.svg',
+                      tagline: 'New & used deals',
+                      accent: 'border-green-400',
+                      bg: 'bg-green-50',
+                    },
+                  ].map((p) => (
+                    <div
+                      key={p.name}
+                      className={`${p.bg} rounded-xl p-5 border-t-4 ${p.accent} text-center`}
+                    >
+                      <img src={p.logo} alt={p.name} className="h-8 mx-auto mb-3 rounded" />
+                      <div className="font-semibold text-gray-900 text-sm">{p.name}</div>
+                      <div className="text-xs text-gray-500 mt-1">{p.tagline}</div>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      {/* ─── CTA ─── */}
+      <section className="py-14 bg-gray-50">
+        <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 text-center">
+          <h2 className="text-3xl font-bold text-gray-900 font-display mb-4">
+            Stop Overpaying for Products in Nigeria
+          </h2>
+          <p className="text-lg text-gray-600 max-w-2xl mx-auto mb-8 leading-relaxed">
+            Thousands of smart shoppers use ProductWhisper to find the best deals across Jumia, Konga, and Jiji.
+          </p>
+          <div className="flex flex-col sm:flex-row gap-4 justify-center">
+            <Button to="/prices" size="lg" className="px-8 font-semibold">
               Compare Prices Now
+            </Button>
+            <Button to="/about" size="lg" variant="outline" className="px-8 font-semibold">
+              Learn More
             </Button>
           </div>
         </div>
-      </div>
-
-      {/* ─── CTA ─── */}
-      <div className="bg-gradient-secondary py-16 mt-12 rounded-premium mx-4 sm:mx-8 lg:mx-12 relative overflow-hidden">
-        <div className="max-w-5xl mx-auto px-4 sm:px-6 lg:px-8 text-center relative z-10">
-          <h2 className="text-3xl sm:text-4xl font-bold text-white font-display mb-6">
-            Stop Overpaying for Products in Nigeria
-          </h2>
-          <p className="text-xl text-white/90 font-light max-w-3xl mx-auto mb-10 leading-relaxed">
-            Join thousands of smart shoppers who use ProductWhisper to find the best deals and avoid scam sellers across Jumia, Konga, and Jiji.
-          </p>
-          <div className="flex flex-col sm:flex-row gap-4 justify-center">
-            <Link
-              to="/prices"
-              className="inline-flex items-center justify-center px-8 py-3 text-base font-semibold rounded-lg bg-white text-[rgb(28,52,84)] hover:bg-gray-100 shadow-lg transition-all hover:scale-[1.02] active:scale-[0.98]"
-            >
-              Start Comparing
-            </Link>
-            <Link
-              to="/about"
-              className="inline-flex items-center justify-center px-8 py-3 text-base font-semibold rounded-lg border-2 border-white text-white bg-transparent hover:bg-white/10 transition-all hover:scale-[1.02] active:scale-[0.98]"
-            >
-              Learn More
-            </Link>
-          </div>
-        </div>
-      </div>
+      </section>
     </div>
   );
 };
