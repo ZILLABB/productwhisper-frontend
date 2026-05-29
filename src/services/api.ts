@@ -370,6 +370,19 @@ class ApiService {
     const weightMatch = title.match(/(\d{1,4}(?:\.\d)?)\s*kg\b/i);
     if (weightMatch) features['Weight'] = { value: `${weightMatch[1]}kg` };
 
+    // Storage device specs
+    const storageMatch = title.match(/\b(\d+)\s*(tb|gb)\b/i);
+    if (storageMatch) {
+      const num = parseInt(storageMatch[1]);
+      const unit = storageMatch[2].toUpperCase();
+      if (unit === 'TB' || num >= 64) features['Storage'] = { value: `${num}${unit}` };
+    }
+    if (/\bssd\b/i.test(title)) features['Type'] = { value: 'SSD' };
+    else if (/\bhdd\b|hard\s*(?:disk|drive)/i.test(title)) features['Type'] = { value: 'HDD' };
+    else if (/\bnvme\b/i.test(title)) features['Type'] = { value: 'NVMe SSD' };
+    if (/\bsata\b/i.test(title)) features['Interface'] = { value: 'SATA' };
+    else if (/\bnvme|m\.?2\b/i.test(title)) features['Interface'] = { value: 'NVMe/M.2' };
+
     // Number of platforms available
     const platforms = [...new Set((p.listings || []).map((l: any) => l.platform))];
     if (platforms.length > 0) features['Available On'] = { value: platforms.join(', ') };
