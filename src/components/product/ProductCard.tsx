@@ -168,6 +168,8 @@ const ProductCard: React.FC<ProductCardProps> = ({
                 <Button
                   variant="ghost"
                   size="sm"
+                  aria-label="Add to favorites"
+                  title="Add to favorites"
                   className="rounded-full p-2 hover:bg-primary/10 hover:text-primary"
                   onClick={onAddToFavorite}
                 >

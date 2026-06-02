@@ -46,12 +46,12 @@ const Button: React.FC<ButtonProps> = ({
     xl: 'text-lg px-6 py-3 rounded-md',
   };
   
-  // Variant classes
+  // Variant classes — use brand tokens (navy primary / gold secondary) for consistency.
   const variantClasses = {
-    primary: 'bg-blue-600 text-white hover:bg-blue-700 focus:ring-blue-500',
-    secondary: 'bg-indigo-600 text-white hover:bg-indigo-700 focus:ring-indigo-500',
-    outline: 'border border-gray-300 bg-white text-gray-700 hover:bg-gray-50 focus:ring-blue-500',
-    ghost: 'text-gray-700 hover:bg-gray-100 focus:ring-gray-500',
+    primary: 'bg-primary text-white hover:bg-primary-dark focus:ring-primary',
+    secondary: 'bg-secondary text-white hover:bg-secondary/90 focus:ring-secondary',
+    outline: 'border border-gray-300 bg-white text-gray-700 hover:bg-gray-50 focus:ring-primary',
+    ghost: 'text-gray-700 hover:bg-gray-100 focus:ring-gray-400',
     danger: 'bg-red-600 text-white hover:bg-red-700 focus:ring-red-500',
     success: 'bg-green-600 text-white hover:bg-green-700 focus:ring-green-500',
   };

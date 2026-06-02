@@ -12,7 +12,7 @@ const AboutPage: React.FC = () => {
   return (
     <div className="min-h-screen bg-gradient-to-b from-gray-50 to-white">
       {/* Hero */}
-      <div className="bg-gradient-to-br from-[#1c3454] to-[#2a4a6e] text-white">
+      <div className="bg-gradient-to-br from-primary to-primary-light text-white">
         <div className="max-w-5xl mx-auto px-4 sm:px-6 py-16 sm:py-24 text-center">
           <h1 className="text-3xl md:text-5xl font-bold mb-4">
             Shop Smarter Across Nigeria
@@ -121,7 +121,7 @@ const AboutPage: React.FC = () => {
               },
             ].map((item) => (
               <div key={item.step} className="text-center">
-                <div className="w-14 h-14 mx-auto mb-4 rounded-full bg-[#1c3454] text-white flex items-center justify-center text-xl font-bold">
+                <div className="w-14 h-14 mx-auto mb-4 rounded-full bg-primary text-white flex items-center justify-center text-xl font-bold">
                   {item.step}
                 </div>
                 <h3 className="text-lg font-semibold text-gray-900 mb-2">{item.title}</h3>
@@ -233,7 +233,7 @@ const AboutPage: React.FC = () => {
 
         {/* CTA */}
         <section className="py-14 text-center">
-          <div className="bg-gradient-to-br from-[#1c3454] to-[#2a4a6e] rounded-2xl p-10 text-white">
+          <div className="bg-gradient-to-br from-primary to-primary-light rounded-2xl p-10 text-white">
             <h2 className="text-2xl font-bold mb-3">Ready to Find Better Deals?</h2>
             <p className="text-white/70 mb-6 max-w-md mx-auto">
               Search any product and compare prices across Jumia, Konga, and Jiji — free, no signup needed.
@@ -241,7 +241,7 @@ const AboutPage: React.FC = () => {
             <div className="flex flex-col sm:flex-row gap-3 justify-center">
               <Link
                 to="/prices"
-                className="px-6 py-3 bg-white text-[#1c3454] font-semibold rounded-lg hover:bg-gray-100 transition-colors"
+                className="px-6 py-3 bg-white text-primary font-semibold rounded-lg hover:bg-gray-100 transition-colors"
               >
                 Compare Prices
               </Link>

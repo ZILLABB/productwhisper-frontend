@@ -434,7 +434,7 @@ const HomePage: React.FC = () => {
       {/* ─── Platform Comparison Callout ─── */}
       <section className="py-14">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="bg-gradient-to-br from-[#1c3454] to-[#2a4a6e] rounded-2xl overflow-hidden shadow-xl">
+          <div className="bg-gradient-to-br from-primary to-primary-light rounded-2xl overflow-hidden shadow-xl">
             <div className="p-8 sm:p-12">
               <div className="grid grid-cols-1 lg:grid-cols-2 gap-10 items-center">
                 {/* Left text */}
@@ -460,7 +460,7 @@ const HomePage: React.FC = () => {
                   </div>
 
                   <div className="mt-8">
-                    <Button to="/prices" size="lg" className="bg-white text-[#1c3454] hover:bg-gray-100 font-semibold px-8">
+                    <Button to="/prices" size="lg" className="bg-white text-primary hover:bg-gray-100 font-semibold px-8">
                       Start Comparing Prices
                     </Button>
                   </div>
