@@ -17,6 +17,8 @@ interface DashItem {
   productId: string;
   productName: string;
   platform: string;
+  condition: string;
+  comparedWithinCondition: boolean;
   myPrice: number;
   marketMin: number;
   marketAvg: number;
@@ -156,11 +158,19 @@ const SellerDashboardPage: React.FC = () => {
                       <tr key={`${it.productId}-${idx}`} className="hover:bg-gray-50">
                         <td className="px-4 py-3 max-w-[280px]">
                           <span className="line-clamp-2 text-gray-900">{it.productName}</span>
-                          {it.overpricedBy > 0 && (
-                            <span className="inline-flex items-center gap-1 text-xs text-red-600 mt-1">
-                              <AlertTriangle className="w-3 h-3" /> {formatPrice(it.overpricedBy)} above cheapest
-                            </span>
-                          )}
+                          <span className="flex flex-wrap items-center gap-1 mt-1">
+                            {it.condition && it.condition !== 'UNKNOWN' && (
+                              <span className="text-xs px-1.5 py-0.5 rounded bg-gray-100 text-gray-600">
+                                {it.condition.replace(/_/g, ' ').toLowerCase()}
+                                {it.comparedWithinCondition && ' · like-for-like'}
+                              </span>
+                            )}
+                            {it.overpricedBy > 0 && (
+                              <span className="inline-flex items-center gap-1 text-xs text-red-600">
+                                <AlertTriangle className="w-3 h-3" /> {formatPrice(it.overpricedBy)} above cheapest
+                              </span>
+                            )}
+                          </span>
                         </td>
                         <td className="px-4 py-3 text-right font-semibold text-gray-900">{formatPrice(it.myPrice)}</td>
                         <td className="px-4 py-3 text-right text-gray-600">{formatPrice(it.marketMin)}</td>
