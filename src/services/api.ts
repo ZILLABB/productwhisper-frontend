@@ -243,6 +243,31 @@ class ApiService {
     );
   }
 
+  // ─── Seller / B2B intelligence ───────────────────────────────
+  async getVendors(limit = 50): Promise<any> {
+    return this.handleRequest(
+      () => this.api.get(`/sellers?limit=${limit}`),
+      null,
+      'Failed to fetch vendors'
+    );
+  }
+
+  async getVendorDashboard(vendorId: string): Promise<any> {
+    return this.handleRequest(
+      () => this.api.get(`/sellers/${vendorId}/dashboard`),
+      null,
+      'Failed to fetch seller dashboard'
+    );
+  }
+
+  async getBrandReport(brand: string): Promise<any> {
+    return this.handleRequest(
+      () => this.api.get(`/sellers/brand/${encodeURIComponent(brand)}`),
+      null,
+      'Failed to fetch brand report'
+    );
+  }
+
   /**
    * Fetch YouTube review videos for a product query.
    */

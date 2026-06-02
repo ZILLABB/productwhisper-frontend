@@ -20,6 +20,7 @@ const PrivacyPage = lazy(() => import('./pages/PrivacyPage'));
 const TermsPage = lazy(() => import('./pages/TermsPage'));
 const PriceComparePage = lazy(() => import('./pages/PriceComparePage'));
 const DealsPage = lazy(() => import('./pages/DealsPage'));
+const SellerDashboardPage = lazy(() => import('./pages/SellerDashboardPage'));
 const NotFoundPage = lazy(() => import('./pages/NotFoundPage'));
 
 /**
@@ -60,6 +61,7 @@ function App() {
             <Route path="compare" element={withErrorBoundaryAndSuspense(ComparisonPage)} />
             <Route path="prices" element={withErrorBoundaryAndSuspense(PriceComparePage)} />
             <Route path="deals" element={withErrorBoundaryAndSuspense(DealsPage)} />
+            <Route path="sellers" element={withErrorBoundaryAndSuspense(SellerDashboardPage)} />
             <Route path="about" element={withErrorBoundaryAndSuspense(AboutPage)} />
             <Route path="contact" element={withErrorBoundaryAndSuspense(ContactPage)} />
             <Route path="product/:id" element={withErrorBoundaryAndSuspense(ProductPage)} />

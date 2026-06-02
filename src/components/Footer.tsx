@@ -109,6 +109,7 @@ const Footer = () => {
                     { label: 'Search', path: '/prices' },
                     { label: 'Deals', path: '/deals' },
                     { label: 'Compare', path: '/compare' },
+                    { label: 'For Sellers', path: '/sellers' },
                   ].map((item, index) => (
                     <li key={index}>
                       <Link
