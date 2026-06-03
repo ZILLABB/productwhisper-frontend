@@ -37,20 +37,18 @@ interface CompactLayoutProps {
 const CompactLayout: React.FC<CompactLayoutProps> = ({
   reducedPadding = false,
   narrow = false,
-  condensedHeader = false,
-  condensedFooter = false,
   bgClass = 'bg-gray-50'
 }) => {
   return (
     <div className={`flex flex-col min-h-screen ${bgClass}`}>
-      <Header condensed={condensedHeader} />
-      <main 
-        className={`flex-1 w-full ${narrow ? 'max-w-5xl' : 'max-w-7xl'} mx-auto 
+      <Header />
+      <main
+        className={`flex-1 w-full ${narrow ? 'max-w-5xl' : 'max-w-7xl'} mx-auto
         ${reducedPadding ? 'px-3 sm:px-4 py-4' : 'px-4 sm:px-6 lg:px-8 py-6'}`}
       >
         <Outlet />
       </main>
-      <Footer condensed={condensedFooter} />
+      <Footer />
     </div>
   );
 };

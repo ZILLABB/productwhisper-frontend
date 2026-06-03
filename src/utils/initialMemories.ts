@@ -1,4 +1,4 @@
-import { Memory } from '../components/common/MemoryBank';
+import type { Memory } from '../components/common/MemoryBank';
 
 // Create initial memories with project information
 export const initialMemories: Memory[] = [

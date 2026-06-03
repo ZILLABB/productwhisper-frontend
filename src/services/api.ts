@@ -296,7 +296,7 @@ class ApiService {
   async get(url: string, config?: AxiosRequestConfig): Promise<any> {
     try {
       const response = await this.api.get(url, config);
-      return response;
+      return response.data;
     } catch (error) {
       console.error(`Error in GET request to ${url}:`, error);
       throw error;

@@ -434,7 +434,7 @@ const ComparisonPage: React.FC = () => {
             <div className="bg-gray-50 p-4 sm:p-6 font-medium text-gray-700 border-b border-gray-100">
               <h3 className="text-base sm:text-lg font-display font-semibold">Product Details</h3>
             </div>
-            {products.map((product, index) => (
+            {products.map((product) => (
               <div key={product.id} className="p-6 border-l border-b border-gray-100 relative">
                 {/* Product Image */}
                 <div className="w-full h-48 bg-gray-50 rounded-lg mb-4 overflow-hidden flex items-center justify-center">

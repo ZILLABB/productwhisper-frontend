@@ -1,4 +1,4 @@
-import React, { useState, useMemo } from 'react';
+import React, { useMemo } from 'react';
 import { useParams, Link } from 'react-router-dom';
 import {
   FiBarChart2,
@@ -16,7 +16,6 @@ import {
   FiCheckCircle,
   FiClock,
 } from 'react-icons/fi';
-import LoadingSpinner from '../components/common/LoadingSpinner';
 import { apiService } from '../services/api';
 import useApi from '../hooks/useApi';
 import ApiErrorFallback from '../components/common/ApiErrorFallback';
@@ -115,8 +114,23 @@ const ProductPage: React.FC = () => {
 
   if (loading) {
     return (
-      <div className="flex justify-center items-center min-h-[60vh]">
-        <LoadingSpinner size="large" text="Loading product details..." />
+      <div className="container mx-auto px-4 py-12">
+        <div className="bg-white rounded-lg shadow-md overflow-hidden">
+          <div className="bg-gray-50 p-6 border-b border-gray-200">
+            <Skeleton className="h-8 w-64 mb-2" />
+            <Skeleton className="h-5 w-48" />
+          </div>
+          <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 p-6">
+            <div className="lg:col-span-5">
+              <Skeleton className="aspect-square rounded-xl" />
+              <Skeleton className="h-40 rounded-xl mt-8" />
+            </div>
+            <div className="lg:col-span-7 space-y-4">
+              <Skeleton className="h-12 rounded-xl" />
+              <Skeleton className="h-64 rounded-xl" />
+            </div>
+          </div>
+        </div>
       </div>
     );
   }
