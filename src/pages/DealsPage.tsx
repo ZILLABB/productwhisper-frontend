@@ -49,8 +49,11 @@ const DealsPage: React.FC = () => {
     setError('');
     try {
       const response = await apiService.get(`/prices/deals?limit=${PAGE_SIZE}&page=${page}`);
-      const body = response.data;
-      const data = body?.data || [];
+      // apiService.get unwraps to the body ({success, data, pagination}), so the
+      // deals array sits at response.data (not response.data.data). Stays
+      // defensive in case the wrapper changes again.
+      const body = response;
+      const data = body?.data ?? [];
       const pagination = body?.pagination;
       setDeals(Array.isArray(data) ? data : []);
       if (pagination) {

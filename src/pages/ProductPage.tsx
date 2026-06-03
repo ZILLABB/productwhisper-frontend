@@ -1,4 +1,4 @@
-import React, { useMemo } from 'react';
+import React, { useMemo, useState } from 'react';
 import { useParams, Link } from 'react-router-dom';
 import {
   FiBarChart2,
@@ -18,6 +18,7 @@ import {
 } from 'react-icons/fi';
 import { apiService } from '../services/api';
 import useApi from '../hooks/useApi';
+import { Skeleton } from '../components/ui/skeleton';
 import ApiErrorFallback from '../components/common/ApiErrorFallback';
 import LazyImage from '../components/common/LazyImage';
 import SentimentChart from '../components/product/SentimentChart';
