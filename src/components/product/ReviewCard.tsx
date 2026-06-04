@@ -22,7 +22,7 @@ interface ReviewCardProps {
 }
 
 const ReviewCard: React.FC<ReviewCardProps> = ({
-  _id,
+  // id is accepted in props but not currently used in render — omitted.
   author,
   date,
   rating,

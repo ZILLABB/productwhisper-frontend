@@ -1,4 +1,4 @@
-import React, { forwardRef, useRef, useState, useEffect } from 'react';
+import React, { forwardRef, useState, useEffect } from 'react';
 
 type MotionComponent = React.ForwardRefExoticComponent<any & React.RefAttributes<any>>;
 
@@ -61,7 +61,7 @@ export function useMotionValue(initial: number) {
   };
 }
 
-export function useTransform(value: any, input: any, output: any) {
+export function useTransform(_value: any, _input: any, output: any) {
   return { get: () => output?.[0] ?? 0, onChange: () => () => {} };
 }
 

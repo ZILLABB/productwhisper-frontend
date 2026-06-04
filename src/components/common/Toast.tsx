@@ -1,5 +1,5 @@
 import React, { useState, useEffect, createContext, useContext } from 'react';
-import { X as XMarkIcon } from 'lucide-react';
+import { X } from 'lucide-react';
 
 type ToastType = 'success' | 'error' | 'warning' | 'info';
 

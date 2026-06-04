@@ -31,7 +31,8 @@ const ProductCard: React.FC<ProductCardProps> = ({
   brand,
   category,
   price,
-  _originalPrice,
+  // originalPrice and tags are accepted by the props interface but currently
+  // unused in the render — intentionally omitted from the destructure.
   rating,
   reviewCount,
   sentimentScore = 0,
@@ -39,7 +40,6 @@ const ProductCard: React.FC<ProductCardProps> = ({
   description,
   inStock,
   discount = 0,
-  _tags = [],
   onAddToCompare,
   onAddToFavorite,
   viewMode = 'grid',

@@ -6,15 +6,11 @@ import {
   FiInfo,
   FiCheck,
   FiX,
-  FiTrendingUp,
   FiTrendingDown,
   FiMessageCircle,
   FiList,
   FiExternalLink,
-  FiShield,
   FiAlertTriangle,
-  FiCheckCircle,
-  FiClock,
 } from 'react-icons/fi';
 import { apiService } from '../services/api';
 import useApi from '../hooks/useApi';
@@ -45,26 +41,6 @@ const PLATFORM_CONFIG: Record<string, {
 };
 
 const fmtNGN = (n: number) => '₦' + n.toLocaleString();
-
-/* ─── Trust Badge ───────────────────────────────────────── */
-
-const TrustBadge: React.FC<{ level?: string; score?: number }> = ({ level, score }) => {
-  const cfg: Record<string, { icon: React.ReactNode; text: string; cls: string }> = {
-    trusted:  { icon: <FiCheckCircle size={12} />, text: 'Trusted Seller',  cls: 'text-green-700 bg-green-50 border-green-200' },
-    verified: { icon: <FiShield size={12} />,      text: 'Verified Seller', cls: 'text-blue-700 bg-blue-50 border-blue-200' },
-    average:  { icon: <FiShield size={12} />,      text: 'Average Seller',  cls: 'text-yellow-700 bg-yellow-50 border-yellow-200' },
-    caution:  { icon: <FiAlertTriangle size={12} />, text: 'Use Caution', cls: 'text-red-700 bg-red-50 border-red-200' },
-  };
-  const c = cfg[level || ''] || { icon: <FiInfo size={12} />, text: 'Marketplace Seller', cls: 'text-gray-500 bg-gray-50 border-gray-200' };
-  return (
-    <span
-      className={`inline-flex items-center gap-1.5 text-xs font-medium border rounded-full px-2.5 py-1 ${c.cls}`}
-      title={score ? `Trust score: ${score}/100` : undefined}
-    >
-      {c.icon} {c.text}{score ? ` (${score}/100)` : ''}
-    </span>
-  );
-};
 
 /* ─── Main Page ─────────────────────────────────────────── */
 
